@@ -8,10 +8,10 @@ from .forms import SignUpForm, SearchUserForm
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 
-# Create your views here.
+# Signup page
 class SignUpPage(View):
     form = SignUpForm
-    success_url = 'login'
+    success_url = reverse_lazy('login')
     template_name = 'Accounts/signup.html'
 
     def get(self, request, *args, **kwargs):
@@ -24,10 +24,11 @@ class SignUpPage(View):
             form.save()
             return redirect(self.success_url)
         else:
-            form = SignUpForm()
-        return render(request, self.template_name, {'form': form})
+            #form #= SignUpForm()
+            return render(request, self.template_name, {'form': form})
+    
 
-
+# define the functions of home page
 class HomePage(View):
     search_form = SearchUserForm
     success_url = reverse_lazy('home')
