@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import Author
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.views import generic
 from django.views import View
 from django.http import HttpResponse
@@ -29,6 +29,33 @@ class SignUpPage(View):
     
 
 # define the functions of home page
+class ProfilePage(View):
+    search_form = SearchUserForm
+    success_url = reverse_lazy('home')
+    template_name = 'Accounts/profile.html'
+    model=Author
+
+    # if a user is not loged-in, he/she will get redirected to login page
+    @method_decorator(login_required(login_url='/accounts/login/'))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    # if receive a GET request, create a new form
+    def get(self, request, *args, **kwargs):
+        search_form = self.search_form()
+        print("sasdfasfasfd")
+        return render(request, self.template_name, {'search_form': search_form})
+    
+    # receive a POST from search box
+    def post(self, request, *args, **kwargs):
+        search_form = self.search_form(request.POST)
+
+        # get the user name from input box, 
+        if search_form.is_valid():
+            user_to_search = search_form.cleaned_data['user_name']
+        return HttpResponse(user_to_search)
+
+
 class HomePage(View):
     search_form = SearchUserForm
     success_url = reverse_lazy('home')
@@ -42,14 +69,5 @@ class HomePage(View):
 
     # if receive a GET request, create a new form
     def get(self, request, *args, **kwargs):
-        search_form = self.search_form()
-        return render(request, self.template_name, {'search_form': search_form})
-    
-    # receive a POST from search box
-    def post(self, request, *args, **kwargs):
-        search_form = self.search_form(request.POST)
-
-        # get the user name from input box, 
-        if search_form.is_valid():
-            user_to_search = search_form.cleaned_data['user_name']
-        return HttpResponse(user_to_search)
+        url = reverse("profile", args=[request.user.id])
+        return redirect(url)

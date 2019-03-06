@@ -5,18 +5,5 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-    Hi {{ user.username }}!
-    <br>
-    <a href="{% url 'logout' %}">logout</a>
-    <br>
-    <form method="post">
-        {% csrf_token %}
-        {{ search_form.as_p }}
-        <button type="submit">search</button>
-    </form>
-{% else %}
-    <a href="{% url 'login' %}">Login</a>
-    <br>
-    <a href="{% url 'signup' %}">Create an account</a>
 {% endif %}
 {% endblock %}
