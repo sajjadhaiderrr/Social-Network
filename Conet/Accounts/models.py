@@ -7,7 +7,7 @@ class Author(AbstractUser):
     class Meta(AbstractUser.Meta):
         pass
 
-class Connection(models.Model):
-    init_id = models.ForeignKey(Author, on_delete=models.CASCADE)
-    recv_id = models.IntegerField()
+class Friendship(models.Model):
+    init_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='creator')
+    recv_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='assignee')
     starting_date = models.DateTimeField(auto_now=True)
