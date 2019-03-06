@@ -4,6 +4,11 @@ import uuid
 
 class Author(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    bio = models.CharField(max_length=200, default="", null=True)
+    host = models.CharField(max_length=50, null=True)
+    displayName = models.CharField(max_length=30, default="")
+    url = models.URLField(default="")
+    github = models.URLField(default="")
     class Meta(AbstractUser.Meta):
         pass
 
