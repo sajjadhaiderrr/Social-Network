@@ -6,7 +6,7 @@ from .models import Author
 class SignUpForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = Author
-        fields = ['username', 'email']
+        fields = ['username', 'email', 'displayName', 'github']
 
 
 class SearchUserForm(forms.Form):

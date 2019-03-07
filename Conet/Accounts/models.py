@@ -7,8 +7,13 @@ class Author(AbstractUser):
     bio = models.CharField(max_length=200, default="", null=True)
     host = models.CharField(max_length=50, null=True)
     displayName = models.CharField(max_length=30, default="")
-    url = models.URLField(default="")
+    
+    # user may provide an invalid github url.
     github = models.URLField(default="")
+    
+    # need to be done
+    url = models.URLField(default="")
+    
     class Meta(AbstractUser.Meta):
         pass
 
