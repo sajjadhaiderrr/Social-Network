@@ -21,3 +21,6 @@ class Friendship(models.Model):
     init_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='creator')
     recv_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='assignee')
     starting_date = models.DateTimeField(auto_now=True)
+
+    # track the status of the friendship. 0: pending; 1: accepted.
+    status = models.IntegerField(default=0)

@@ -36,24 +36,41 @@ class ProfilePage(View):
     model=Author
 
     # if a user is not loged-in, he/she will get redirected to login page
-    @method_decorator(login_required(login_url='/accounts/login/'))
+    @method_decorator(login_required(login_url='/author/login/'))
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
     # if receive a GET request, create a new form
     def get(self, request, *args, **kwargs):
+        # get current user and user that is being viewed
+        user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
+        current_user = request.user
         search_form = self.search_form()
-        print("sasdfasfasfd")
-        return render(request, self.template_name, {'search_form': search_form})
+        return render(request, self.template_name, {'search_form': search_form, 'user_be_viewed':user_be_viewed})
     
     # receive a POST from search box
     def post(self, request, *args, **kwargs):
-        search_form = self.search_form(request.POST)
+        user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
+        current_user = request.user
 
-        # get the user name from input box, 
-        if search_form.is_valid():
-            user_to_search = search_form.cleaned_data['user_name']
-        return HttpResponse(user_to_search)
+        # if you are viewing your own website
+        if (user_be_viewed.id == current_user.id):
+            search_form = self.search_form(request.POST)
+            # get the user name from input box, 
+            if search_form.is_valid():
+                user_to_search = search_form.cleaned_data['user_name']
+            return HttpResponse(user_to_search)
+
+'''
+class OthersProfilePage(View):
+    model = Author
+    user_being_viewed = Author
+    template_name = 'Accounts/otherprofile.html'
+
+    def get(self, request, *args, **kwargs):
+'''
+
+
 
 
 class HomePage(View):

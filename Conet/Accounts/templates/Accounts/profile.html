@@ -4,16 +4,27 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-{% if user.is_authenticated %}
-    Hi {{ user.username }}!
+{% if user.is_authenticated%}
+    {% if user.id == user_be_viewed.id %}
+        {{ user.username }}, this is your home page <br>
+    {% endif %}
+
+    Login as: {{ request.user.username }}! <br>
+    Viewing:  {{ user_be_viewed.username }}!
     <br>
     <a href="{% url 'logout' %}">logout</a>
     <br>
-    <form method="post">
-        {% csrf_token %}
-        {{ search_form.as_p }}
-        <button type="submit">search</button>
-    </form>
+
+    <!-- If user is viewing his own page. Show the search bar-->
+    {% if user.id == user_be_viewed.id %}
+        <form method="post">
+            {% csrf_token %}
+            {{ search_form.as_p }}
+            <button type="submit">search</button>
+        </form>
+    {% else %}
+        <a href="">Be a friend</a>
+    {% endif %}
 {% else %}
     <a href="{% url 'login' %}">Login</a>
     <br>
