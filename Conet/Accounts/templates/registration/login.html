@@ -1,0 +1,26 @@
+<!-- templates/registration/login.html -->
+{% extends 'Accounts/base.html' %}
+{% load bootstrap4 %}
+{% load static %}
+
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="login-back">
+  <div class="container">
+    <div class="d-flex justify-content-center ">
+      <div class="card">
+        <h3 class="card-header" >Login</h3>
+        <div class="card-body">
+          <form class="form" action="{% url 'login' %}" method="post">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            <button type="submit" class="btn btn-primary btn-block">Login</button>
+          </form>
+          <a href="/author/signup/">Create an account</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

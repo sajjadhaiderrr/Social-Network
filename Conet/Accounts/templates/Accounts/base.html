@@ -1,0 +1,20 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+{% load bootstrap4 %}
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'Accounts/style.css' %}">
+<html lang="en-ca">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}{% endblock %}</title>
+    {% bootstrap_css %}
+    {% bootstrap_javascript jquery='full' %}
+    {% bootstrap_messages %}
+</head>
+<body>
+  {% block content %}
+
+  {% endblock %}
+</body>
+</html>
