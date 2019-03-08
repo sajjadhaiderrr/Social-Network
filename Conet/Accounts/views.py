@@ -21,7 +21,11 @@ class SignUpPage(View):
     def post(self, request, *args, **kwargs):
         form = self.form(request.POST)
         if form.is_valid():
+            username = form.cleaned_data['username']
             form.save()
+            user = Author.objects.get(username=username)
+            user.url = user.host + "/" + str(user.id) + '/'
+            user.save()
             return redirect(self.success_url)
         else:
             #form #= SignUpForm()
@@ -61,18 +65,6 @@ class ProfilePage(View):
                 user_to_search = search_form.cleaned_data['user_name']
             return HttpResponse(user_to_search)
 
-'''
-class OthersProfilePage(View):
-    model = Author
-    user_being_viewed = Author
-    template_name = 'Accounts/otherprofile.html'
-
-    def get(self, request, *args, **kwargs):
-'''
-
-
-
-
 class HomePage(View):
     search_form = SearchUserForm
     success_url = reverse_lazy('home')
@@ -80,7 +72,7 @@ class HomePage(View):
     user=Author
 
     # if a user is not loged-in, he/she will get redirected to login page
-    @method_decorator(login_required(login_url='/accounts/login/'))
+    @method_decorator(login_required(login_url='/author/login/'))
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
@@ -88,3 +80,7 @@ class HomePage(View):
     def get(self, request, *args, **kwargs):
         url = reverse("profile", args=[request.user.id])
         return redirect(url)
+
+
+def send_friend_request(request, *args, **kwargs):
+    print(request)
