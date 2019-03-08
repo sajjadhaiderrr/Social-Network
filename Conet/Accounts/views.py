@@ -1,18 +1,20 @@
-from django.shortcuts import render, redirect
-from .models import Author, Friendship
-from django.urls import reverse_lazy, reverse
-from django.views import generic
-from django.views import View
-from django.http import HttpResponse
-from .forms import SignUpForm, SearchUserForm
+import datetime
+import json
+
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
+from django.views import View, generic
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from django.views.decorators.csrf import csrf_exempt
-import json
-import datetime
+
+from .forms import SearchUserForm, SignUpForm
+from .models import Author, Friendship
+
 
 # Signup page
 class SignUpPage(View):
@@ -86,42 +88,3 @@ class HomePage(View):
     def get(self, request, *args, **kwargs):
         url = reverse("profile", args=[request.user.id])
         return redirect(url)
-
-@csrf_exempt
-def friend_request(request):
-    if request.method == 'POST':
-        request_body = json.loads(request.body.decode())
-        init_user = Author.objects.get(id=request_body['init']['id'])
-        recv_user = Author.objects.get(id=request_body['recv']['id'])
-        response = {"query":'friendrequest'}
-        try:
-            friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now(), status=0)
-            friendship.save()
-            response['success'] = True
-            response['message'] = 'Friend request sent'
-            return HttpResponse(json.dumps(response), 200)
-        except:
-            response['success'] = False
-            response['message'] = 'Friend request sent'
-            return HttpResponse(json.dumps(response), status=400)
-    return HttpResponse(400)
-
-
-@csrf_exempt
-def unfriend_request(request):
-    if request.method == 'POST':
-        request_body = json.loads(request.body.decode())
-        init_user = Author.objects.get(id=request_body['init']['id'])
-        recv_user = Author.objects.get(id=request_body['recv']['id'])
-        response = {"query":'unfriendrequest'}
-        try:
-
-            Friendship.objects.filter(init_id=init_user, recv_id=recv_user).delete()
-            response['success'] = True
-            response['message'] = 'Unfriend request sent'
-            return HttpResponse(json.dumps(response), 200)
-        except:
-            response['success'] = False
-            response['message'] = 'Unfriend request sent'
-            return HttpResponse(json.dumps(response), status=400)
-    return HttpResponse(400)

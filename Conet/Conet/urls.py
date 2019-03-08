@@ -15,14 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from Accounts.views import HomePage, friend_request, unfriend_request
+from Accounts.views import HomePage
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('author/', include('Accounts.urls')),
     path('author/', include('django.contrib.auth.urls')),
-    path('friendrequest/', friend_request, name='friendrequest'),
-    path('unfriendrequest/', unfriend_request, name='friendrequest'),
-    path('api/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/', include('api.urls'), name='api'),
     path('', HomePage.as_view(), name='home')
 ]

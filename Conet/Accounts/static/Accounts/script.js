@@ -40,10 +40,10 @@ function sendUnFriendRequestCallback(objects){
 
 function sendFriendRequest(init, recv){
     users = {"init": init, "recv": recv};
-    sendJSONHTTPPost(recv.host+"/friendrequest/", users, sendFriendRequestCallback)
+    sendJSONHTTPPost(recv.host+"/api/friendrequest/", users, sendFriendRequestCallback)
 }
 
 function sendUnFriendRequest(init, recv){
     users = {"init": init, "recv": recv};
-    sendJSONHTTPPost(recv.host+"/unfriendrequest/", users, sendUnFriendRequestCallback)
+    sendJSONHTTPPost(recv.host+"/api/unfriendrequest/", users, sendUnFriendRequestCallback)
 }
