@@ -6,7 +6,7 @@ import socket
 class Author(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     bio = models.CharField(max_length=200, default="", null=True)
-    host = models.CharField(default=str(socket.gethostbyname(socket.gethostname())), max_length=50)
+    host = models.CharField(default="", max_length=50)
     displayName = models.CharField(max_length=30, default="")
     
     # user may provide an invalid github url.
@@ -25,3 +25,6 @@ class Friendship(models.Model):
 
     # track the status of the friendship. 0: pending; 1: accepted.
     status = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('init_id', 'recv_id')

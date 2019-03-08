@@ -1,8 +1,8 @@
 <!-- templates/home.html -->
 {% extends 'Accounts/base.html' %}
-
+{% csrf_token %}
 {% block title %}Home{% endblock %}
-
+{% load static %}
 {% block content %}
     {% if user.is_authenticated%}
         {% if user.id == user_be_viewed.id %}
@@ -23,7 +23,14 @@
                 <button type="submit">search</button>
             </form>
         {% else %}
-            <button type="button" class="btn btn-primary btn-block" onclick="">Be a friend</a>
+            <script>
+            current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
+            user_be_viewed =  {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
+            
+            
+            </script>
+            <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Be a friend</a>
+            <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfriend</a>
         {% endif %}
     {% else %}
         <a href="{% url 'login' %}">Login</a>

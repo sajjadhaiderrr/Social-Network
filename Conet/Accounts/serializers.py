@@ -1,15 +1,15 @@
 from rest_framework import serializers
+from .models import *
 
+'''
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ('id', 'email', 'bio', 'host', 'first_name', 'last_name', 'displayName', 'url', 'github')
+'''
 
-class AuthorSerializer(serializers.Serializer):
-    id = serializers.UUIDField(read_only=True)
-    bio = serializers.CharField(required=False, allow_black=True, max_length=200)
-    host = serializers.CharField(required=True)
-    displayName = serializers.CharField()
-    
-    # user may provide an invalid github url.
-    github = serializers.URLField()
-    
-    # need to be done
-    url = serializers.URLField()
+class AuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Author
+        fields = ('id', 'host', 'displayName', 'url')
     
