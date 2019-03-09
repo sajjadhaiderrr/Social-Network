@@ -10,9 +10,10 @@ from django.shortcuts import render
 class postReqHandler(APIView):
 
     def get(self, request, postid):
-        return 
+        return
     def post(self, request):
-        return 
-    def put(self, request)
-        
-    def delete(self, )
+        return
+    def put(self, request):
+        return
+    def delete(self, request, postid):
+        return
