@@ -10,7 +10,7 @@ from django.views import View, generic
 from Accounts.models import Author
 from Accounts.models import Friendship
 
-from .serializers import *
+from .serializers import AuthorFriendIDSerializers
 
 from rest_framework.response import Response
 
