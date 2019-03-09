@@ -15,7 +15,7 @@ class Author(AbstractUser):
         pass
 
 class Friendship(models.Model):
-    init_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='creator')
+    init_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='friends')
     recv_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='assignee')
     starting_date = models.DateTimeField(auto_now=True)
 
