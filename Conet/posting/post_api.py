@@ -23,9 +23,9 @@ class PostWithoutIdReqHandler(APIView):
 
 class PostWithIdReqHandler(APIView):
     #handle a reuqest with a postid
-    def get(self, request, postid):  
+    def get(self, request, postId):  
         try:
-            post = Post.objects.get(pk=postid)
+            post = Post.objects.get(pk=postId)
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         #Todo: authentication and decide whether to response the request post or 403
@@ -33,9 +33,9 @@ class PostWithIdReqHandler(APIView):
         #Todo: response in json
         return Response(serializer.data)
 
-    def put(self, request, postid):
+    def put(self, request, postId):
         try:
-            post = Post.objects.get(pk=postid)
+            post = Post.objects.get(pk=postId)
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         #Todo: authentication for modification
@@ -46,9 +46,9 @@ class PostWithIdReqHandler(APIView):
             #Todo: response success message on json format
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    def delete(self, request, postid):
+    def delete(self, request, postId):
         try:
-            post = Post.objects.get(pk=postid)
+            post = Post.objects.get(pk=postId)
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         #Todo: authentication for deletion
@@ -56,25 +56,25 @@ class PostWithIdReqHandler(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class CommentReqHandler(APIView):
-    def get(self, request, postid):
+    def get(self, request, postId):
         try:
-            Post.objects.get(pk=postid)
+            Post.objects.get(pk=postId)
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        Comments = Comment.objects.fileter(postid=postid)
+        Comments = Comment.objects.fileter(postid=postId)
         serializer = CommentSerializer(Comments)
         #Todo: change response to json
         return Response(serializer.data)
 
-    def post(self, request, postid):
+    def post(self, request, postId):
         try:
-            Post.objects.get(pk=postid)
+            Post.objects.get(pk=postId)
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         curAuthor = None
-        serializer = PostSerializer(data=request.data, context={'author': curAuthor, 'post': postid})
+        serializer = PostSerializer(data=request.data, context={'author': curAuthor, 'post': postId})
         if serializer.is_valid():
             serializer.save()
             #Todo: response success message on json format
