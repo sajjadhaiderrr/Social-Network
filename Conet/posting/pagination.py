@@ -10,7 +10,7 @@ class CustomPagination(PageNumberPagination):
 
     def get_paginated_response(self, data):
         query = "comments" if re.search("/\d+/comments", self.request.path) else query = "posts"
-        pre_link, next_link = self.get_previous_link() self.get_next_link()
+        pre_link, next_link = self.get_previous_link(), self.get_next_link()
         
         res_obj = {
             "query": query,
