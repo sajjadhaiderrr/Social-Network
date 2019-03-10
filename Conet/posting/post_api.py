@@ -12,11 +12,8 @@ class PostWithoutIdReqHandler(APIView):
         #Todo: get all public posts
         return Response()
     def post(self, request):
-        #Todo: check if current user 
-        #curAuthor = author who sends request
-        #source, origin ?
-
         curAuthor = None
+        #Todo: curAuthor = author who sends request (find out this author)
         serializer = PostSerializer(data=request.data, context={'author': curAuthor,})
         if serializer.is_valid():
             serializer.save()
@@ -31,8 +28,9 @@ class PostWithIdReqHandler(APIView):
             post = Post.objects.get(pk=postid)
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        #Todo: check authentication and decide whether to response the request post or 403
+        #Todo: authentication and decide whether to response the request post or 403
         serializer = PostSerializer(post)
+        #Todo: response in json
         return Response(serializer.data)
 
     def put(self, request, postid):
@@ -40,16 +38,22 @@ class PostWithIdReqHandler(APIView):
             post = Post.objects.get(pk=postid)
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-        return Response()
-
+        #Todo: authentication for modification
+        serializer = PostSerializer(post, request.data)
+        #Todo: response in json
+        if serializer.is_valid():
+            serializer.save()
+            #Todo: response success message on json format
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     def delete(self, request, postid):
         try:
             post = Post.objects.get(pk=postid)
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-
-        return Response()
+        #Todo: authentication for deletion
+        post.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class CommentReqHandler(APIView):
     def get(self, request, postid):
@@ -60,6 +64,7 @@ class CommentReqHandler(APIView):
 
         Comments = Comment.objects.fileter(postid=postid)
         serializer = CommentSerializer(Comments)
+        #Todo: change response to json
         return Response(serializer.data)
 
     def post(self, request, postid):
@@ -68,4 +73,10 @@ class CommentReqHandler(APIView):
         except Post.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        return Response()
+        curAuthor = None
+        serializer = PostSerializer(data=request.data, context={'author': curAuthor, 'post': postid})
+        if serializer.is_valid():
+            serializer.save()
+            #Todo: response success message on json format
+            return Response()
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

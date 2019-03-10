@@ -7,33 +7,40 @@ from Accounts.models import Author
 #This class is gonna be moved to app Accounts
 class AuthorSerializer(serializers.ModelSerializer):
     #author fields
-    
+    #author model doesn't need to store url, which gonna be moved to serializer
+    url = serializers.SerializerMethodField()
+
     class Meta:
         model = Author
         fields = '__all__'
 
+    def get_url(self, obj):
+        return "{}/author/{}".format(obj.host, obj.id)
+
 class PostSerializer(serializers.ModelSerializer):
     #override some fields
     author = AuthorSerializer(read_only=True)
-    comment = serializers.SerializerMethodField()
+    comments = serializers.SerializerMethodField()
     #Todo:
-    #  page
-    #  size
     #  count
+    #  size
     #  ...
     class Meta:
         model = Post
         fields = '__all__'
-        read_only_fields = ('postid')
 
     def get_comment(self, obj):
-            comments = Comment.objects.filter(post=obj.postid)
-            serializer = CommentSerializer(comments, many=True)
-            return serializer.data
+        comments = Comment.objects.filter(post=obj.postid)
+        serializer = CommentSerializer(comments, many=True)
+        return serializer.data
 
     def create(self, validated_data):
         author = self.context['Author']
-        return Post.objects.create(author, **validated_data)
+        post = Post.objects.create(author, **validated_data)
+        src = 'http://hostname/posts/{}'.format(post.postid)
+        post.source = post.origin = src
+        post.save()
+        return post
 
 class CommentSerializer(serializers.ModelSerializer):
     author = AuthorSerializer(read_only=True)
@@ -43,4 +50,6 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        return
+        author = self.context['author']
+        post = self.context['post']
+        return Comment.objects.create(author=author, post=post, **validated_data)
