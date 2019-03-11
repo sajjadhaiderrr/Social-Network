@@ -13,9 +13,9 @@ class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
         fields = '__all__'
-`
-        def get_url(self, obj):
-            return "{}/author/{}".format(obj.host, obj.id)`
+
+    def get_url(self, obj):
+        return "{}/author/{}".format(obj.host, obj.id)
 
 class PostSerializer(serializers.ModelSerializer):
     #override some fields
