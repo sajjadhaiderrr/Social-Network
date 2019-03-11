@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Accounts',
+    'rest_framework',
+    'posting',
     'bootstrap4',
 ]
 
@@ -124,3 +126,8 @@ AUTH_USER_MODEL = 'Accounts.Author'
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'conet.posting.pagination',
+    'PAGE_SIZE': 50
+}
