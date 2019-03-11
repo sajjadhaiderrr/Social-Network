@@ -11,8 +11,10 @@ class PostWithoutIdReqHandler(APIView):
     #handle a request without specifying postid (create new post or get public post)
     def get(self, request):
         #Todo: get all public posts
-        posts = [post.title for post in Post.objects.all()]
-        return Response(posts)
+        posts = Post.objects.all()
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data)
+        
     def post(self, request):
         curAuthor = None
         #Todo: curAuthor = author who sends request (find out this author)
