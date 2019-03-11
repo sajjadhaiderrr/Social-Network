@@ -4,3 +4,6 @@ from django.shortcuts import redirect, render, get_object_or_404
 
 def createPost(request):
     return render(request, "createpost.html")
+
+def viewPost(request):
+    return render(request, "viewposts.html")
