@@ -19,8 +19,8 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     #override some fields
-    author = AuthorSerializer(read_only=True)
-    comments = serializers.SerializerMethodField()
+    #author = AuthorSerializer(read_only=True)
+    #comments = serializers.SerializerMethodField()
     #Todo:
     #  count
     #  size
@@ -34,14 +34,14 @@ class PostSerializer(serializers.ModelSerializer):
         serializer = CommentSerializer(comments, many=True)
         return serializer.data
 
-    def create(self, validated_data):
-        #for fields which are no belonged to, might need to pop that data
-        author = self.context['Author']
-        post = Post.objects.create(author, **validated_data)
-        src = 'http://hostname/posts/{}'.format(post.postid)
-        post.source = post.origin = src
-        post.save()
-        return post
+    # def create(self, validated_data):
+    #     #for fields which are no belonged to, might need to pop that data
+    #     author = self.context['Author']
+    #     post = Post.objects.create(author, **validated_data)
+    #     src = 'http://hostname/posts/{}'.format(post.postid)
+    #     post.source = post.origin = src
+    #     post.save()
+    #     return post
 
 class CommentSerializer(serializers.ModelSerializer):
     author = AuthorSerializer(read_only=True)

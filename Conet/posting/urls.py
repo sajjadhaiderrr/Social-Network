@@ -2,7 +2,7 @@ from django.urls import path
 from . import post_api, views, Helper
 
 urlpatterns = [
-    path('', views.CreatePostHandler.as_view(), name='view_posts'),
+    path('', post_api.PostWithoutIdReqHandler.as_view(), name='view_posts'),
     path('create/', Helper.createPost, name='create_post'),
     #path('', post_api.PostWithoutIdReqHandler.as_view()),
     #path('<postid>/', post_api.PostWithIdReqHandler.as_view()),

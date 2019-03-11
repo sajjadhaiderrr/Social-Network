@@ -127,7 +127,7 @@ AUTH_USER_MODEL = 'Accounts.Author'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
-REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'conet.posting.pagination',
-    'PAGE_SIZE': 50
-}
+#REST_FRAMEWORK = {
+#    'DEFAULT_PAGINATION_CLASS': 'Conet.posting.pagination',
+#    'PAGE_SIZE': 50
+#}

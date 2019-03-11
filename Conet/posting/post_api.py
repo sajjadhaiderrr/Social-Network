@@ -4,17 +4,20 @@ from rest_framework.response import Response
 from posting.models import Post, Comment
 from posting.serializers import PostSerializer, CommentSerializer
 from django.shortcuts import render
+import json
 
 # Create your views here.
 class PostWithoutIdReqHandler(APIView):
     #handle a request without specifying postid (create new post or get public post)
     def get(self, request):
         #Todo: get all public posts
-        return Response()
+        posts = [post.title for post in Post.objects.all()]
+        return Response(posts)
     def post(self, request):
         curAuthor = None
         #Todo: curAuthor = author who sends request (find out this author)
-        serializer = PostSerializer(data=request.data, context={'author': curAuthor,})
+        serializer = PostSerializer(data=request.data)
+        #serializer = PostSerializer(data=request.data, context={'author': curAuthor,})
         if serializer.is_valid():
             serializer.save()
             #Todo: response success message on json format
