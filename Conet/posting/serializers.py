@@ -30,12 +30,13 @@ class PostSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_comment(self, obj):
-        comments = Comment.objects.filter(post=obj.postid)
+        comments = Comment.objects.filter(post=obj.postid).order_by('published')
         serializer = CommentSerializer(comments, many=True)
         return serializer.data
 
     def create(self, validated_data):
-        author = self.context['author']
+        #for fields which are no belonged to, might need to pop that data
+        author = self.context['Author']
         post = Post.objects.create(author, **validated_data)
         src = 'http://hostname/posts/{}'.format(post.postid)
         post.source = post.origin = src
