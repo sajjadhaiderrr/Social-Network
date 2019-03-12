@@ -50,7 +50,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
-    def create(self, validated_data):
-        author = self.context['author']
-        post = self.context['post']
-        return Comment.objects.create(author=author, post=post, **validated_data)
+    # def create(self, validated_data):
+    #     author = self.context['author']
+    #     post = self.context['post']
+    #     return Comment.objects.create(author=author, post=post, **validated_data)

@@ -48,7 +48,7 @@ function createPost() {
   url = url[0] + "//" + url[2] ;
   console.log(body);
   console.log(url)
-  return fetch(url + "/posts/", {
+  return fetch(url + "/posts/api/", {
     method: "POST",
     mode: "cors",
     cache: "no-cache",
