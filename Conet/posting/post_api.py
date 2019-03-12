@@ -6,17 +6,57 @@ from posting.serializers import PostSerializer, CommentSerializer
 from django.shortcuts import render
 import json
 
-# Create your views here.
-class PostWithoutIdReqHandler(APIView):
+### API START
+
+# path: /posts
+class ReadAllPublicPosts(APIView):
+    # get: All posts marked as public on the server
+    def get(self, request):
+        posts = Post.objects.filter(visibility="PUBLIC")
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data)
+
+# path: /posts/{post_id}
+class ReadSinglePost(APIView):
+    # get: Access to a single post with id = `post_id`
+    def get(self, request, post_id):
+        post = Post.objects.filter(pk=post_id)
+        serializer = PostSerializer(post[0])
+        return Response(serializer.data)
+
+# path: /posts/{post_id}/comments
+class ReadAndCreateAllCommentsOnSinglePost(APIView):
+    # get: Get comments of a post
+    def get(self, request, post_id):
+        comments = Comment.objects.filter(post=post_id)
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+
+    # post: Add a comment to a post
+    def post(self, request, post_id):
+        request.data["post"] = post_id
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            #Todo: response success message on json format
+            return Response()
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+### API END
+
+
+### HELPER START
+
+class PostReqHandler(APIView):
     #handle a request without specifying postid (create new post or get public post)
     def get(self, request):
         #Todo: get all public posts
         posts = Post.objects.all()
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
-        
+
     def post(self, request):
-        curAuthor = None
+        #curAuthor = None
         #Todo: curAuthor = author who sends request (find out this author)
         serializer = PostSerializer(data=request.data)
         #serializer = PostSerializer(data=request.data, context={'author': curAuthor,})
@@ -26,62 +66,19 @@ class PostWithoutIdReqHandler(APIView):
             return Response()
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class PostWithIdReqHandler(APIView):
-    #handle a reuqest with a postid
-    def get(self, request, postId):  
-        try:
-            post = Post.objects.get(pk=postId)
-        except Post.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        #Todo: authentication and decide whether to response the request post or 403
-        serializer = PostSerializer(post)
-        #Todo: response in json
-        return Response(serializer.data)
-
-    def put(self, request, postId):
-        try:
-            post = Post.objects.get(pk=postId)
-        except Post.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        #Todo: authentication for modification
-        serializer = PostSerializer(post, request.data)
-        #Todo: response in json
-        if serializer.is_valid():
-            serializer.save()
-            #Todo: response success message on json format
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    def delete(self, request, postId):
-        try:
-            post = Post.objects.get(pk=postId)
-        except Post.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        #Todo: authentication for deletion
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 class CommentReqHandler(APIView):
-    def get(self, request, postId):
-        try:
-            Post.objects.get(pk=postId)
-        except Post.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-
-        Comments = Comment.objects.fileter(postid=postId)
-        serializer = CommentSerializer(Comments)
-        #Todo: change response to json
+    def get(self, request):
+        comments = Comment.objects.all()
+        serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 
-    def post(self, request, postId):
-        try:
-            Post.objects.get(pk=postId)
-        except Post.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
 
-        curAuthor = None
-        serializer = PostSerializer(data=request.data, context={'author': curAuthor, 'post': postId})
+    def post(self, request):
+        serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             #Todo: response success message on json format
             return Response()
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+### HELPER END

@@ -4,7 +4,7 @@ window.onload = function() {
     let url = window.location.href.split("/")
     url = url[0] + "//" + url[2] ;
     console.log(url)
-    fetch(url + "/posts/", {
+    fetch(url + "/posts/api/", {
         method:             "GET",
         mode:               "cors",
         cache:              "no-cache",
