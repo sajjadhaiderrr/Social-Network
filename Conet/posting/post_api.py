@@ -38,7 +38,6 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            #Todo: response success message on json format
             return Response()
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
