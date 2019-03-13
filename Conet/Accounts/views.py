@@ -1,12 +1,20 @@
-from django.shortcuts import render, redirect
-from .models import Author
-from django.urls import reverse_lazy, reverse
-from django.views import generic
-from django.views import View
-from django.http import HttpResponse
-from .forms import SignUpForm, SearchUserForm
+import datetime
+import json
+
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+from django.shortcuts import redirect, render
+from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
+from django.views import View, generic
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+from .forms import SearchUserForm, SignUpForm
+from .models import Author, Friendship
+
 
 # Signup page
 class SignUpPage(View):
@@ -21,7 +29,12 @@ class SignUpPage(View):
     def post(self, request, *args, **kwargs):
         form = self.form(request.POST)
         if form.is_valid():
+            username = form.cleaned_data['username']
             form.save()
+            user = Author.objects.get(username=username)
+            user.host = request.META['HTTP_HOST']
+            user.url = user.host + "/" + str(user.id) + '/'
+            user.save()
             return redirect(self.success_url)
         else:
             #form #= SignUpForm()
@@ -44,7 +57,6 @@ class ProfilePage(View):
     def get(self, request, *args, **kwargs):
         # get current user and user that is being viewed
         user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
-        current_user = request.user
         search_form = self.search_form()
         return render(request, self.template_name, {'search_form': search_form, 'user_be_viewed':user_be_viewed})
     
@@ -61,18 +73,6 @@ class ProfilePage(View):
                 user_to_search = search_form.cleaned_data['user_name']
             return HttpResponse(user_to_search)
 
-'''
-class OthersProfilePage(View):
-    model = Author
-    user_being_viewed = Author
-    template_name = 'Accounts/otherprofile.html'
-
-    def get(self, request, *args, **kwargs):
-'''
-
-
-
-
 class HomePage(View):
     search_form = SearchUserForm
     success_url = reverse_lazy('home')
@@ -80,7 +80,7 @@ class HomePage(View):
     user=Author
 
     # if a user is not loged-in, he/she will get redirected to login page
-    @method_decorator(login_required(login_url='/accounts/login/'))
+    @method_decorator(login_required(login_url='/author/login/'))
     def dispatch(self, *args, **kwargs):
         return super().dispatch(*args, **kwargs)
 
