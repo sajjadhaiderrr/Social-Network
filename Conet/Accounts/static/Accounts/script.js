@@ -76,5 +76,5 @@ function sendInitRequestCallback(response){
 // function to initialize profile page based on if current user and the user he is viewing are friends or not.
 function init_profile_page(init, recv){
     request_body = {'authors':"['"+recv.id+"']"};
-    sendJSONHTTPPost(init.host+"/api/author/"+init.id+"/friends/", request_body, sendInitRequestCallback);
+    sendJSONHTTPPost(init.host+"/api/author/"+init.id+"/following/", request_body, sendInitRequestCallback);
 }

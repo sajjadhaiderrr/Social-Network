@@ -31,7 +31,7 @@ class ExtendAuthorSerializers(serializers.ModelSerializer):
         fields = ('id', 'email', 'bio', 'host', 'first_name', 'last_name', 'displayName', 'url', 'github','friends')
 
 
-class Helper_AuthorFriendIDSerializers(serializers.ModelSerializer):
+class Helper_FollowingSerializers(serializers.ModelSerializer):
     author = serializers.SerializerMethodField('get_receiver')
 
     def get_receiver(self, obj):
@@ -42,8 +42,26 @@ class Helper_AuthorFriendIDSerializers(serializers.ModelSerializer):
         fields = ("author",)
 
 
-class AuthorFriendIDSerializers(serializers.ModelSerializer):
-    friends = Helper_AuthorFriendIDSerializers(many=True, read_only=True)
+class FollowingSerializers(serializers.ModelSerializer):
+    friends = Helper_FollowingSerializers(many=True, read_only=True)
+    
     class Meta:
         model = Author
         fields = ('friends',)
+
+
+class Helper_FollowerSerializers(serializers.ModelSerializer):
+    author = serializers.SerializerMethodField('get_receiver')
+
+    def get_receiver(self, obj):
+        return obj.init_id.id
+
+    class Meta:
+        model = Friendship
+        fields = ("author",)
+
+class FollowerSerializers(serializers.ModelSerializer):
+    follower = Helper_FollowerSerializers(many=True, read_only=True)
+    class Meta:
+        model = Friendship
+        fields = ('follower',)

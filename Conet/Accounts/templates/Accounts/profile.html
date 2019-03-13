@@ -6,8 +6,8 @@
 {% block content %}
     {% if user.is_authenticated%}
         
-        {% if user.id == user_be_viewed.id %}
-            {{ user.username }}, this is your home page <br>
+        {% if request.user.id == user_be_viewed.id %}
+            {{ request.user.username }}, this is your home page <br>
         {% endif %}
 
         Login as: {{ request.user.username }}! <br>

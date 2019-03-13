@@ -10,7 +10,7 @@ from django.views import View, generic
 from Accounts.models import Author
 from Accounts.models import Friendship
 
-from .serializers import AuthorFriendIDSerializers
+from .serializers import FollowingSerializers, FollowerSerializers
 
 from rest_framework.response import Response
 
@@ -58,24 +58,71 @@ def friend_request(request):
     return HttpResponse(400)
 
 
-# for api/author/{author_id}/friends
-
-class AuthorFriends(View):
+# for api/author/{author_id}/following
+class AuthorFollowing(View):
     model=Author
     
-    # get a list of author's friends
+    # get a list of author's following authors
     def get(self, request,*args, **kwargs):
         response = {"query":'friends'}
         try:
             current_user = Author.objects.get(id=kwargs['pk'])
-            friends = AuthorFriendIDSerializers(current_user).data['friends']
-                
+            followings = FollowingSerializers(current_user).data['friends']
             response['authors'] = []
-            for friend in friends:
+            for friend in followings:
+                print(type(friend['author']))
                 response['authors'].append(str(friend['author']))
             return HttpResponse(json.dumps(response), 200)
         except:
             response['authors'] = []
+        return HttpResponse(400)
+
+
+# for api/author/{author_id}/follower/
+class AuthorFollower(View):
+    model=Author
+    
+    # get a list of author's followers
+    def get(self, request,*args, **kwargs):
+        response = {"query":'friends'}
+        try:
+            current_user = Author.objects.get(id=kwargs['pk'])
+            followers = FollowerSerializers(current_user).data['follower']
+            
+            response['authors'] = []
+            for friend in followers:
+                response['authors'].append(str(friend['author']))
+            return HttpResponse(json.dumps(response), 200)
+        except:
+            response['authors'] = []
+        return HttpResponse(400)
+    
+
+# for api/author/{author_id}/friends
+class AuthorFriends(View):
+
+    def get(self, request,*args, **kwargs):
+        response = {"query":'friends'}
+        try:
+            current_user = Author.objects.get(id=kwargs['pk'])
+            followings = FollowingSerializers(current_user).data['friends']
+            followers = FollowerSerializers(current_user).data['follower']
+            
+            following_id = []
+            for f in followings:
+                following_id.append(str(f['author']))
+
+            follower_id = []
+            for f in followers:
+                follower_id.append(str(f['author']))
+            
+            friends = list(set(following_id) & set(follower_id))
+            response['authors'] = friends
+            return HttpResponse(json.dumps(response), 200)
+
+        except:
+            response['authors'] = []
+            
         return HttpResponse(400)
     
     # Ask a service if anyone in the list is a friend
@@ -88,7 +135,7 @@ class AuthorFriends(View):
         response = {"query":'friends'}
         try:
             current_user = Author.objects.get(id=kwargs['pk'])
-            friends = AuthorFriendIDSerializers(current_user).data['friends']
+            friends = FollowingSerializers(current_user).data['friends']
             response['authors'] = []
             for friend in friends:
                 if str(friend['author']) in request_friends:
@@ -97,3 +144,5 @@ class AuthorFriends(View):
         except:
             response['authors'] = []
         return HttpResponse(400)
+
+
