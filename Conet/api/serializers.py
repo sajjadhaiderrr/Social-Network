@@ -25,10 +25,10 @@ class Helper_AuthorFriendSerializers(serializers.ModelSerializer):
 
 # Serializer for the api/author/{author_id}
 class ExtendAuthorSerializers(serializers.ModelSerializer):
-    friends = Helper_AuthorFriendSerializers(many=True, read_only=True)
+
     class Meta:
         model = Author
-        fields = ('id', 'email', 'bio', 'host', 'first_name', 'last_name', 'displayName', 'url', 'github','friends')
+        fields = ('id', 'email', 'bio', 'host', 'first_name', 'last_name', 'displayName', 'url', 'github')
 
 
 class Helper_FollowingSerializers(serializers.ModelSerializer):
