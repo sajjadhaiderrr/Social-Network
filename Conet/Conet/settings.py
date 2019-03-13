@@ -40,8 +40,7 @@ INSTALLED_APPS = [
     'Accounts',
     'rest_framework',
     'posting',
-    'bootstrap4',
-    'rest_framework',
+    'bootstrap4'
 ]
 
 MIDDLEWARE = [
