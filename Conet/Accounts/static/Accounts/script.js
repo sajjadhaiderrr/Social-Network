@@ -46,13 +46,13 @@ function sendUnFriendRequestCallback(objects){
 // function to send befriend request
 function sendFriendRequest(init, recv){
     users = {"query": "friendrequest", "author": init, "friend": recv};
-    sendJSONHTTPPost(recv.host+"/api/friendrequest/", users, sendFriendRequestCallback);
+    sendJSONHTTPPost(recv.host+"/friendrequest", users, sendFriendRequestCallback);
 }
 
 // function to send unfriend request
 function sendUnFriendRequest(init, recv){
     users = {"query": "unfriendrequest", "author": init, "friend": recv};
-    sendJSONHTTPPost(recv.host+"/api/unfriendrequest/", users, sendUnFriendRequestCallback);
+    sendJSONHTTPPost(recv.host+"/unfriendrequest", users, sendUnFriendRequestCallback);
 }
 
 // callback function after sending init
@@ -76,5 +76,5 @@ function sendInitRequestCallback(response){
 // function to initialize profile page based on if current user and the user he is viewing are friends or not.
 function init_profile_page(init, recv){
     request_body = {'authors':"['"+recv.id+"']"};
-    sendJSONHTTPPost(init.host+"/api/author/"+init.id+"/following/", request_body, sendInitRequestCallback);
+    sendJSONHTTPPost(init.host+"/author/"+init.id+"/following", request_body, sendInitRequestCallback);
 }

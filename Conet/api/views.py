@@ -110,6 +110,30 @@ class AuthorFollowing(View):
         except:
             response['authors'] = []
         return HttpResponse(400)
+    
+    def post(self, request,*args, **kwargs):
+        request_body = json.loads(request.body.decode())
+        request_friends = request_body['authors']
+        for friend in request_friends:
+            friend = str(friend)
+        response = {"query":'friends'}
+        try:
+            current_user = Author.objects.get(id=kwargs['pk'])
+            followings = FollowingSerializers(current_user).data['friends']
+            
+            
+            following_id = []
+            for f in followings:
+                following_id.append(str(f['author']))
+            
+            response['authors'] = []
+            for friend in following_id:
+                if str(friend) in request_friends:
+                    response['authors'].append(str(friend))
+            return HttpResponse(json.dumps(response), 200)
+        except:
+            response['authors'] = []
+        return HttpResponse(400)
 
 
 # for api/author/{author_id}/follower/
