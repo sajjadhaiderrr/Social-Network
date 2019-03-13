@@ -11,4 +11,6 @@ urlpatterns = [
     path('author/<uuid:pk>/follower', csrf_exempt(views.AuthorFollower.as_view()), name='authorfollower'),
     path('author/<uuid:pk>/friends', csrf_exempt(views.AuthorFriends.as_view()), name='authorfriends'),
     path('author/<uuid:pk>', csrf_exempt(views.AuthorAPI.as_view()), name='author'),
+    path('author/<authorid>/friends/<authorid>', views.TwoAuthorsRelation.as_view(), name='two_authors_relation'),
+    path('author/posts', views.AuthorizedPostsHandler.as_view(), name='authorizedposts'),
 ]

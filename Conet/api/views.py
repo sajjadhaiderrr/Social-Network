@@ -6,6 +6,11 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View, generic
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.db.models import Q
+
 
 from Accounts.models import Author
 from Accounts.models import Friendship
@@ -135,7 +140,6 @@ class AuthorFollowing(View):
             response['authors'] = []
         return HttpResponse(400)
 
-
 # for api/author/{author_id}/follower/
 class AuthorFollower(View):
     model=Author
@@ -213,5 +217,34 @@ class AuthorFriends(View):
         except:
             response['authors'] = []
         return HttpResponse(400)
+
+#reference: https://docs.djangoproject.com/en/2.1/ref/request-response/
+
+# service/author/<authorid>/friends/<authorid>
+class TwoAuthorsRelation(APIView):
+    def get(self, request, author_id1, author_id2):
+        prefix_url = request.get_host() + "/"
+        author_url1, author_url2 = prefix_url + author_id1, prefix_url + author_id2
+
+        author1 = Author.objects.filter(id=author_id1)
+        author2 = Author.objects.filter(id=author_id2)
+
+        if (author1.exists() and author2.exists()):
+            relations = Author.objects.filter((Q(init_id=author_id1)&Q(recv_id=author_id2))|
+                                            (Q(init_id=author_id2)&Q(recv_id=author_id1)))
+            areFriends = "True" if (relations.exists() and relations[0].status == 1) else "False"
+        else:
+            #will be done on next part, at least one of author not exists on this server
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+        res_body = {"query": "friends",
+                    "authors": [author_url1, author_url2],
+                    "friends":  areFriends}
+        return Response(res_body)
+
+# service/author/posts
+class AuthorizedPostsHandler(APIView):
+    def get(self, request):
+        return Response()
 
 
