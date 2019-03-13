@@ -1,0 +1,46 @@
+{% extends 'Accounts/base.html' %}
+{% csrf_token %}
+{% block title %}Search Results{% endblock %}
+{% load static %}
+{% block content %}
+    {% if user.is_authenticated%}
+        {% include 'Accounts/nav.html' %}
+        {% for author in authors %}
+        <div class="card search-results">
+            <div class="row">
+                <div class="card-body col-sm-8">
+                    <h3 class="card-title">{{author.displayName}}</h3>
+                    <dl class="row">
+                        <dt class="col-sm-3">Biography</dt>
+                        <dd class="col-sm-9">
+                            {% if author.bio == ''%}
+                                None
+                            {% else %}
+                                {{author.bio}}
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-3">Host</dt>
+                        <dd class="col-sm-9">
+                            {{author.host}}
+                        </dd>
+
+                        <dt class="col-sm-3">Github</dt>
+                        <dd class="col-sm-9">
+                            <a href="{{author.host}}">{{author.github}}</a>
+                        </dd>
+
+
+                    </dl>
+                </div>
+                <div class="card-body col-sm-2" >
+                    <a class='btn btn-primary align-middle' href="{{author.url}}">View more</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+
+    {% endif %}
+
+{% endblock %}

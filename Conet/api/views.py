@@ -22,7 +22,7 @@ from rest_framework.response import Response
 # Create your views here.
 
 
-class AuthorAPI(View):
+class AuthorAPI(APIView):
     model = Author
 
     def get(self, request,*args, **kwargs):
@@ -49,10 +49,10 @@ class AuthorAPI(View):
             for friend in friends:
                 friend_data = ExtendAuthorSerializers(Author.objects.get(id=friend)).data 
                 response['friends'].append(str(friend_data))
-            return HttpResponse(json.dumps(response), 200)
+            return Response(response)
         except:
             response['authors'] = []
-        return HttpResponse(400)
+        return Response(response, status=400)
 
 
 
@@ -114,7 +114,7 @@ class AuthorFollowing(View):
             return HttpResponse(json.dumps(response), 200)
         except:
             response['authors'] = []
-        return HttpResponse(400)
+        return HttpResponse(json.dumps(response), 400)
     
     def post(self, request,*args, **kwargs):
         request_body = json.loads(request.body.decode())
@@ -138,10 +138,10 @@ class AuthorFollowing(View):
             return HttpResponse(json.dumps(response), 200)
         except:
             response['authors'] = []
-        return HttpResponse(400)
+        return HttpResponse(json.dumps(response), 400)
 
 # for api/author/{author_id}/follower/
-class AuthorFollower(View):
+class AuthorFollower(APIView):
     model=Author
     
     # get a list of author's followers
@@ -154,14 +154,14 @@ class AuthorFollower(View):
             response['authors'] = []
             for friend in followers:
                 response['authors'].append(str(friend['author']))
-            return HttpResponse(json.dumps(response), 200)
+            return Response(response)
         except:
             response['authors'] = []
-        return HttpResponse(400)
+        return Response(response, status=400)
     
 
 # for api/author/{author_id}/friends
-class AuthorFriends(View):
+class AuthorFriends(APIView):
 
     def get(self, request,*args, **kwargs):
         response = {"query":'friends'}
@@ -180,12 +180,12 @@ class AuthorFriends(View):
             
             friends = list(set(following_id) & set(follower_id))
             response['authors'] = friends
-            return HttpResponse(json.dumps(response), 200)
+            return Response(response)
 
         except:
             response['authors'] = []
             
-        return HttpResponse(400)
+        return Response(response, status=400)
     
     # Ask a service if anyone in the list is a friend
     @method_decorator(csrf_exempt)
@@ -213,10 +213,10 @@ class AuthorFriends(View):
             for friend in friends:
                 if str(friend) in request_friends:
                     response['authors'].append(str(friend))
-            return HttpResponse(json.dumps(response), 200)
+            return Response(response)
         except:
             response['authors'] = []
-        return HttpResponse(400)
+        return Response(response, status=400)
 
 #reference: https://docs.djangoproject.com/en/2.1/ref/request-response/
 
@@ -225,13 +225,12 @@ class TwoAuthorsRelation(APIView):
     def get(self, request, author_id1, author_id2):
         prefix_url = request.get_host() + "/"
         author_url1, author_url2 = prefix_url + author_id1, prefix_url + author_id2
-
+        
         author1 = Author.objects.filter(id=author_id1)
         author2 = Author.objects.filter(id=author_id2)
-
         if (author1.exists() and author2.exists()):
-            relations = Author.objects.filter((Q(init_id=author_id1)&Q(recv_id=author_id2))|
-                                            (Q(init_id=author_id2)&Q(recv_id=author_id1)))
+            relations = Friendship.objects.filter((Q(init_id=author_id1)&Q(recv_id=author_id2))|    # pylint: disable=maybe-no-member
+                                            (Q(init_id=author_id2)&Q(recv_id=author_id1)))          
             areFriends = "True" if (relations.exists() and relations[0].status == 1) else "False"
         else:
             #will be done on next part, at least one of author not exists on this server

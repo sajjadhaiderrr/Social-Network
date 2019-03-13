@@ -5,7 +5,8 @@
 {% load static %}
 {% block content %}
     {% if user.is_authenticated%}
-        
+        {% include 'Accounts/nav.html' %}
+          
         {% if request.user.id == user_be_viewed.id %}
             {{ request.user.username }}, this is your home page <br>
         {% endif %}
@@ -18,13 +19,10 @@
 
         <!-- If user is viewing his own page. Show the search bar-->
         {% if user.id == user_be_viewed.id %}
-            <form method="post">
-                {% csrf_token %}
-                {{ search_form.as_p }}
-                <button type="submit">search</button>
-            </form>
+            
         {% else %}
             <script>
+            const csrf_token = "{{ csrf_token }}"
             current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
             user_be_viewed =  {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
             init_profile_page(current_user, user_be_viewed);

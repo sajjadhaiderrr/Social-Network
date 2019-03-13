@@ -17,9 +17,10 @@ function sendJSONHTTPPost(url, objects, callback){
     if (xhr.overrideMimeType) {
         xhr.overrideMimeType("application/json");
     }
-    xhr.open("POST", "http://"+url);
+    xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("x-csrftoken", csrf_token);
     xhr.send(JSON.stringify(objects));
     
 }
@@ -75,6 +76,12 @@ function sendInitRequestCallback(response){
 
 // function to initialize profile page based on if current user and the user he is viewing are friends or not.
 function init_profile_page(init, recv){
+    console.log("initing")
     request_body = {'authors':"['"+recv.id+"']"};
     sendJSONHTTPPost(init.host+"/author/"+init.id+"/following", request_body, sendInitRequestCallback);
+}
+
+// function to search other users
+function search_other_users(){
+
 }
