@@ -10,12 +10,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
+from django.http import JsonResponse
 
 
 from Accounts.models import Author
 from Accounts.models import Friendship
 
-from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers
+from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers, AuthorSerializer
 
 from rest_framework.response import Response
 
@@ -231,7 +232,7 @@ class TwoAuthorsRelation(APIView):
 
         if (author1.exists() and author2.exists()):
             relations = Author.objects.filter((Q(init_id=author_id1)&Q(recv_id=author_id2))|
-                                            (Q(init_id=author_id2)&Q(recv_id=author_id1)))
+                                            (Q(init_id=author_id2)&Q(recv_id=author_id1)))  
             areFriends = "True" if (relations.exists() and relations[0].status == 1) else "False"
         else:
             #will be done on next part, at least one of author not exists on this server
@@ -247,4 +248,31 @@ class AuthorizedPostsHandler(APIView):
     def get(self, request):
         return Response()
 
+#reference: https://stackoverflow.com/questions/12615154/how-to-get-the-currently-logged-in-users-user-id-in-django
+
+#user profile
+class AuthorProfileHandler(APIView):
+    def get(self, request, authorid):
+        try:
+            author = Author.objects.get(pk=authorid)
+            serializer = AuthorSerializer(author)
+            return JsonResponse(serializer.data)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+    def put(self, request, authorid):
+        try:
+            reqed_author = Author.objects.get(pk=authorid)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        if request.user.id != authorid:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = AuthorSerializer(reqed_author, data=request.data)
+        serializer.is_valid()
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 

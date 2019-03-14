@@ -5,6 +5,20 @@ from rest_framework import serializers
 import json
 
 
+#Author serializer for GET, PUT author profile
+class AuthorSerializer(serializers.ModelSerializer):
+    #author fields
+    #author model doesn't need to store url, which gonna be moved to serializer
+    url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Author
+        fields = '__all__'
+
+    def get_url(self, obj):
+        return "{}/author/{}".format(obj.host, obj.id)
+
+
 
 # Helper serializer for the api/author/{author_id}
 class Helper_AuthorSerializers(serializers.ModelSerializer):
