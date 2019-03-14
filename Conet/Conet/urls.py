@@ -23,7 +23,6 @@ urlpatterns = [
     path('author/', include('django.contrib.auth.urls')),
     path('', include('api.urls'), name='api'),
     path('posts/', include('posting.urls')),
-    path('', include('posting.urls')),
     path('', HomePage.as_view(), name='home'),
 
 ]

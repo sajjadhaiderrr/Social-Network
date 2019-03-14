@@ -32,8 +32,8 @@ class SignUpPage(View):
             username = form.cleaned_data['username']
             form.save()
             user = Author.objects.get(username=username)
-            user.host = request.META['HTTP_HOST']
-            user.url = user.host + "/" + str(user.id) + '/'
+            user.host = 'http://'+request.META['HTTP_HOST']
+            user.url = user.host + "/author/" + str(user.id) + '/'
             user.save()
             return redirect(self.success_url)
         else:
@@ -57,14 +57,14 @@ class ProfilePage(View):
     def get(self, request, *args, **kwargs):
         # get current user and user that is being viewed
         user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
-        search_form = self.search_form()
-        return render(request, self.template_name, {'search_form': search_form, 'user_be_viewed':user_be_viewed})
-    
+        return render(request, self.template_name, {'user_be_viewed':user_be_viewed})
+    '''
     # receive a POST from search box
     def post(self, request, *args, **kwargs):
         user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
         current_user = request.user
-
+        print("asdfasdf")
+        
         # if you are viewing your own website
         if (user_be_viewed.id == current_user.id):
             search_form = self.search_form(request.POST)
@@ -72,6 +72,8 @@ class ProfilePage(View):
             if search_form.is_valid():
                 user_to_search = search_form.cleaned_data['user_name']
             return HttpResponse(user_to_search)
+            '''
+            
 
 class HomePage(View):
     search_form = SearchUserForm
@@ -88,3 +90,11 @@ class HomePage(View):
     def get(self, request, *args, **kwargs):
         url = reverse("profile", args=[request.user.id])
         return redirect(url)
+
+
+class SearchResultPage(View):
+    template_name = 'Accounts/searchresult.html'
+    def get(self, request, *args, **kwarg):
+        search_term = request.GET['search']
+        authors = Author.objects.filter(displayName__contains=search_term).exclude(id=request.user.id)
+        return render(request, self.template_name, {'authors':authors})
