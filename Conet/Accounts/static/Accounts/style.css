@@ -40,6 +40,11 @@
     margin-left: 5%;
 }
 
+.content{
+    margin-left:5%;
+    margin-top:5%;
+}
+
 @keyframes fadein{
     from {opacity: 0;}
     to {opacity: 1;}
