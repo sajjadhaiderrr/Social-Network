@@ -22,7 +22,30 @@ function sendJSONHTTPPost(url, objects, callback){
     xhr.setRequestHeader("Accept", "application/json");
     xhr.setRequestHeader("x-csrftoken", csrf_token);
     xhr.send(JSON.stringify(objects));
-    
+}
+
+function sendJSONHTTPGet(url, objects, callback){
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState==4) {
+            try {
+                if (xhr.status==200) {
+                    callback(xhr.response);
+                }
+            } 
+            catch(e) {
+                alert('Error: ' + e.name);
+            }
+        }
+    };
+    if (xhr.overrideMimeType) {
+        xhr.overrideMimeType("application/json");
+    }
+    xhr.open("GET", url);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.setRequestHeader("Accept", "application/json");
+    xhr.setRequestHeader("x-csrftoken", csrf_token);
+    xhr.send(JSON.stringify(objects));
 }
 
 // callback function after sending friend request
@@ -78,7 +101,7 @@ function sendInitRequestCallback(response){
 function init_profile_page(init, recv){
     console.log("initing")
     request_body = {'authors':"['"+recv.id+"']"};
-    sendJSONHTTPPost(init.host+"/author/"+init.id+"/following", request_body, sendInitRequestCallback);
+    sendJSONHTTPGet(init.host+"/author/"+init.id+"/following", request_body, sendInitRequestCallback);
 }
 
 // function to search other users
