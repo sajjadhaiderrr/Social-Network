@@ -48,7 +48,7 @@ function createPost() {
   url = url[0] + "//" + url[2] ;
   console.log(body);
   console.log(url)
-  return fetch(url + "/posts/api/", {
+  return fetch(url + "/api/posts", {
     method: "POST",
     mode: "cors",
     cache: "no-cache",
@@ -64,7 +64,7 @@ function createPost() {
       alert("Success")
       let url = window.location.href.split("/");
       url = url[0] + "//" + url[2];
-      window.location = url + "/posts/view";
+      window.location = url;
     }
     else {
       alert("Error: " + response.status);
