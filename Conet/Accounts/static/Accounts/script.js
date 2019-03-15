@@ -210,3 +210,15 @@ function getFriends(user){
     request_body={};
     sendJSONHTTPGet(url, request_body, sendFriendsCallback);
 }
+
+function get_num_friend_callback(response){
+    response = JSON.parse(response);
+    num_friends = response.authors.length;
+    document.getElementById("num-friends").innerText = num_friends;
+}
+
+function init_home_page(user){
+    request_body = {};
+    friend_url = user.url + "friends"
+    sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
+}
