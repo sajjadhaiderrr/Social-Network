@@ -6,22 +6,33 @@
 {% block content %}
     {% if user.is_authenticated%}
         {% include 'Accounts/nav.html' %}
-          
-        {% if request.user.id == user_be_viewed.id %}
-            {{ request.user.username }}, this is your home page <br>
-        {% endif %}
+        <script>
+            const csrf_token = '{{ csrf_token }}';
+            var current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
+            init_home_page(current_user);
+        </script>
+        <div class="content row">  
+            <div class='col-sm-3' style="background-color: #ffffff;">
+                <h1 class="h1 text-primary center-text">{{ user.displayName }}</h1>
+                <div id='user-stats' class='row'>
+                    <div class='col-sm-6'>
+                        <p class="text-secondary center-text stats" >Friends</p>
+                        <h3 id="num-friends" class="text-primary center-text" style="text-align: center;"></h3>
+                    </div>
+                    <div class='col-sm-6'>
+                        <p class="text-secondary stats center-text">Posts</p>
+                        <h3 id="num-posts" class="text-primary center-text">0</h3>
+                    </div>
+                </div>
+                <a class="btn btn-primary" style="display: block;margin-left: auto; margin-right: auto; margin-bottom: 5%"  href="/posts/create/">Create a Post</a>
+                
+            </div>
+            <div class='col-sm-8' style="background-color: #ffffff; margin-left:1%">
+                Post cards goes here.
+            </div>
+            
 
-        Login as: {{ request.user.username }}! <br>
-        Viewing:  {{ user_be_viewed.username }}!
-        <br>
-        <a href="{% url 'logout' %}">logout</a>
-        <br>
-
-        <!-- If user is viewing his own page. Show the search bar-->
-        
-    {% else %}
-        <a href="{% url 'login' %}">Login</a>
-        <br>
-        <a href="{% url 'signup' %}">Create an account</a>
+            
+        </div>
     {% endif %}
 {% endblock %}
