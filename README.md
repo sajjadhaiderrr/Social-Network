@@ -12,15 +12,26 @@ This project is consisted by three apps:
         - Login
         - Search for other users by their display names.
         - Viewing profile of current logined user.
+            
         - Viewing profile of other user's profile.
+            
         - Following other users.
         - Unfollowing other users.
     - Also contains pages that showing:
+        - Login page
+            - `/author/signin/`
+        - Sign-up page
+            - `/author/signup/`
         - Current user's home page
+            - `/author/{author_id}/`
         - Current user's profile
+            - `/author/{author_id}/info/`
         - Current user's friends
+            - `/author/{author_id}/friends/`
         - Other user's profile
+            - `/author/{author_id}/info/`
         - Search result of other users.
+            - `/author/searchresult/?search={term}`
 - api
     - The following apis are implemented:
         - Authors:
