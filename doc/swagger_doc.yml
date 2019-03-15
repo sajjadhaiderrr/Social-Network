@@ -226,7 +226,7 @@ paths:
   /author/{author1_id}/friends/{author2_id}:
     get:
       summary: Ask if 2 authors are friends
-      description: |
+      description:
         STRIP the `http://` and `https://` from the URI in the restful query
         If you need a template (optional): `GET http://service/author/<authorid1>/friends/<service2>/author/<authorid2>`
         where `authorid1` = `de305d54-75b4-431b-adb2-eb6b9e546013` (actually `author` `http://service/author/de305d54-75b4-431b-adb2-eb6b9e546013` )
