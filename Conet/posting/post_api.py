@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from posting.models import Post, Comment
 from posting.serializers import PostSerializer, CommentSerializer
 from django.shortcuts import render
+from Accounts.models import Author
 import json
 
 ### API START
@@ -55,15 +56,31 @@ class PostReqHandler(APIView):
         return Response(serializer.data)
 
     def post(self, request):
-        #curAuthor = None
+        curAuthor = Author.objects.get(id=request.user.id)
+        origin = request.scheme+ "://" +request.get_host()+ "/"
         #Todo: curAuthor = author who sends request (find out this author)
-        serializer = PostSerializer(data=request.data)
-        #serializer = PostSerializer(data=request.data, context={'author': curAuthor,})
+        #serializer = PostSerializer(data=request.data)
+        serializer = PostSerializer(data=request.data, context={'author': curAuthor, 'origin': origin})
         if serializer.is_valid():
             serializer.save()
             #Todo: response success message on json format
             return Response()
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, postid):
+        if (not Post.objects.filter(pk=postid).exists()):
+            return Response("Invalid Post", satus=404)
+        else:
+            post = Post.objects.get(pk=postid)
+            current_user = Author.objects.get(pk=request.user.id)
+
+            if current_user == post.author.id:
+                serializer = PostSerializer(data=request.data)
+
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response()
+                return Response("Invalid data", serializer.errors, status=400)
 
 class CommentReqHandler(APIView):
     def get(self, request):
