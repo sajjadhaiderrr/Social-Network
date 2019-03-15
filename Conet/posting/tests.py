@@ -86,7 +86,7 @@ def test_CommentReqHandler(self):
 
     comment_url = reverse('comment', args=[post_id])
     response = self.client_comp.post(comment_url, {
-        'post':'testserver',
+        'post':post,
         'comment': {
         'author': { 'id': self.author_base.id  },
         'comment': 'testcomment'
