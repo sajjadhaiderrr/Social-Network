@@ -38,7 +38,7 @@ class PostSerializer(serializers.ModelSerializer):
         #for fields which are no belonged to, might need to pop that data
         author = self.context['author']
         origin = self.context['origin']
-        post = Post.objects.create(origin=origin, source=origin, **validated_data)
+        Post.objects.create(author=author, origin=origin, source=origin, **validated_data)
         src = 'http://hostname/posts/{}'.format(post.postid)
         post.source = post.origin = src
         post.save()
