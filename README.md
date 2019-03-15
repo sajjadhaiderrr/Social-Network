@@ -45,7 +45,7 @@ This project is consisted by three apps:
             - `/posts`
                 - `GET`: Get all posts marked as public on the server
             - `/posts/create`
-                - `GET`: Create a new post
+                - `POST`: Create a new post
             - `/posts/{post_id}`
                 - `GET`: Get a post by post id
             - `/posts/{post_id}/comments`
