@@ -14,6 +14,8 @@ from django.db.models import Q
 
 from Accounts.models import Author
 from Accounts.models import Friendship
+from posting.models import Post
+from posting.serializers import PostSerializer
 
 from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers
 
@@ -262,6 +264,23 @@ class TwoAuthorsRelation(APIView):
 # service/author/posts
 class AuthorizedPostsHandler(APIView):
     def get(self, request):
-        return Response()
+        allposts = []
+
+        #get the posts of all your friends whos visibility is set to FRIENDS
+        curAuthor = request.user.id
+        relations = Friendship.objects.filter(init_id = curAuthor, status = 1)
+        for relation in relations:
+            friend_id = relation.recv_id          
+            posts = Post.objects.filter(postid = friend_id, visibility = "FRIENDS")
+            for i in posts:
+                allposts.append(i)
+        
+        #get all publics posts
+        public = Post.objects.filter(visibility="PUBLIC")
+        for x in public:
+            allposts.append(x)
+        
+        serializer = PostSerializer(allposts, many=True)
+        return Response(serializer.data)
 
 
