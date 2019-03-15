@@ -42,11 +42,13 @@ This project is consisted by three apps:
 - posting
     - The following apis are implemented:
         - Posts:           
-            - `/posts`
+            - `/posts/`
                 - `GET`: Get all posts marked as public on the server
                 - `POST`: Create a new post
             - `/posts/{post_id}`
                 - `GET`: Get a post by post id
+                - `PUT`: Update a post by post id
+                
             - `/posts/{post_id}/comments`
                 - `GET`: Get comments of a post
                 - `POST`: Add a comment to a post
