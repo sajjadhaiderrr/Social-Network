@@ -13,7 +13,7 @@ function uploadFile() {
   if (file) {
     reader.readAsDataURL(file);
   }
-
+  }
 }
 
 function test() {
@@ -42,7 +42,7 @@ function createPost() {
     form.content = document.getElementById("content").value;
   }
 
-  elif (form.contentType == "image/png;base64" || form.contentType == "image/jpeg;base64") {
+  else if (form.contentType == "image/png;base64" || form.contentType == "image/jpeg;base64") {
     form.content = uploadedImage;
   }
 
