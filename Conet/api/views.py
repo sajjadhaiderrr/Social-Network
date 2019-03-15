@@ -59,7 +59,7 @@ class AuthorAPI(APIView):
             response['friends'] = []
             for friend in friends:
                 friend_data = ExtendAuthorSerializers(Author.objects.get(id=friend)).data 
-                response['friends'].append(str(friend_data))
+                response['friends'].append(json.dumps(friend_data))
             return Response(response, status=200)
         except:
             response['authors'] = []

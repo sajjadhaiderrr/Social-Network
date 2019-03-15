@@ -2,7 +2,7 @@ import datetime
 import json
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
@@ -57,22 +57,10 @@ class ProfilePage(View):
     def get(self, request, *args, **kwargs):
         # get current user and user that is being viewed
         user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
-        return render(request, self.template_name, {'user_be_viewed':user_be_viewed})
-    '''
-    # receive a POST from search box
-    def post(self, request, *args, **kwargs):
-        user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
         current_user = request.user
-        print("asdfasdf")
-        
-        # if you are viewing your own website
-        if (user_be_viewed.id == current_user.id):
-            search_form = self.search_form(request.POST)
-            # get the user name from input box, 
-            if search_form.is_valid():
-                user_to_search = search_form.cleaned_data['user_name']
-            return HttpResponse(user_to_search)
-            '''
+        if(current_user != user_be_viewed):
+            return HttpResponseRedirect(user_be_viewed.url+"info/")
+        return render(request, self.template_name, {'user_be_viewed':user_be_viewed})
             
 
 class HomePage(View):
@@ -98,3 +86,17 @@ class SearchResultPage(View):
         search_term = request.GET['search']
         authors = Author.objects.filter(displayName__contains=search_term).exclude(id=request.user.id)
         return render(request, self.template_name, {'authors':authors})
+
+class InfoPage(View):
+    template_name = 'Accounts/info.html'
+    
+    def get(self, request, *args, **kwargs):
+        user_be_viewed = Author.objects.get(id=kwargs['pk'])
+        
+        return render(request, self.template_name, {'user_be_viewed':user_be_viewed})
+
+class FriendsPage(View):
+    template_name = 'Accounts/friendslist.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name,{})
