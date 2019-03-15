@@ -30,7 +30,7 @@ class PostSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_comment(self, obj):
-        comments = Comment.objects.filter(post=obj.postid).order_by('published')
+        comments = Comment.objects.filter(post=obj.postid).order_by('published')    # pylint: disable=maybe-no-member
         serializer = CommentSerializer(comments, many=True)
         return serializer.data
 
@@ -38,8 +38,8 @@ class PostSerializer(serializers.ModelSerializer):
         #for fields which are no belonged to, might need to pop that data
         author = self.context['author']
         origin = self.context['origin']
-        Post.objects.create(author=author, origin=origin, source=origin, **validated_data)
-        src = 'http://hostname/posts/{}'.format(post.postid)
+        post = Post.objects.create(author=author, origin=origin, source=origin, **validated_data)  # pylint: disable=maybe-no-member
+        src = 'http://hostname/posts/{}'.format(post.postid)    # pylint: disable=maybe-no-member
         post.source = post.origin = src
         post.save()
         return post
