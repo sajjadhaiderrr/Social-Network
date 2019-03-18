@@ -1,22 +1,9 @@
 from rest_framework import serializers
 from posting.models import Post, Comment
 from Accounts.models import Author
+from api.serializers import AuthorSerializer
 
 #reference: https://www.django-rest-framework.org/api-guide
-
-#This class is gonna be moved to app Accounts
-class AuthorSerializer(serializers.ModelSerializer):
-    #author fields
-    #author model doesn't need to store url, which gonna be moved to serializer
-    url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Author
-        fields = '__all__'
-
-    def get_url(self, obj):
-        return "{}/author/{}".format(obj.host, obj.id)
-
 class PostSerializer(serializers.ModelSerializer):
     #override some fields
     #author = AuthorSerializer(read_only=True)

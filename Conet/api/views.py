@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.db.models import Q
+from django.http import JsonResponse
 
 
 from Accounts.models import Author
@@ -17,8 +18,7 @@ from Accounts.models import Friendship
 from posting.models import Post
 from posting.serializers import PostSerializer
 
-from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers
-
+from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers, AuthorSerializer
 from rest_framework.response import Response
 
 # Create your views here.
@@ -246,7 +246,7 @@ class TwoAuthorsRelation(APIView):
             following_id = []
             for f in followings:
                 following_id.append(str(f['author']))
-
+                
             follower_id = []
             for f in followers:
                 follower_id.append(str(f['author']))
@@ -283,4 +283,31 @@ class AuthorizedPostsHandler(APIView):
         serializer = PostSerializer(allposts, many=True)
         return Response(serializer.data)
 
+#reference: https://stackoverflow.com/questions/12615154/how-to-get-the-currently-logged-in-users-user-id-in-django
+
+#user profile
+class AuthorProfileHandler(APIView):
+    def get(self, request, authorid):
+        try:
+            author = Author.objects.get(pk=authorid)
+            serializer = AuthorSerializer(author)
+            return JsonResponse(serializer.data)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+    def put(self, request, authorid):
+        try:
+            reqed_author = Author.objects.get(pk=authorid)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        if request.user.id != authorid:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        
+        serializer = AuthorSerializer(reqed_author, data=request.data)
+        serializer.is_valid()
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 

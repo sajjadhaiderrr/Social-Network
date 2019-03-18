@@ -10,10 +10,12 @@ from django.views import View, generic
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .forms import SearchUserForm, SignUpForm
 from .models import Author, Friendship
+from api.serializers import AuthorSerializer
 
 
 # Signup page
@@ -87,13 +89,29 @@ class SearchResultPage(View):
         authors = Author.objects.filter(displayName__contains=search_term).exclude(id=request.user.id)
         return render(request, self.template_name, {'authors':authors})
 
-class InfoPage(View):
+class InfoPage(APIView):
     template_name = 'Accounts/info.html'
     
-    def get(self, request, *args, **kwargs):
-        user_be_viewed = Author.objects.get(id=kwargs['pk'])
-        
-        return render(request, self.template_name, {'user_be_viewed':user_be_viewed})
+    def get(self, request, authorId):
+        user_be_viewed = Author.objects.get(id=authorId)
+        from_one_author = True if(request.user.id == user_be_viewed.id) else False
+        return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed':user_be_viewed})
+
+    def put(self, request, authorId):
+        try:
+            reqed_author = Author.objects.get(pk=authorId)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if request.user.id != authorId:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        serializer = AuthorSerializer(reqed_author, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            from_one_author = True
+            return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed':reqed_author})
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class FriendsPage(View):
     template_name = 'Accounts/friendslist.html'

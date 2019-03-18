@@ -12,16 +12,20 @@
             load_user_profile(current_user, user_be_viewed)
         </script>
         
-        <div class='content'> 
+        <div class='content profile-content'> 
             <div class='profile-outer-div' id='profile-outer-div'>
             </div>
-            {% if request.user.id != current_user.id %}
+            {% if not from_one_author %}
                 <script>
-                init_profile_page(current_user, user_be_viewed);
+                    init_profile_page(current_user, user_be_viewed);
                 </script>
-                <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Be a friend</a>
+                <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Be a
+                    friend</a>
                 <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfriend</a>
+            {% else %}
+                <button id="btn-edit" class="btn btn-primary" onclick="editProfile()">Edit</button>
             {% endif %}
+            
         </div>
     {% else %}
         <a href="{% url 'login' %}">Login</a>

@@ -60,6 +60,10 @@
     text-align: center;
 }
 
+.profile-content{
+    
+}
+
 @keyframes fadein{
     from {opacity: 0;}
     to {opacity: 1;}

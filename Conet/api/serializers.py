@@ -4,7 +4,18 @@ from django.db import models
 from rest_framework import serializers
 import json
 
+#Author serializer for GET, PUT author profile
+class AuthorSerializer(serializers.ModelSerializer):
+    #author fields
+    #author model doesn't need to store url, which gonna be moved to serializer
+    url = serializers.SerializerMethodField()
+    class Meta:
+        model = Author
+        #fields = '__all__'
+        fields = ('id', 'bio', 'displayName', 'github', 'url')
 
+    def get_url(self, obj):
+        return "{}/author/{}".format(obj.host, obj.id)
 
 # Helper serializer for the api/author/{author_id}
 class Helper_AuthorSerializers(serializers.ModelSerializer):
@@ -22,7 +33,6 @@ class Helper_AuthorFriendSerializers(serializers.ModelSerializer):
     class Meta:
         model = Friendship
         fields = ("author",)
-
 # Serializer for the api/author/{author_id}
 class ExtendAuthorSerializers(serializers.ModelSerializer):
 
