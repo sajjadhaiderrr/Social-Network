@@ -1,0 +1,36 @@
+{% extends 'Accounts/base.html' %}
+{% csrf_token %}
+{% block title %}Info{% endblock %}
+{% load static %}
+{% block content %}
+    {% if user.is_authenticated%}
+        {% include 'Accounts/nav.html' %}
+        <script>
+            const csrf_token = "{{ csrf_token }}"
+            current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
+            user_be_viewed =  {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
+            load_user_profile(current_user, user_be_viewed)
+        </script>
+        
+        <div class='content profile-content'> 
+            <div class='profile-outer-div' id='profile-outer-div'>
+            </div>
+            {% if not from_one_author %}
+                <script>
+                    init_profile_page(current_user, user_be_viewed);
+                </script>
+                <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Be a
+                    friend</a>
+                <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfriend</a>
+            {% else %}
+                <button id="btn-edit" class="btn btn-primary" onclick="editProfile()">Edit</button>
+            {% endif %}
+            
+        </div>
+    {% else %}
+        <a href="{% url 'login' %}">Login</a>
+        <br>
+        <a href="{% url 'signup' %}">Create an account</a>
+    {% endif %}
+{% endblock %}  
+        

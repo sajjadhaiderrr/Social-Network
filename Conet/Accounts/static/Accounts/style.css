@@ -1,5 +1,11 @@
+
+
 .html .body{
     height: 100%;
+    
+}
+.body{
+    background-color: #eeeeee!important;
 }
 
 .login-back{
@@ -18,7 +24,7 @@
     overflow: scroll;
 }
 
-.card{
+.card.welcompage{
     height: auto;
     width: 500pt;
     margin-top:5%;
@@ -26,8 +32,42 @@
     -webkit-animation: fadein 1s;
     animation: fadein 1s;
 }
+.card.search-results{
+    margin-top:0pt;
+    margin-left:10%;
+    margin-right:10%;
+    display: hidden;
+    width:80%;
+}
+
+.card.search-results .card-body.col-sm-8{
+    margin-left: 5%;
+}
+
+.content{
+    margin-left:3%;
+    margin-top:3%;
+    margin-right: 3%;
+    margin-bottom: 3%;
+}
+
+.stats{
+    margin-bottom:0%; 
+    
+}
+
+.center-text{
+    text-align: center;
+}
+
+.profile-content{
+    
+}
 
 @keyframes fadein{
     from {opacity: 0;}
     to {opacity: 1;}
 }
+
+
+

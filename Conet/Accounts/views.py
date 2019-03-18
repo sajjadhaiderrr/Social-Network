@@ -2,7 +2,7 @@ import datetime
 import json
 
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
@@ -10,10 +10,12 @@ from django.views import View, generic
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .forms import SearchUserForm, SignUpForm
 from .models import Author, Friendship
+from api.serializers import AuthorSerializer
 
 
 # Signup page
@@ -32,8 +34,8 @@ class SignUpPage(View):
             username = form.cleaned_data['username']
             form.save()
             user = Author.objects.get(username=username)
-            user.host = request.META['HTTP_HOST']
-            user.url = user.host + "/" + str(user.id) + '/'
+            user.host = 'http://'+request.META['HTTP_HOST']
+            user.url = user.host + "/author/" + str(user.id) + '/'
             user.save()
             return redirect(self.success_url)
         else:
@@ -57,21 +59,11 @@ class ProfilePage(View):
     def get(self, request, *args, **kwargs):
         # get current user and user that is being viewed
         user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
-        search_form = self.search_form()
-        return render(request, self.template_name, {'search_form': search_form, 'user_be_viewed':user_be_viewed})
-    
-    # receive a POST from search box
-    def post(self, request, *args, **kwargs):
-        user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
         current_user = request.user
-
-        # if you are viewing your own website
-        if (user_be_viewed.id == current_user.id):
-            search_form = self.search_form(request.POST)
-            # get the user name from input box, 
-            if search_form.is_valid():
-                user_to_search = search_form.cleaned_data['user_name']
-            return HttpResponse(user_to_search)
+        if(current_user != user_be_viewed):
+            return HttpResponseRedirect(user_be_viewed.url+"info/")
+        return render(request, self.template_name, {'user_be_viewed':user_be_viewed})
+            
 
 class HomePage(View):
     search_form = SearchUserForm
@@ -88,3 +80,41 @@ class HomePage(View):
     def get(self, request, *args, **kwargs):
         url = reverse("profile", args=[request.user.id])
         return redirect(url)
+
+
+class SearchResultPage(View):
+    template_name = 'Accounts/searchresult.html'
+    def get(self, request, *args, **kwarg):
+        search_term = request.GET['search']
+        authors = Author.objects.filter(displayName__contains=search_term).exclude(id=request.user.id)
+        return render(request, self.template_name, {'authors':authors})
+
+class InfoPage(APIView):
+    template_name = 'Accounts/info.html'
+    
+    def get(self, request, authorId):
+        user_be_viewed = Author.objects.get(id=authorId)
+        from_one_author = True if(request.user.id == user_be_viewed.id) else False
+        return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed':user_be_viewed})
+
+    def put(self, request, authorId):
+        try:
+            reqed_author = Author.objects.get(pk=authorId)
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if request.user.id != authorId:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        serializer = AuthorSerializer(reqed_author, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            from_one_author = True
+            return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed':reqed_author})
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class FriendsPage(View):
+    template_name = 'Accounts/friendslist.html'
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name,{})

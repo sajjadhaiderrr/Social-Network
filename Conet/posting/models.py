@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from Accounts.models import Author
 #from django.apps import apps
 
 # Create your models here.
@@ -13,7 +14,7 @@ content_type_choice = (
 )
 
 class Post(models.Model):
-    
+
     visible_type_choice = (
         ('PRIVATE', 'private to visibleTo list'),
         ('FRIENDS', 'private to my friends'),
@@ -27,7 +28,7 @@ class Post(models.Model):
     source = models.URLField(null=True)
     origin = models.URLField(null=True)
     description = models.CharField(max_length=200)
-    #author = models.ForeignKey('Accounts.Author', on_delete=models.CASCADE, default=1)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, default=1)
     contentType = models.CharField(max_length=32, choices=content_type_choice, default='text/plain')
     content = models.TextField(blank=True)
     categories = models.CharField(max_length=250)
@@ -44,4 +45,3 @@ class Comment(models.Model):
     comment = models.CharField(max_length=500)
     contentType = models.CharField(max_length=32, choices=content_type_choice, default='text/plain')
     published = models.DateTimeField(auto_now_add=True)
-

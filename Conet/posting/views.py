@@ -23,10 +23,10 @@ class AuthorPostHandler(APIView):
         return
 
 class CreatePostHandler(APIView):
-    def get(self, request):
-        #Todo: get all public posts
-        posts = [post.description for post in Post.objects.all()]
-        return Response(posts)
+    # def get(self, request):
+    #     #Todo: get all public posts
+    #     posts = [post.description for post in Post.objects.all()]
+    #     return Response(posts)
     def post(self, request):
         serializer = PostSerializer(data=request.data)
         if serializer.is_valid():

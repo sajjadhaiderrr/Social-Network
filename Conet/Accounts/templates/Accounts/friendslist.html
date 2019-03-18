@@ -1,0 +1,18 @@
+{% extends 'Accounts/base.html' %}
+{% csrf_token %}
+{% block title %}Search Results{% endblock %}
+{% load static %}
+{% block content %}
+    {% if user.is_authenticated%}
+        {% include 'Accounts/nav.html' %}
+        <div id='friend-div'>
+        </div>
+        <script>
+            const csrf_token = "{{ csrf_token }}"
+            getFriends('{{request.user.url}}')
+        </script>
+    {% else %}
+
+    {% endif %}
+
+{% endblock %}
