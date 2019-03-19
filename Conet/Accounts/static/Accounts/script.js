@@ -259,7 +259,7 @@ function editProfile() {
     }
 
     comfirmBtn.addEventListener("click", function () {
-        fetchPutRequest(window.location.href, {
+           fetchPutRequest(window.location.href, {
             'email': data['email'].value, 
             'bio': data['bio'].value,
             'first_name': data['first_name'].value,
