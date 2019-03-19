@@ -255,7 +255,7 @@ class AuthorizedPostsHandler(APIView):
 
 #reference: https://stackoverflow.com/questions/12615154/how-to-get-the-currently-logged-in-users-user-id-in-django
 
-#user profile
+#user profile handler
 class AuthorProfileHandler(APIView):
     def get(self, request, authorid):
         try:
