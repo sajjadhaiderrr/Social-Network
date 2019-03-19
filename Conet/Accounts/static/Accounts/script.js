@@ -287,24 +287,25 @@ function setMultiAttributes(obj, attributes){
 
 // set # of friends on home page to its # of friends
 function get_num_friend_callback(response){
-    response = JSON.parse(response);
-    num_friends = response.authors.length;
-    document.getElementById("num-friends").innerText = num_friends;
+    var response = JSON.parse(response);
+    var num_friends = response.authors.length;
+    var aTag = document.createElement("a");
+    aTag.innerText=num_friends;
+    aTag.href = 'friends/';
+    document.getElementById("num-friends").appendChild(aTag);
 }
 
 function get_num_posts_made_callback(response){
-    console.log(response);
-    response = JSON.parse(response);
-    console.log(response);
-    num_posts_made = response.length;
-    document.getElementById("num-friends").innerText = num_friends;
+    var response = JSON.parse(response);
+    var num_posts_made = response.posts.length;
+    document.getElementById("num-posts").innerText = num_posts_made;
 }
 
 // function for initializing home page
 function init_home_page(user){
-    request_body = {};
-    friend_url = user.url + "friends"
-    made_posts_url = user.url + "madeposts"
+    var request_body = {};
+    var friend_url = user.url + "friends"
+    var made_posts_url = user.url+"madeposts"
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
-    sendJSONHTTPGet(friend_url, request_body, get_num_posts_made_callback);
+    sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
 }
