@@ -317,10 +317,12 @@ class AuthorProfileHandler(APIView):
 class AuthorMadePostAPI(APIView):
     def get(self,request,pk):
         try:
+            response = {}
+            response['query'] = "madeposts"
             author = Author.objects.get(pk=pk)
-            posts = Post.objects.filter(author = author)    # pylint: disable=maybe-no-member
+            posts = Post.objects.filter(author = author).order_by(F("published").desc())   # pylint: disable=maybe-no-member
             serializer = PostSerializer(posts, many=True)
-            return Response(serializer.data)
-            
+            response['posts'] = serializer.data
+            return Response(response, status=status.HTTP_200_OK) 
         except:
             return Response(status=status.HTTP_400_BAD_REQUEST)
