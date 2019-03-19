@@ -81,7 +81,7 @@ function sendUnFriendRequest(init, recv) {
 
 // callback function after sending init
 // - Simply change the button to "unfriend" if they are friends
-function sendInitRequestCallback(response) {
+function sendInitInfoRequestCallback(response) {
     var response = JSON.parse(response);
     if (response.authors.length == 0) {
         var btn = document.getElementById("btn-unfriend");
@@ -96,6 +96,11 @@ function sendInitRequestCallback(response) {
     }
 }
 
+function init_info_page(init, recv) {
+    console.log("initing")
+    var request_body = { 'authors': "['" + recv.id + "']" };
+    sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
+}
 
 function sendLoadUserProfileCallback(response) {
     var response = JSON.parse(response);
@@ -124,6 +129,7 @@ function load_user_profile(current_user, user_be_viewed) {
     sendJSONHTTPGet(current_user.host + "/author/" + user_be_viewed.id, request_body, sendLoadUserProfileCallback);
 }
 
+// create a list of cards shows the friends
 function sendFriendsCallback(response) {
     response = JSON.parse(response);
     friends = response.friends;
@@ -226,6 +232,7 @@ function fetchPutRequest(url, profileInfo) {
             window.location.reload(true);
         });
 }
+
 //
 function editProfile() {
     var intendToEdit = document.querySelectorAll("#email, #bio, #first_name, #last_name, #displayName, #github");
@@ -285,9 +292,19 @@ function get_num_friend_callback(response){
     document.getElementById("num-friends").innerText = num_friends;
 }
 
+function get_num_posts_made_callback(response){
+    console.log(response);
+    response = JSON.parse(response);
+    console.log(response);
+    num_posts_made = response.length;
+    document.getElementById("num-friends").innerText = num_friends;
+}
+
 // function for initializing home page
 function init_home_page(user){
     request_body = {};
     friend_url = user.url + "friends"
+    made_posts_url = user.url + "madeposts"
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
+    sendJSONHTTPGet(friend_url, request_body, get_num_posts_made_callback);
 }
