@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from posting.models import Post, Comment
-from posting.serializers import PostSerializer, CommentSerializer
+from api.serializers import PostSerializer, CommentSerializer
 from django.shortcuts import render
 from Accounts.models import Author
 import json
@@ -13,7 +13,7 @@ import json
 class ReadAllPublicPosts(APIView):
     # get: All posts marked as public on the server
     def get(self, request):
-        posts = Post.objects.filter(visibility="PUBLIC")
+        posts = Post.objects.filter(visibility="PUBLIC") # pylint: disable=maybe-no-member
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
 
@@ -21,15 +21,15 @@ class ReadAllPublicPosts(APIView):
 class ReadSinglePost(APIView):
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
-        post = Post.objects.filter(pk=post_id)
+        post = Post.objects.filter(pk=post_id)# pylint: disable=maybe-no-member
         serializer = PostSerializer(post[0])
         return Response(serializer.data)
     # put: update single post with id = post_id
     def put(self, request, post_id):
-        if (not Post.objects.filter(pk=post_id).exists()):
-            return Response("Invalid Post", satus=404)
+        if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
+            return Response("Invalid Post", status=404)
         else:
-            post = Post.objects.get(pk=post_id)
+            post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
             current_user = Author.objects.get(pk=request.user.id)
 
             if current_user == post.author.id:
@@ -45,7 +45,7 @@ class ReadSinglePost(APIView):
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
     # get: Get comments of a post
     def get(self, request, post_id):
-        comments = Comment.objects.filter(post=post_id)
+        comments = Comment.objects.filter(post=post_id)# pylint: disable=maybe-no-member
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 
@@ -69,7 +69,7 @@ class PostReqHandler(APIView):
     # GET: get all posts
     def get(self, request):
         #Todo: get all public posts
-        posts = Post.objects.all()
+        posts = Post.objects.all()# pylint: disable=maybe-no-member
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
 
@@ -86,7 +86,7 @@ class PostReqHandler(APIView):
 
 class CommentReqHandler(APIView):
     def get(self, request):
-        comments = Comment.objects.all()
+        comments = Comment.objects.all()# pylint: disable=maybe-no-member
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 

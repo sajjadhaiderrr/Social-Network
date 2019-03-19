@@ -5,9 +5,7 @@ function sendJSONHTTPPost(url, objects, callback) {
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
             try {
-                if (xhr.status == 200) {
-                    callback(xhr.response);
-                }
+                callback(xhr.response);
             }
             catch (e) {
                 alert('Error: ' + e.name);
@@ -301,11 +299,69 @@ function get_num_posts_made_callback(response){
     document.getElementById("num-posts").innerText = num_posts_made;
 }
 
+function home_page_get_visible_post_callback(response){
+    var response = JSON.parse(response);
+    if(response.next == "None" && response.posts==[]){
+        console.log("The end");
+    }else{
+        for(post of response.posts){
+            console.log(post)
+            var card = document.createElement("div");
+            card.classList.add("card","home-page-post-card");
+            
+
+            var card_body = document.createElement("div");
+            card_body.classList.add("card-body");
+
+            var card_title = document.createElement("h3");
+            card_title.classList.add("card-title");
+            card_title.innerText = post.title;
+
+            
+            var author_name = document.createElement("a")
+            author_name.classList.add("font-weight-light", "text-muted");
+            author_name.innerText = post.postauthor.displayName;
+            author_name.href= post.postauthor.url;
+            
+            var publish_time = document.createElement("p");
+            publish_time.classList.add("font-weight-light", "text-muted");
+            var publish_date_time = Date.parse(post.published);
+            var now = new Date();
+            var sec_ago = (now - publish_date_time)/1000;
+            var min_ago = sec_ago / 60;
+            var hr_ago = min_ago / 60;
+            var days_ago = hr_ago / 24;
+            if (min_ago < 60){
+                publish_time.innerText = Math.round(min_ago) + " mins. ago";
+            }else if (hr_ago < 60){
+                publish_time.innerText = Math.round(hr_ago) + " hrs. ago";
+            }else{
+                publish_time.innerText = Math.round(days_ago) + " days ago";
+            }
+
+            var content = document.createElement("p");
+            content.innerText = post.content;
+            
+
+            card_body.appendChild(card_title);
+            card_body.appendChild(author_name);
+            card_body.appendChild(publish_time);
+            card_body.appendChild(document.createElement("hr"));
+            card_body.appendChild(content);
+            card.appendChild(card_body);
+            document.getElementById("home_page_post_cards").appendChild(card);
+        }
+    }
+}
+
 // function for initializing home page
 function init_home_page(user){
+    page_number = 0;
     var request_body = {};
-    var friend_url = user.url + "friends"
-    var made_posts_url = user.url+"madeposts"
+    var friend_url = user.url + "friends";
+    var made_posts_url = user.url+"madeposts";
+    var fetch_posts_url = user.host + "/author/posts" + "?page="+page_number;
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
+    sendJSONHTTPGet(fetch_posts_url, request_body, home_page_get_visible_post_callback);
 }

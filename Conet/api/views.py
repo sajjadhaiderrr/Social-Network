@@ -16,9 +16,8 @@ from django.http import JsonResponse
 from Accounts.models import Author
 from Accounts.models import Friendship
 from posting.models import Post
-from posting.serializers import PostSerializer
 
-from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers, AuthorSerializer
+from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers, AuthorSerializer, Helper_AuthorSerializers, PostSerializer
 from rest_framework.response import Response
 
 # Create your views here.
@@ -69,7 +68,7 @@ class AuthorAPI(APIView):
             # append friend's detailed information to response
             response['friends'] = []
             for friend in friends:
-                friend_data = ExtendAuthorSerializers(Author.objects.get(id=friend)).data 
+                friend_data = Helper_AuthorSerializers(Author.objects.get(id=friend)).data 
                 response['friends'].append(json.dumps(friend_data))
             return Response(response, status=200)
         except:
@@ -237,7 +236,7 @@ class TwoAuthorsRelation(APIView):
 class AuthorizedPostsHandler(APIView):
     def get(self, request):
         allposts = []
-        page_size = 2
+        page_size = 10
         #get the posts of all your friends whos visibility is set to FRIENDS
         current_user = Author.objects.get(pk=request.user.id)
         friends = get_friends(current_user) 
@@ -266,12 +265,12 @@ class AuthorizedPostsHandler(APIView):
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = PostSerializer(response_posts, many=True)
+        
         
         response = {}
         response['query'] = "posts"
         response['count'] = len(allposts)
-        response['size'] = len(serializer.data)
+        response['size'] = len(response_posts)
         if(page>0):
             response['previous'] = current_user.host + "/author/posts?page="+str(page-1)
         else:
@@ -281,7 +280,12 @@ class AuthorizedPostsHandler(APIView):
             response['next'] = current_user.host + "/author/posts?page="+str(page+1)
         else:
             response['next'] = "None"
-        response['posts'] = serializer.data
+
+        response['posts'] = []
+        for post in response_posts:
+            serializer = PostSerializer(post).data
+            serializer['postid'] = str(serializer['postid'])
+            response['posts'].append(serializer)
         
         return Response(response)
 
