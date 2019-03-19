@@ -1,6 +1,6 @@
 import datetime
 import json
-
+from django.db.models import F
 from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -44,6 +44,8 @@ def get_friends(user):
     friends = list(set(following_id) & set(follower_id))
     return friends
 
+
+# =============== end of helper function ====================
 
 # api for /author
 class AuthorAPI(APIView):
@@ -235,23 +237,53 @@ class TwoAuthorsRelation(APIView):
 class AuthorizedPostsHandler(APIView):
     def get(self, request):
         allposts = []
-
+        page_size = 2
         #get the posts of all your friends whos visibility is set to FRIENDS
         current_user = Author.objects.get(pk=request.user.id)
         friends = get_friends(current_user) 
         for friend in friends:
             friend = Author.objects.get(pk=friend)       
             posts = Post.objects.filter(author = friend, visibility = "FRIENDS") # pylint: disable=maybe-no-member
-            for i in posts:
-                allposts.append(i)
-        
-        #get all publics posts
+            posts = posts | posts
+
+        #get all public posts
         public = Post.objects.filter(visibility="PUBLIC")   # pylint: disable=maybe-no-member
-        for x in public:
+        posts = posts | public
+        posts = posts.order_by(F("published").desc())
+        for x in posts:
             allposts.append(x)
         
-        serializer = PostSerializer(allposts, many=True)
-        return Response(serializer.data)
+        try:
+            page = int(request.GET.get("page", 0))
+            if (page < 0):
+                raise Exception()
+            allposts[page * page_size]
+            if ((page+1)*page_size >= len(allposts)):
+                last_page = True
+            else:
+                last_page = False
+            response_posts = allposts[page * page_size : min((page+1)*page_size, len(allposts))]
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = PostSerializer(response_posts, many=True)
+        
+        response = {}
+        response['query'] = "posts"
+        response['count'] = len(allposts)
+        response['size'] = len(serializer.data)
+        if(page>0):
+            response['previous'] = current_user.host + "/author/posts?page="+str(page-1)
+        else:
+            response['previous'] = "None"
+
+        if(not last_page):
+            response['next'] = current_user.host + "/author/posts?page="+str(page+1)
+        else:
+            response['next'] = "None"
+        response['posts'] = serializer.data
+        
+        return Response(response)
 
 #reference: https://stackoverflow.com/questions/12615154/how-to-get-the-currently-logged-in-users-user-id-in-django
 
@@ -281,3 +313,14 @@ class AuthorProfileHandler(APIView):
             return JsonResponse(serializer.data)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+# get a list of posts made by given author
+class AuthorMadePostAPI(APIView):
+    def get(self,request,pk):
+        try:
+            author = Author.objects.get(pk=pk)
+            posts = Post.objects.filter(author = author)    # pylint: disable=maybe-no-member
+            serializer = PostSerializer(posts, many=True)
+            return Response(serializer.data)
+            
+        except:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
