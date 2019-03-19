@@ -97,14 +97,6 @@ function sendInitRequestCallback(response) {
 }
 
 
-// function to initialize profile page based on if current user and the user he is viewing are friends or not.
-function init_profile_page(init, recv) {
-    console.log("initing")
-    var request_body = { 'authors': "['" + recv.id + "']" };
-    sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitRequestCallback);
-}
-
-
 function sendLoadUserProfileCallback(response) {
     var response = JSON.parse(response);
     for (var key in response) {
@@ -205,7 +197,7 @@ function sendFriendsCallback(response) {
     }
 }
 
-// function to 
+// function to get a list of friends of current user.
 function getFriends(user) {
     url = user.slice(0, -1);
     request_body = {};
@@ -284,4 +276,18 @@ function setMultiAttributes(obj, attributes){
         console.log(attr);
         obj.setAttribute(attr, attributes[attr]);
     }
+}
+
+// set # of friends on home page to its # of friends
+function get_num_friend_callback(response){
+    response = JSON.parse(response);
+    num_friends = response.authors.length;
+    document.getElementById("num-friends").innerText = num_friends;
+}
+
+// function for initializing home page
+function init_home_page(user){
+    request_body = {};
+    friend_url = user.url + "friends"
+    sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
 }

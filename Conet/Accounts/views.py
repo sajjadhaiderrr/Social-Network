@@ -107,6 +107,7 @@ class InfoPage(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
         serializer = AuthorSerializer(reqed_author, data=request.data)
+
         if serializer.is_valid():
             serializer.save()
             from_one_author = True

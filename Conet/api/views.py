@@ -23,6 +23,28 @@ from rest_framework.response import Response
 
 # Create your views here.
 
+# =============== helper function ====================
+# get a list of friends of given user
+def get_friends(user):
+    followings = FollowingSerializers(user).data['friends']
+            
+    # get people who is following current user
+    followers = FollowerSerializers(user).data['follower']
+
+    # parse result from serializers. following_id will be a list of strings of UUID
+    following_id = []
+    follower_id = []
+    for f in followings:
+        following_id.append(str(f['author']))
+    
+    for f in followers:
+        follower_id.append(str(f['author']))
+            
+    # find who is both followed by current user and following current user
+    friends = list(set(following_id) & set(follower_id))
+    return friends
+
+
 # api for /author
 class AuthorAPI(APIView):
     model = Author
@@ -40,22 +62,7 @@ class AuthorAPI(APIView):
             for i in author_data.keys():
                 response[i] = author_data[i]
 
-            # get people who is followed by current user.
-            followings = FollowingSerializers(current_user).data['friends']
-            
-            # get people who is following current user
-            followers = FollowerSerializers(current_user).data['follower']
-
-            # parse result from serializers. following_id will be a list of strings of UUID
-            following_id = []
-            for f in followings:
-                following_id.append(str(f['author']))
-            follower_id = []
-            for f in followers:
-                follower_id.append(str(f['author']))
-            
-            # find who is both followed by current user and following current user
-            friends = list(set(following_id) & set(follower_id))
+            friends = get_friends(current_user)
             
             # append friend's detailed information to response
             response['friends'] = []
@@ -173,21 +180,7 @@ class AuthorFriends(APIView):
             # get current user on URL
             current_user = Author.objects.get(id=kwargs['pk'])
 
-            # get a list of followers and list of people whom current user is following.
-            followings = FollowingSerializers(current_user).data['friends']
-            followers = FollowerSerializers(current_user).data['follower']
-            
-            # parse result to list
-            following_id = []
-            for f in followings:
-                following_id.append(str(f['author']))
-
-            follower_id = []
-            for f in followers:
-                follower_id.append(str(f['author']))
-            
-            # find who is both followed by current user and following current user
-            friends = list(set(following_id) & set(follower_id))
+            friends = get_friends(current_user)
             response['authors'] = friends
             return Response(response)
         except:
@@ -208,19 +201,7 @@ class AuthorFriends(APIView):
             # get current user on URL
             current_user = Author.objects.get(id=kwargs['pk'])
             
-            # get a list of followers and list of people whom current user is following.
-            followings = FollowingSerializers(current_user).data['friends']
-            followers = FollowerSerializers(current_user).data['follower']
-            
-            # parse result to list
-            following_id = []
-            for f in followings:
-                following_id.append(str(f['author']))
-            follower_id = []
-            for f in followers:
-                follower_id.append(str(f['author']))
-            # find who is both followed by current user and following current user
-            friends = list(set(following_id) & set(follower_id))
+            friends = get_friends(current_user)
             response['authors'] = []
             for friend in friends:
                 if str(friend) in request_friends:
@@ -240,18 +221,7 @@ class TwoAuthorsRelation(APIView):
         try:
             author1 = Author.objects.get(id=author_id1)
             author2 = Author.objects.get(id=author_id2)
-            followings = FollowingSerializers(author1).data['friends']
-            followers = FollowerSerializers(author1).data['follower']
-                
-            following_id = []
-            for f in followings:
-                following_id.append(str(f['author']))
-                
-            follower_id = []
-            for f in followers:
-                follower_id.append(str(f['author']))
-                
-            friends = list(set(following_id) & set(follower_id))
+            friends = get_friends(author1)
             
             response['friends'] = author_id2 in friends
             response['authors'] = [author1.url, author2.url]
@@ -267,16 +237,16 @@ class AuthorizedPostsHandler(APIView):
         allposts = []
 
         #get the posts of all your friends whos visibility is set to FRIENDS
-        curAuthor = request.user.id
-        relations = Friendship.objects.filter(init_id = curAuthor, status = 1)
-        for relation in relations:
-            friend_id = relation.recv_id          
-            posts = Post.objects.filter(postid = friend_id, visibility = "FRIENDS")
+        current_user = Author.objects.get(pk=request.user.id)
+        friends = get_friends(current_user) 
+        for friend in friends:
+            friend = Author.objects.get(pk=friend)       
+            posts = Post.objects.filter(author = friend, visibility = "FRIENDS") # pylint: disable=maybe-no-member
             for i in posts:
                 allposts.append(i)
         
         #get all publics posts
-        public = Post.objects.filter(visibility="PUBLIC")
+        public = Post.objects.filter(visibility="PUBLIC")   # pylint: disable=maybe-no-member
         for x in public:
             allposts.append(x)
         
