@@ -32,7 +32,9 @@ class SignUpPage(View):
         form = self.form(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
-            form.save()
+            formObj = form.save(commit=False)
+            formObj.is_active = False
+            formObj.save()
             user = Author.objects.get(username=username)
             user.host = 'http://'+request.META['HTTP_HOST']
             user.url = user.host + "/author/" + str(user.id) + '/'
