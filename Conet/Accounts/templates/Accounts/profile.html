@@ -12,7 +12,7 @@
             init_home_page(current_user);
         </script>
         <div class="content row">  
-            <div class='col-sm-3' style="background-color: #ffffff;">
+            <div class='col-sm-3 card' style="height:fit-content">
                 <h1 class="h1 text-primary center-text">{{ user.displayName }}</h1>
                 <div id='user-stats' class='row'>
                     <div class='col-sm-6'>
@@ -27,8 +27,8 @@
                 <a class="btn btn-primary" style="display: block;margin-left: auto; margin-right: auto; margin-bottom: 5%"  href="/posts/create/">Create a Post</a>
                 
             </div>
-            <div class='col-sm-8' style="background-color: #ffffff; margin-left:1%">
-                Post cards goes here.
+            <div class='col-sm-8' id="home_page_post_cards" style="margin-left:1%">
+                
             </div>
             
 

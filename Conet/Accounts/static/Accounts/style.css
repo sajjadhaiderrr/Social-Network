@@ -64,6 +64,10 @@
     
 }
 
+.home-page-post-card{
+    margin-top:5pt;
+}
+
 @keyframes fadein{
     from {opacity: 0;}
     to {opacity: 1;}

@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from posting.models import Post, Comment
-from posting.serializers import PostSerializer
+from api.serializers import PostSerializer
 from django.shortcuts import render, get_object_or_404, get_list_or_404, render
 from rest_framework.pagination import PageNumberPagination
 
@@ -14,7 +14,7 @@ class AuthorPostHandler(APIView):
     def get(self, request):
         current_user = request.user
         if (current_user.id):
-            postsToGet = get_list_or_404(Post.objects.order_by('published'), author=current_user.id)
+            postsToGet = get_list_or_404(Post.objects.order_by('published'), author=current_user.id)    # pylint: disable=maybe-no-member
             paginator = PageNumberPagination()
             paginator.page_size = 10
             results = paginator.paginate_queryset(postsToGet, request)
