@@ -21,6 +21,8 @@ class ReadAllPublicPosts(APIView):
 class ReadSinglePost(APIView):
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
+        if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
+            return Response(status=200)
         post = Post.objects.filter(pk=post_id)# pylint: disable=maybe-no-member
         serializer = PostSerializer(post[0])
         return Response(serializer.data)
@@ -32,13 +34,25 @@ class ReadSinglePost(APIView):
             post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
             current_user = Author.objects.get(pk=request.user.id)
 
-            if current_user == post.author.id:
-                serializer = PostSerializer(data=request.data)
+            if current_user.id == post.author.id:
+                serializer = PostSerializer(post, data=request.data, partial=True)
 
                 if serializer.is_valid():
                     serializer.save()
                     return Response()
                 return Response("Invalid data", status=400)
+
+    def delete(self, request, post_id):
+        if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
+            return Response("Invalid Post", status=404)
+        else:
+            post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
+            current_user = Author.objects.get(pk=request.user.id)
+
+            if current_user.id == post.author.id:
+                post.delete()
+                return Response()
+            return Response("Invalid data", status=400)
 
 
 # path: /posts/{post_id}/comments
