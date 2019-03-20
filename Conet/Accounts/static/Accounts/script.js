@@ -299,6 +299,7 @@ function get_num_posts_made_callback(response){
     document.getElementById("num-posts").innerText = num_posts_made;
 }
 
+// loading and creating cards of post cards
 function home_page_get_visible_post_callback(response){
     var response = JSON.parse(response);
     if(response.next == "None" && response.posts==[]){
