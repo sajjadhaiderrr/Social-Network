@@ -1,6 +1,6 @@
 # CMPUT404-Project
 This is CMPUT404 project. This is a distributed social network. Written by:
-- Andrew Guo
+- Jiahao Guo
 - Hussain Khan
 - Sajjad Haider
 - Yizhou Zhao

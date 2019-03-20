@@ -251,7 +251,31 @@ class AuthorizedPostsHandler(APIView):
         posts = posts.order_by(F("published").desc())
         for x in posts:
             allposts.append(x)
+
+        #get posts that satisfy FOAF
+        allfoafs = set()
+        for friend in friends:
+            friend = Author.objects.get(pk=friend)
+            foafs = get_friends(friend)
+            for each in foafs:
+                allfoafs.add(each)
         
+        posts = Post.objects.none()
+        for foaf in allfoafs:
+            newposts = Post.objects.filter(visibility="FOAF", author=foaf)
+            posts |= newposts
+        
+        for post in posts:
+            allposts.append(post)
+        #foaf end
+
+        #private
+        for friend in friends:
+            posts = Post.objcets.filter(author=friend, visibility="PRIVATE")
+            for post in posts:
+                post.visibleTo
+        #there are some repeat operations above, might combine later    
+
         try:
             page = int(request.GET.get("page", 0))
             if (page < 0):
@@ -265,8 +289,6 @@ class AuthorizedPostsHandler(APIView):
         except:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        
-        
         response = {}
         response['query'] = "posts"
         response['count'] = len(allposts)
