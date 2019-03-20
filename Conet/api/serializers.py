@@ -106,7 +106,7 @@ class PostSerializer(serializers.ModelSerializer):
         author = self.context['author']
         origin = self.context['origin']
         post = Post.objects.create(author=author, origin=origin, source=origin, **validated_data)  # pylint: disable=maybe-no-member
-        src = origin+'/'+str(post.postid)+'/'    # pylint: disable=maybe-no-member
+        src = origin+''+str(post.postid)+'/'    # pylint: disable=maybe-no-member
         post.source = post.origin = src
         post.save()
         return post
@@ -122,12 +122,18 @@ class PostSerializer(serializers.ModelSerializer):
         return instance
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = AuthorSerializer(read_only=True)
+    author = serializers.SerializerMethodField('get_author')
+    post = serializers.SerializerMethodField('get_post')
 
+    def get_author(self, obj):
+        return Helper_AuthorSerializers(Author.objects.get(id=obj.author.id)).data
+    
+    def get_post(self,obj):
+        return obj.comment_post.id
+    
     class Meta:
         model = Comment
-        fields = '__all__'
-
+        fields = ('commentid','author', 'post', 'comment', 'contentType', 'published')
     # def create(self, validated_data):
     #     author = self.context['author']
     #     post = self.context['post']
