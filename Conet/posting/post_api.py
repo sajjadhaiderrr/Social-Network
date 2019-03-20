@@ -38,7 +38,7 @@ class ReadSinglePost(APIView):
                 if serializer.is_valid():
                     serializer.save()
                     return Response()
-                return Response("Invalid data", serializer.errors, status=400)
+                return Response("Invalid data", status=400)
 
 
 # path: /posts/{post_id}/comments
