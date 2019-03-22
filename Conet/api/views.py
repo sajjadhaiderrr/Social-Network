@@ -33,6 +33,7 @@ def get_friends(user):
     # parse result from serializers. following_id will be a list of strings of UUID
     following_id = []
     follower_id = []
+
     for f in followings:
         following_id.append(str(f['author']))
     
@@ -41,6 +42,9 @@ def get_friends(user):
             
     # find who is both followed by current user and following current user
     friends = list(set(following_id) & set(follower_id))
+    print("followings: ", following_id)
+    print("followers: ", follower_id)
+    print("friends: ", friends)
     return friends
 
 
@@ -237,32 +241,34 @@ class AuthorizedPostsHandler(APIView):
     def get(self, request):
         allposts = []
         page_size = 10
+        posts = Post.objects.none() # pylint: disable=maybe-no-member
+
         #get the posts of all your friends whos visibility is set to FRIENDS
         current_user = Author.objects.get(pk=request.user.id)
         friends = get_friends(current_user) 
         for friend in friends:
             friend = Author.objects.get(pk=friend)       
-            posts = Post.objects.filter(author = friend, visibility = "FRIENDS") # pylint: disable=maybe-no-member
-            posts = posts | posts
+            newposts = Post.objects.filter(author = friend, visibility = "FRIENDS") # pylint: disable=maybe-no-member
+            posts |= newposts
 
         #get all public posts
         public = Post.objects.filter(visibility="PUBLIC")   # pylint: disable=maybe-no-member
-        posts = posts | public
+        posts |= public
         posts = posts.order_by(F("published").desc())
-        for x in posts:
-            allposts.append(x)
 
         #get posts that satisfy FOAF
         allfoafs = set()
         for friend in friends:
+            #direct friend with posts "FOAF" should visible to current user
             friend = Author.objects.get(pk=friend)
+            newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
+            posts |= newposts
             foafs = get_friends(friend)
             for each in foafs:
                 allfoafs.add(each)
         
-        posts = Post.objects.none()
         for foaf in allfoafs:
-            newposts = Post.objects.filter(visibility="FOAF", author=foaf)
+            newposts = Post.objects.filter(visibility="FOAF", author=foaf) # pylint: disable=maybe-no-member
             posts |= newposts
         
         for post in posts:
@@ -270,10 +276,11 @@ class AuthorizedPostsHandler(APIView):
         #foaf end
 
         #private
+        '''
         for friend in friends:
-            posts = Post.objcets.filter(author=friend, visibility="PRIVATE")
+            posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
             for post in posts:
-                post.visibleTo
+                post.visibleTo'''
         #there are some repeat operations above, might combine later    
 
         try:
