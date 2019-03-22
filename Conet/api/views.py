@@ -14,7 +14,7 @@ from django.http import JsonResponse
 
 
 from Accounts.models import Author
-from Accounts.models import Friendship
+from Accounts.models import Friendship, FriendRequestHandler
 from posting.models import Post
 
 from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers, AuthorSerializer, Helper_AuthorSerializers, PostSerializer
@@ -53,7 +53,6 @@ def get_friends(user):
 # api for /author
 class AuthorAPI(APIView):
     model = Author
-
     def get(self, request,*args, **kwargs):
         response = {"query":'author'}
         try:
@@ -97,6 +96,8 @@ def unfriend_request(request):
         # try to delete the relationship with given init_user and recv_user
         try:
             Friendship.objects.filter(init_id=init_user, recv_id=recv_user).delete()    # pylint: disable=maybe-no-member
+            FriendRequestHandler.objects.filter(init_id = init_user, recv_id=recv_user).delete() # pylint: disable=maybe-no-member
+            
             response['success'] = True
             return HttpResponse(json.dumps(response), 200)
         except:
@@ -119,8 +120,14 @@ def friend_request(request):
         response['message'] = 'Friend request received'
         # try to add the relationship with given init_user and recv_user
         try: 
-            friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now(), status=0)
+            # adding the relationship to Friendship in database
+            friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
             friendship.save()
+            
+            # creating a friendrequesthandler. For notification purpose.
+            friend_request_handler = FriendRequestHandler(init_id = init_user, recv_id=recv_user, starting_date=datetime.datetime.now(),status=0)
+            friendship.save()
+            
             response['success'] = True
             return HttpResponse(json.dumps(response), 200)
         except:
@@ -237,7 +244,7 @@ class TwoAuthorsRelation(APIView):
             return Response(response, status=400)
 
 # service/author/posts
-class AuthorizedPostsHandler(APIView):
+class AuthorPostsAPI(APIView):
     def get(self, request):
         allposts = []
         page_size = 10
@@ -245,7 +252,10 @@ class AuthorizedPostsHandler(APIView):
 
         #get the posts of all your friends whos visibility is set to FRIENDS
         current_user = Author.objects.get(pk=request.user.id)
-        friends = get_friends(current_user) 
+        friends = get_friends(current_user)
+
+        posts = Post.objects.filter(author=request.user)  # pylint: disable=maybe-no-member
+
         for friend in friends:
             friend = Author.objects.get(pk=friend)       
             newposts = Post.objects.filter(author = friend, visibility = "FRIENDS") # pylint: disable=maybe-no-member
