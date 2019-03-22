@@ -59,6 +59,7 @@ This project is consisted by three apps:
             - `/posts/{post_id}`
                 - `GET`: Get a post by post id
                 - `PUT`: Update a post by post id
+                - `DELETE`: Delete a post by post id
                 
             - `/posts/{post_id}/comments`
                 - `GET`: Get comments of a post

@@ -21,6 +21,8 @@ class ReadAllPublicPosts(APIView):
 class ReadSinglePost(APIView):
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
+        if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
+            return Response(status=200)
         post = Post.objects.filter(pk=post_id)# pylint: disable=maybe-no-member
         serializer = PostSerializer(post[0])
         return Response(serializer.data)
@@ -32,31 +34,44 @@ class ReadSinglePost(APIView):
             post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
             current_user = Author.objects.get(pk=request.user.id)
 
-            if current_user == post.author.id:
-                serializer = PostSerializer(data=request.data)
+            if current_user.id == post.author.id:
+                serializer = PostSerializer(post, data=request.data, partial=True)
 
                 if serializer.is_valid():
                     serializer.save()
                     return Response()
                 return Response("Invalid data", status=400)
 
+    def delete(self, request, post_id):
+        if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
+            return Response("Invalid Post", status=404)
+        else:
+            post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
+            current_user = Author.objects.get(pk=request.user.id)
+
+            if current_user.id == post.author.id:
+                post.delete()
+                return Response()
+            return Response("Invalid data", status=400)
+
 
 # path: /posts/{post_id}/comments
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
     # get: Get comments of a post
     def get(self, request, post_id):
-        comments = Comment.objects.filter(post=post_id)# pylint: disable=maybe-no-member
+        comments = Comment.objects.filter(comment_post=post_id)# pylint: disable=maybe-no-member
         serializer = CommentSerializer(comments, many=True)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     # post: Add a comment to a post
     def post(self, request, post_id):
-        request.data["post"] = post_id
-        serializer = CommentSerializer(data=request.data)
+        curAuthor = Author.objects.get(id=request.user.id)
+        post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
+        serializer = CommentSerializer(data=request.data, context={'comment_author': curAuthor, 'comment_post': post})
         if serializer.is_valid():
             serializer.save()
-            return Response()
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_403_FORBIDDEN)
 
 ### API END
 

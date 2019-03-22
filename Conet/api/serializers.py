@@ -122,18 +122,25 @@ class PostSerializer(serializers.ModelSerializer):
         return instance
 
 class CommentSerializer(serializers.ModelSerializer):
-    author = serializers.SerializerMethodField('get_author')
-    post = serializers.SerializerMethodField('get_post')
+    # author = serializers.SerializerMethodField('get_author')
+    # post = serializers.SerializerMethodField('get_post')
 
-    def get_author(self, obj):
-        return Helper_AuthorSerializers(Author.objects.get(id=obj.author.id)).data
+    # def get_author(self, obj):
+    #     return Helper_AuthorSerializers(Author.objects.get(id=obj.author.id)).data
     
     def get_post(self,obj):
         return obj.comment_post.id
     
     class Meta:
         model = Comment
-        fields = ('commentid','author', 'post', 'comment', 'contentType', 'published')
+        fields = ('commentid','comment_author', 'comment_post', 'comment', 'contentType', 'published')
+
+    def create(self, validated_data):
+        author = self.context['comment_author']
+        post = self.context['comment_post']
+        comment = Comment.objects.create(comment_author=author, comment_post=post, **validated_data)  # pylint: disable=maybe-no-member
+        comment.save()
+        return comment
     # def create(self, validated_data):
     #     author = self.context['author']
     #     post = self.context['post']
