@@ -19,8 +19,15 @@ class Friendship(models.Model):
     recv_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follower')
     starting_date = models.DateTimeField(auto_now=True)
 
-    # track the status of the friendship. 0: pending; 1: accepted.
-    status = models.IntegerField(default=0)
-
     class Meta:
         unique_together = ('init_id', 'recv_id')
+
+class FriendRequestHandler(models.Model):
+    init_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='friends')
+    recv_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follower')
+    starting_date = models.DateTimeField(auto_now=True)
+
+    # track the status of the friendship. 
+    # 0: pending; 
+    # 1: completed (which should be ignored in the future);
+    status = models.IntegerField(default=0)
