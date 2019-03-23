@@ -1,7 +1,7 @@
 import datetime
 import json
 from django.db.models import F
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotAllowed
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -14,7 +14,7 @@ from django.http import JsonResponse
 
 
 from Accounts.models import Author
-from Accounts.models import Friendship, FriendRequestHandler
+from Accounts.models import Friendship
 from posting.models import Post
 
 from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers, AuthorSerializer, Helper_AuthorSerializers, PostSerializer
@@ -40,10 +40,10 @@ def get_friends(user):
     for f in followers:
         follower_id.append(str(f['author']))
             
-    # find who is both followed by current user and following current user
-    friends = list(set(following_id) & set(follower_id))
     print("followings: ", following_id)
     print("followers: ", follower_id)
+    # find who is both followed by current user and following current user
+    friends = list(set(following_id) & set(follower_id))
     print("friends: ", friends)
     return friends
 
@@ -58,16 +58,13 @@ class AuthorAPI(APIView):
         try:
             # get current user
             current_user = Author.objects.get(id=kwargs['pk'])
-            
             # get current user's data. Note that friends' data is excluded
             author_data = ExtendAuthorSerializers(current_user).data
             
             # append each data to response
             for i in author_data.keys():
                 response[i] = author_data[i]
-
             friends = get_friends(current_user)
-            
             # append friend's detailed information to response
             response['friends'] = []
             for friend in friends:
@@ -86,56 +83,101 @@ def unfriend_request(request):
     if request.method == 'POST':
         # parse request body
         request_body = json.loads(request.body.decode())
+        response = {"query":'unfriendrequest'}
 
         # instanciate initiator and receiver as Author object
-        init_user = Author.objects.get(id=request_body['author']['id'])
-        recv_user = Author.objects.get(id=request_body['friend']['id'])
-        response = {"query":'unfriendrequest'}
-        response['message'] = 'Unfriend request received'
+        send_id = request_body['author']['id'].replace(request_body['author']['host']+'author/','')
+        rcv_id = request_body['friend']['id'].replace(request_body['friend']['host']+'author/','')
+        try:
+            init_user = Author.objects.get(id=send_id)
+            recv_user = Author.objects.get(id=rcv_id)
+        except:
+            response['message'] = 'Request author or request friend does not exist.'
+            return HttpResponse(json.dumps(response), status=400)
 
         # try to delete the relationship with given init_user and recv_user
-        try:
-            Friendship.objects.filter(init_id=init_user, recv_id=recv_user).delete()    # pylint: disable=maybe-no-member
-            FriendRequestHandler.objects.filter(init_id = init_user, recv_id=recv_user).delete() # pylint: disable=maybe-no-member
+        reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
+        friendship = Friendship.objects.filter(init_id=init_user, recv_id=recv_user) # pylint: disable=maybe-no-member
+        if (reverse_friendship.exists() or friendship.exists()):
+            #case: there's reverse relationship between two users and there's a pending friend
+            #request from recv_user to init_user
+            if reverse_friendship.exists() and reverse_friendship[0].state == 0:
+                reverse_friendship[0].state = 1
+                reverse_friendship[0].save()
+            if friendship.exists():
+                friendship.delete()
             
             response['success'] = True
+            response['message'] = 'Unfriend request proceeded successfully.'
             return HttpResponse(json.dumps(response), 200)
-        except:
+        else:
             response['success'] = False
+            response['message'] = 'Unfriend request failed because relationship does not exist.'
             return HttpResponse(json.dumps(response), status=400)
     else:
-        response={"Access-Control-Allow-Methods": 'POST'}
-        return HttpResponse(json.dumps(response), status=405)
+        return HttpResponseNotAllowed(['POST'])
 
 # /friendrequest
 def friend_request(request):
     if request.method == 'POST':
         # parse request body
         request_body = json.loads(request.body.decode())
+        # response body
+        response = {"query":'friendrequest'}
 
         # instanciate initiator and receiver as Author object
-        init_user = Author.objects.get(id=request_body['author']['id'])
-        recv_user = Author.objects.get(id=request_body['friend']['id'])
-        response = {"query":'friendrequest'}
-        response['message'] = 'Friend request received'
-        # try to add the relationship with given init_user and recv_user
-        try: 
-            # adding the relationship to Friendship in database
+        send_id = request_body['author']['id'].replace(request_body['author']['host']+'author/','')
+        rcv_id = request_body['friend']['id'].replace(request_body['friend']['host']+'author/','')
+        print(send_id)
+        print(rcv_id)
+        try:
+            init_user = Author.objects.get(id=send_id)
+            recv_user = Author.objects.get(id=rcv_id)
+        except:
+            response['message'] = 'Request author or request friend does not exist.'
+            print("eror here1")
+            return HttpResponse(json.dumps(response), status=400)
+
+        # try to get the current relationship between two authors
+        try:
+            friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)
+        except:  
+            reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
             friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
-            friendship.save()
-            
-            # creating a friendrequesthandler. For notification purpose.
-            friend_request_handler = FriendRequestHandler(init_id = init_user, recv_id=recv_user, starting_date=datetime.datetime.now(),status=0)
-            friendship.save()
-            
+            #If there's a reverse relation between init_user and recv_user, they become friend
+            #case1: init_user accepts friend request from recv_user
+            #case2: both init_user and recv_user send friend request to each other
+            #case3: recv_user is following init_user
+            if reverse_friendship.exists():
+                reverse_friendship[0].state = 1
+                reverse_friendship[0].starting_date = datetime.datetime.now()
+                reverse_friendship[0].save()
+                friendship.state = 1
+                friendship.save()
+                response['message'] = 'Your friend request is accepted.'
+            #init_user sends a friend request to recv_user and there's no reverse relationship
+            else:
+                friendship.state = 0
+                friendship.save()
+                response['message'] = 'Your friend request is sent successfully.'
             response['success'] = True
             return HttpResponse(json.dumps(response), 200)
-        except:
-            response['success'] = False
-            return HttpResponse(json.dumps(response), status=400)
+            #friend request is sent already or init_user is already followed to recv_user
+        if friendship.state == 0:
+            response['message'] = 'You are already sent a friend request to this user.'
+        else:
+            response['message'] = 'You are already followed this user.'
+        print("eror here2")
+        return HttpResponse(json.dumps(response), status=400)
     else:
-        response={"Access-Control-Allow-Methods": 'POST'}
-        return HttpResponse(json.dumps(response), status=405)
+        return HttpResponseNotAllowed(['POST'])
+
+#/notification
+def notification(request):
+    if request.method == 'GET':
+        return HttpResponse(status=200)
+    else:
+        return HttpResponseNotAllowed(['GET'])
 
 
 # for author/{author_id}/following
@@ -271,8 +313,9 @@ class AuthorPostsAPI(APIView):
         for friend in friends:
             #direct friend with posts "FOAF" should visible to current user
             friend = Author.objects.get(pk=friend)
-            newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
-            posts |= newposts
+            #newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
+            #posts |= newposts
+            allfoafs.add(friend)
             foafs = get_friends(friend)
             for each in foafs:
                 allfoafs.add(each)
