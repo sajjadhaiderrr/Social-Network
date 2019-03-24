@@ -5,7 +5,7 @@ import socket
 
 class Author(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    bio = models.CharField(max_length=200, default="", null=True)
+    bio = models.CharField(max_length=200, default="None", null=True)
     host = models.CharField(default="", max_length=50)
     displayName = models.CharField(max_length=30, default="")
     github = models.URLField(default="")

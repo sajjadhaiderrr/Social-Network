@@ -58,7 +58,7 @@ class FollowingSerializers(serializers.ModelSerializer):
     friends = serializers.SerializerMethodField()
 
     def get_friends(self, obj):
-        friendships = Friendship.objects.filter(init_id=obj.id, state=1) # pylint: disable=maybe-no-member
+        friendships = Friendship.objects.filter(init_id=obj.id) # pylint: disable=maybe-no-member
         friends = Helper_FollowingSerializers(friendships, many=True)
         return friends.data
 
@@ -80,7 +80,7 @@ class FollowerSerializers(serializers.ModelSerializer):
     followers = serializers.SerializerMethodField()
 
     def get_followers(self, obj):
-        friendships = Friendship.objects.filter(recv_id=obj.id, state=1) # pylint: disable=maybe-no-member
+        friendships = Friendship.objects.filter(recv_id=obj.id) # pylint: disable=maybe-no-member
         followers = Helper_FollowerSerializers(friendships, many=True)
         return followers.data
 

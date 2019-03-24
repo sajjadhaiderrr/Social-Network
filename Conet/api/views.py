@@ -55,7 +55,6 @@ class UnfriendRequestHandler(APIView):
         # parse request body
         request_body = request.data
         response = {"query":'unfriendrequest'}
-        print(request_body)
         # instanciate initiator and receiver as Author object
         send_id = request_body['author']['id'].replace(request_body['author']['host']+'/author/','')
         rcv_id = request_body['friend']['id'].replace(request_body['friend']['host']+'/author/','')
@@ -209,9 +208,12 @@ class AuthorFollower(APIView):
         response = {"query":'friends'}
         try:
             # get current user based on URL on browser. It is the id of user who is currently being viewed.
+            
             current_user = Author.objects.get(id=kwargs['pk'])
+            
             # get people who is following the user shows on screen.
-            followers = FollowerSerializers(current_user).data['follower']
+            followers = FollowerSerializers(current_user).data['followers']
+            
             response['authors'] = []
             for friend in followers:
                 friend_data = Helper_AuthorSerializers(Author.objects.get(id=friend['author'])).data 
@@ -337,7 +339,6 @@ class AuthorPostsAPI(APIView):
             page = int(request.GET.get("page", 0))
             if (page < 0):
                 raise Exception()
-            allposts[page * page_size]
             if ((page+1)*page_size >= len(allposts)):
                 last_page = True
             else:
