@@ -10,5 +10,4 @@ urlpatterns = [
     path('<uuid:pk>/friends/', views.FriendsPage.as_view(), name='friends'),
     path('<uuid:pk>/followers/', views.FollowersPage.as_view(), name='followers'),
     path('<uuid:pk>/following/', views.FollowingPage.as_view(), name='following'),
-    
 ]

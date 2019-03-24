@@ -54,12 +54,17 @@ class Helper_FollowingSerializers(serializers.ModelSerializer):
 
 
 class FollowingSerializers(serializers.ModelSerializer):
-    friends = Helper_FollowingSerializers(many=True, read_only=True)
-    
+    #friends = Helper_FollowingSerializers(many=True, read_only=True)
+    friends = serializers.SerializerMethodField()
+
+    def get_friends(self, obj):
+        friendships = Friendship.objects.filter(init_id=obj.id, state=1) # pylint: disable=maybe-no-member
+        friends = Helper_FollowingSerializers(friendships, many=True)
+        return friends.data
+
     class Meta:
         model = Author
         fields = ('friends',)
-
 
 class Helper_FollowerSerializers(serializers.ModelSerializer):
     author = serializers.SerializerMethodField('get_receiver')
@@ -72,10 +77,16 @@ class Helper_FollowerSerializers(serializers.ModelSerializer):
         fields = ("author",)
 
 class FollowerSerializers(serializers.ModelSerializer):
-    follower = Helper_FollowerSerializers(many=True, read_only=True)
+    followers = serializers.SerializerMethodField()
+
+    def get_followers(self, obj):
+        friendships = Friendship.objects.filter(recv_id=obj.id, state=1) # pylint: disable=maybe-no-member
+        followers = Helper_FollowerSerializers(friendships, many=True)
+        return followers.data
+
     class Meta:
         model = Friendship
-        fields = ('follower',)
+        fields = ('followers',)
 
 
 #reference: https://www.django-rest-framework.org/api-guide

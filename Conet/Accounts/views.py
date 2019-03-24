@@ -37,7 +37,7 @@ class SignUpPage(View):
             formObj.save()
             user = Author.objects.get(username=username)
             user.host = 'http://'+request.META['HTTP_HOST']
-            user.url = user.host + "/author/" + str(user.id) + '/'
+            user.url = user.host + "/author/" + str(user.id)
             user.save()
             return redirect(self.success_url)
         else:
@@ -97,7 +97,11 @@ class InfoPage(APIView):
     
     def get(self, request, authorId):
         user_be_viewed = Author.objects.get(id=authorId)
+        print("authorId: ", authorId)
+        print(request.user.id)
+        print(user_be_viewed.id)
         from_one_author = True if(request.user.id == user_be_viewed.id) else False
+        print(from_one_author)
         return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed':user_be_viewed})
 
     def put(self, request, authorId):

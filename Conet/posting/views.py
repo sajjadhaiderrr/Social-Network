@@ -47,4 +47,4 @@ class CreatePostHandler(APIView):
         #         }
         #         return Response(responseBody, status=status.HTTP_200_OK)
         #     else:
-        #         return Reponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        #         return Reponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  

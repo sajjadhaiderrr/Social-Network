@@ -44,6 +44,13 @@
     margin-left: 5%;
 }
 
+.card.friend-request{
+    margin: 0 auto;
+    width: 50%;
+    float: none;
+    margin-top: 10px;
+}
+
 .content{
     margin-left:3%;
     margin-top:3%;
@@ -88,5 +95,36 @@
     to {opacity: 1;}
 }
 
+.nav-bell{
+    font-size: 24px;
+}
+.nav-notify{
+    position: relative;
+}
+
+.badge-danger{
+    position: absolute;
+    top: 5px; 
+    left: 15px;
+    font-size: 0.6em;
+}
+
+.btn-decline{
+    display: inline-block;
+    background-color: #f2f2f2;
+    color: #404040;
+    margin: 0;
+
+}
+
+.btn-decline:hover{
+    background-color: #d9d9d9;
+    color: #404040;
+}
+
+.btn-accept{
+    display: inline-block;
+    margin: 0;
+}
 
 

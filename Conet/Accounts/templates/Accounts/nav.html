@@ -12,6 +12,12 @@
     
     <div class="collapse navbar-collapse" id="navbarColor02">
         <ul class="navbar-nav mr-auto">
+            <li class="nav-item nav-bell"></li>
+                <a class="nav-link nav-notify" href='/notification'>
+                    <i class="fas fa-sm fa-bell" href='/notification'></i>
+                    <span class="badge badge-danger"></span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{request.user.url}}">Home <span class="sr-only">(current)</span></a>
             </li>
@@ -31,4 +37,5 @@
         </form>
         <a style="margin-left:1%" class="btn btn-outline-light my-2 my-sm-0" href="{% url 'logout' %}">Logout</a>
     </div>
+    <span class="glyphicon glyphicon-bell"></span>
 </nav>

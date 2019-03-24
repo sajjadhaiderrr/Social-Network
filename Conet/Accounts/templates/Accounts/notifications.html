@@ -1,0 +1,49 @@
+<!-- templates/notifications.html -->
+{% extends 'Accounts/base.html' %}
+{% csrf_token %}
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        {% include 'Accounts/nav.html' %}
+        <script>
+                const csrf_token = "{{csrf_token}}";
+                const author = {'id': '{{author.id}}',
+                                'host': '{{author.host}}',
+                                'displayName': '{{author.displayName}}',
+                                'url': '{{author.url}}'};
+                var friends = [];
+                {% for friend in friends %}
+                    friends.push({
+                            'id': '{{friend.id}}',
+                            'host': '{{friend.host}}',
+                            'displayName': '{{friend.displayName}}',
+                            'url': '{{friend.url}}'});
+                {% endfor %}
+                </script>
+        <div class="container">
+            {% if friends|length > 0 %}
+                {% for friend in friends %}
+                    <div class="card friend-request">
+                        <div class="card-body">
+                            <h4>
+                                <a href="{{friend.url}}">{{friend.displayName}}</a>
+                            </h4>
+                            <a href="#" class="btn btn-primary btn-accept d-inline-block" onclick="acceptRequest(author, friends[{{forloop.counter0}}])">Accept</a>
+                            <a href="#" class="btn btn-decline d-inline-block" onclick="declineRequest(author, friends[{{forloop.counter0}}])">Decline</a>
+                        </div>
+                    </div>
+
+                {% endfor %}
+            {% else %}
+                <div class="card friend-request">
+                    <div class="card-body">
+                        <h5 class="card-title" style="text-align: center">
+                            No new friend request
+                        </h5>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
