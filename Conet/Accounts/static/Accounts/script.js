@@ -77,28 +77,7 @@ function sendUnFriendRequest(init, recv) {
     sendJSONHTTPPost(recv.host + "/unfriendrequest", users, sendUnFriendRequestCallback);
 }
 
-// callback function after sending init
-// - Simply change the button to "unfriend" if they are friends
-function sendInitInfoRequestCallback(response) {
-    var response = JSON.parse(response);
-    if (response.authors.length == 0) {
-        var btn = document.getElementById("btn-unfriend");
-        btn.style.display = "none";
-        var new_btn = document.getElementById("btn-befriend");
-        new_btn.style.display = "block";
-    } else {
-        var btn = document.getElementById("btn-befriend");
-        btn.style.display = "none";
-        var new_btn = document.getElementById("btn-unfriend");
-        new_btn.style.display = "block";
-    }
-}
 
-function init_info_page(init, recv) {
-    console.log("initing")
-    var request_body = { 'authors': "['" + recv.id + "']" };
-    sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
-}
 
 function sendLoadUserProfileCallback(response) {
     var response = JSON.parse(response);
@@ -127,14 +106,8 @@ function load_user_profile(current_user, user_be_viewed) {
     sendJSONHTTPGet(current_user.host + "/author/" + user_be_viewed.id, request_body, sendLoadUserProfileCallback);
 }
 
-// create a list of cards shows the friends
-function sendFriendsCallback(response) {
-    response = JSON.parse(response);
-    friends = response.friends;
-    for (var i of friends) {
-        var friend = JSON.parse(i);
-
-        var friend_card = document.createElement("div");
+function create_card_showing_friends(friend){
+    var friend_card = document.createElement("div");
         friend_card.classList.add("card", "search-results");
 
         var row_div = document.createElement("div");
@@ -197,6 +170,31 @@ function sendFriendsCallback(response) {
         row_div.appendChild(button_div);
         friend_card.appendChild(row_div);
 
+        return friend_card;
+}
+
+
+// create a list of cards shows the friends
+function sendFriendsCallback(response) {
+    console.log(response)
+    response = JSON.parse(response);
+    friends = response.friends;
+    for (var i of friends) {
+        var friend = JSON.parse(i);
+        var friend_card = create_card_showing_friends(friend);
+        document.getElementById('friend-div').appendChild(friend_card);
+    }
+}
+
+// create a list of cards shows the friends
+function sendFollowingFollwerCallback(response) {
+    
+    response = JSON.parse(response);
+    friends = response.authors;
+    for (var i of friends) {
+        console.log(i)
+        var friend = i;
+        var friend_card = create_card_showing_friends(friend);
         document.getElementById('friend-div').appendChild(friend_card);
     }
 }
@@ -206,6 +204,18 @@ function getFriends(user) {
     url = user.slice(0, -1);
     request_body = {};
     sendJSONHTTPGet(url, request_body, sendFriendsCallback);
+}
+
+function getFollowers(user) {
+    url = user+"follower";
+    request_body = {};
+    sendJSONHTTPGet(url, request_body, sendFollowingFollwerCallback);
+}
+
+function getFollowing(user) {
+    url = user+"following";
+    request_body = {};
+    sendJSONHTTPGet(url, request_body, sendFollowingFollwerCallback);
 }
 
 function backToProfile(recoverList) {
@@ -255,6 +265,7 @@ function editProfile() {
         input_field.setAttribute("name", intendToEdit[idx].id);
         input_field.value = intendToEdit[idx].innerText;
         data[input_field.name] = input_field;
+        console.log(intendToEdit[idx].parentNode);
         intendToEdit[idx].parentNode.replaceChild(input_field, intendToEdit[idx]);
     }
 
@@ -271,9 +282,9 @@ function editProfile() {
 
     cancelBtn.addEventListener("click", backToProfile());
 
-    document.getElementsByClassName("content")[0].removeChild(editBtn);
-    document.getElementsByClassName("content")[0].appendChild(cancelBtn);
-    document.getElementsByClassName("content")[0].appendChild(comfirmBtn);
+    document.getElementById("profile-card").removeChild(editBtn);
+    document.getElementById("profile-card").appendChild(cancelBtn);
+    document.getElementById("profile-card").appendChild(comfirmBtn);
 }
 
 function setMultiAttributes(obj, attributes){
@@ -283,20 +294,51 @@ function setMultiAttributes(obj, attributes){
     }
 }
 
+/*
+#     #                                                        
+#     #  ####  #    # ######    #####    ##    ####  ######    
+#     # #    # ##  ## #         #    #  #  #  #    # #         
+####### #    # # ## # #####     #    # #    # #      #####     
+#     # #    # #    # #         #####  ###### #  ### #         
+#     # #    # #    # #         #      #    # #    # #         
+#     #  ####  #    # ######    #      #    #  ####  ######    
+
+*/
 // set # of friends on home page to its # of friends
 function get_num_friend_callback(response){
     var response = JSON.parse(response);
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
-    aTag.href = 'friends/';
+    aTag.href = user_be_viewed.url + 'friends/';
     document.getElementById("num-friends").appendChild(aTag);
+}
+
+function get_num_follower_callback(response){
+    var response = JSON.parse(response);
+    var num_friends = response.authors.length;
+    var aTag = document.createElement("a");
+    aTag.innerText=num_friends;
+    aTag.href = user_be_viewed.url + 'followers/';
+    document.getElementById("num-follower").appendChild(aTag);
+}
+
+function get_num_following_callback(response){
+    var response = JSON.parse(response);
+    var num_friends = response.authors.length;
+    var aTag = document.createElement("a");
+    aTag.innerText=num_friends;
+    aTag.href = user_be_viewed.url + 'following/';
+    document.getElementById("num-following").appendChild(aTag);
 }
 
 function get_num_posts_made_callback(response){
     var response = JSON.parse(response);
     var num_posts_made = response.posts.length;
-    document.getElementById("num-posts").innerText = num_posts_made;
+    var aTag = document.createElement("a");
+    aTag.innerText=num_posts_made;
+    aTag.href = user_be_viewed.url + 'posts/';
+    document.getElementById("num-posts").appendChild(aTag);
 }
 
 // loading and creating cards of post cards
@@ -361,8 +403,134 @@ function init_home_page(user){
     var request_body = {};
     var friend_url = user.url + "friends";
     var made_posts_url = user.url+"madeposts";
+    var follower_url = user.url+"follower";
+    var following_url = user.url + "following";
     var fetch_posts_url = user.host + "/author/posts" + "?page="+page_number;
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
+    sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
+    sendJSONHTTPGet(following_url, request_body, get_num_following_callback);
     sendJSONHTTPGet(fetch_posts_url, request_body, home_page_get_visible_post_callback);
+}
+
+/*
+ ###                                                        
+  #  #    # ######  ####     #####    ##    ####  ######    
+  #  ##   # #      #    #    #    #  #  #  #    # #         
+  #  # #  # #####  #    #    #    # #    # #      #####     
+  #  #  # # #      #    #    #####  ###### #  ### #         
+  #  #   ## #      #    #    #      #    # #    # #         
+ ### #    # #       ####     #      #    #  ####  ######   
+*/
+
+// callback function after sending init
+// - Simply change the button to "unfriend" if they are friends
+function sendInitInfoRequestCallback(response) {
+    var response = JSON.parse(response);
+    var following = false;
+    for(var relation of response.authors){
+        if(relation.id == user_be_viewed.id){
+            following = true;
+            break;
+        }
+    }
+    if (!following) {
+        var btn = document.getElementById("btn-unfriend");
+        btn.style.display = "none";
+        var new_btn = document.getElementById("btn-befriend");
+        new_btn.style.display = "block";
+    } else {
+        var btn = document.getElementById("btn-befriend");
+        btn.style.display = "none";
+        var new_btn = document.getElementById("btn-unfriend");
+        new_btn.style.display = "block";
+    }
+}
+
+function get_profile_callback(response){
+    var response = JSON.parse(response);
+    
+    console.log(response)
+    // adding first name
+    var fn = document.createElement("p");
+    fn.classList.add("text-secondary", "profile-card-content");
+    fn.innerText = response.first_name;
+    fn.setAttribute("id", "first_name");
+    document.getElementById("profile-card-info").appendChild(fn);
+
+    // adding last name
+    var ln = document.createElement("p");
+    ln.classList.add("text-secondary", "profile-card-content");
+    ln.innerText = response.last_name;
+    ln.setAttribute("id", "last_name");
+    document.getElementById("profile-card-info").appendChild(ln);
+
+    // adding bio
+    var bio = document.createElement("p");
+    bio.classList.add("text-secondary", "profile-card-content");
+    if (response.bio == ""){
+        response.bio = "None";
+    }
+    bio.innerText = response.bio;
+    bio.setAttribute("id", "bio");
+    document.getElementById("profile-card-info").appendChild(bio);
+
+    // add email
+    var email = document.createElement("a");
+    email.classList.add("text-secondary", "profile-card-content")
+    var email_icon = document.createElement("span");
+    email_icon.classList.add("oi", "oi-envelope-closed");
+    email.appendChild(email_icon);
+    email.innerHTML += "  " + response.email;
+    email.href = "mailto:"+response.email;
+    email.setAttribute("id", "email");
+    document.getElementById("profile-card-info").appendChild(email);
+    var br = document.createElement("br");
+    document.getElementById("profile-card-info").appendChild(br);
+
+
+    // add github
+    var github = document.createElement("a");
+    github.classList.add("text-secondary", "profile-card-content")
+    var github_icon = document.createElement("span");
+    github_icon.classList.add("oi", "oi-fork");
+    github.appendChild(github_icon);
+    github.innerHTML += " " + response.github;
+    github.href = response.github;
+    github.setAttribute("id", "github");
+    document.getElementById("profile-card-info").appendChild(github);
+    var br = document.createElement("br");
+    document.getElementById("profile-card-info").appendChild(br);
+
+    // add host
+    var host = document.createElement("a");
+    host.classList.add("text-secondary", "profile-card-content")
+    var host_icon = document.createElement("span");
+    host_icon.classList.add("oi", "oi-flag");
+    host.appendChild(host_icon);
+    host.innerHTML += " " + response.host;
+    host.href = response.host;
+    document.getElementById("profile-card-info").appendChild(host);
+    var br = document.createElement("br");
+    document.getElementById("profile-card-info").appendChild(br);
+
+    
+    
+}
+
+function init_info_page(init, recv) {
+    var request_body = { 'authors': "['" + recv.id + "']" };
+    var profile_url = recv.url.slice(0,-1)
+    var friend_url = recv.url + "friends";
+    var made_posts_url = recv.url+"madeposts";
+    var follower_url = recv.url+"follower";
+    var following_url = recv.url + "following";
+    sendJSONHTTPGet(profile_url, {}, get_profile_callback);
+    sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
+    sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
+    sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
+    sendJSONHTTPGet(following_url, request_body, get_num_following_callback);
+    if(init.id != recv.id){
+        sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
+    }
 }

@@ -62,9 +62,10 @@ class ProfilePage(View):
         # get current user and user that is being viewed
         user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
         current_user = request.user
+
         if(current_user != user_be_viewed):
             return HttpResponseRedirect(user_be_viewed.url+"info/")
-        return render(request, self.template_name, {'user_be_viewed':user_be_viewed})
+        return render(request, self.template_name, {'user_be_viewed':user_be_viewed, 'current_user':current_user})
             
 
 class HomePage(View):
@@ -122,6 +123,18 @@ class InfoPage(APIView):
 
 class FriendsPage(View):
     template_name = 'Accounts/friendslist.html'
-
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name,{})
+        user_be_viewed = Author.objects.get(id=kwargs['pk'])
+        return render(request, self.template_name,{'query':'friends', 'user_be_viewed': user_be_viewed})
+
+class FollowersPage(View):
+    template_name = 'Accounts/friendslist.html'
+    def get(self, request, *args, **kwargs):
+        user_be_viewed = Author.objects.get(id=kwargs['pk'])
+        return render(request, self.template_name,{'query':'followers', 'user_be_viewed': user_be_viewed})
+
+class FollowingPage(View):
+    template_name = 'Accounts/friendslist.html'
+    def get(self, request, *args, **kwargs):
+        user_be_viewed = Author.objects.get(id=kwargs['pk'])
+        return render(request, self.template_name,{'query':'following', 'user_be_viewed': user_be_viewed})

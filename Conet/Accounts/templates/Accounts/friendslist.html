@@ -9,7 +9,15 @@
         </div>
         <script>
             const csrf_token = "{{ csrf_token }}"
-            getFriends('{{request.user.url}}')
+            console.log('{{query}}');
+            if('{{query}}' == 'friends'){
+                console.log("friends");
+                getFriends('{{user_be_viewed.url}}');
+            }else if ('{{query}}' == 'followers'){
+                getFollowers('{{user_be_viewed.url}}');
+            }else if ('{{query}}' == 'following'){
+                getFollowing('{{user_be_viewed.url}}');
+            }
         </script>
     {% else %}
 

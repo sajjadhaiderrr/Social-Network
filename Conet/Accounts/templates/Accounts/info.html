@@ -1,3 +1,4 @@
+
 {% extends 'Accounts/base.html' %}
 {% csrf_token %}
 {% block title %}Info{% endblock %}
@@ -9,22 +10,60 @@
             const csrf_token = "{{ csrf_token }}"
             current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
             user_be_viewed =  {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
-            load_user_profile(current_user, user_be_viewed)
+            //load_user_profile(current_user, user_be_viewed)
+            init_info_page(current_user, user_be_viewed);
         </script>
-        
-        <div class='content profile-content'> 
-            <div class='profile-outer-div' id='profile-outer-div'>
+        <div class='content row'>
+            <!-- card -->  
+            <div id="profile-card" class='col-sm-3 card' style="height:fit-content">
+                <h1 id="displayName" class="h1 text-primary center-text">{{ user_be_viewed.displayName }}</h1>
+                <hr>
+                <div id='profile-card-info'>
+                </div>
+                <hr>
+                <div class='row'>
+                    <div class='col-sm-6'>
+                        <p class="text-secondary center-text stats" >Friends</p>
+                        <h3 id="num-friends" class="text-primary center-text" style="text-align: center;"></h3>
+                    </div>
+                    <div class='col-sm-6'>
+                        <p class="text-secondary stats center-text">Posts</p>
+                        <h3 id="num-posts" class="text-primary center-text" ></h3>
+                    </div>
+                    
+                </div>
+                <div class='row'>
+                    <div class='col-sm-6'>
+                        <p class="text-secondary stats center-text">Following</p>
+                        <h3 id="num-following" class="text-primary center-text" ></h3>
+                    </div>
+                    <div class='col-sm-6'>
+                        <p class="text-secondary stats center-text">Followers</p>
+                        <h3 id="num-follower" class="text-primary center-text" ></h3>
+                    </div>
+                </div>
+                {% if not from_one_author %}
+                    <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Follow</a>
+                    <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfollow</a>
+                {% else %}
+                    <button id="btn-edit" class="btn btn-primary" onclick="editProfile()">Edit</button>
+                {% endif %}
             </div>
+            <!-- end of card -->
+            <div class='profile-outer-div' id='profile-outer-div'>
+
+            </div>
+            <!--
             {% if not from_one_author %}
                 <script>
                     init_info_page(current_user, user_be_viewed);
                 </script>
-                <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Be a
-                    friend</a>
-                <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfriend</a>
+                <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Follow</a>
+                <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfollow</a>
             {% else %}
                 <button id="btn-edit" class="btn btn-primary" onclick="editProfile()">Edit</button>
             {% endif %}
+            -->
         </div>
     {% else %}
         <a href="{% url 'login' %}">Login</a>
@@ -32,4 +71,3 @@
         <a href="{% url 'signup' %}">Create an account</a>
     {% endif %}
 {% endblock %}  
-        
