@@ -53,20 +53,35 @@
 
 .stats{
     margin-bottom:0%; 
-    
+    font-size: 9pt;
+    font-weight: bold;
 }
 
 .center-text{
     text-align: center;
 }
 
-.profile-content{
-    
+.profile-card-content{
+    margin-left: 5%;
+    margin-right: 5%;
+    margin-bottom: 1% !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
 }
 
 .home-page-post-card{
     margin-top:5pt;
 }
+
+#profile-card-button{
+    display: block;
+    margin-left: auto; 
+    margin-right: auto; 
+    margin-bottom: 5%;
+}
+
 
 @keyframes fadein{
     from {opacity: 0;}

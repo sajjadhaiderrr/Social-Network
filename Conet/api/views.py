@@ -144,7 +144,8 @@ class AuthorFollowing(View):
 
             # append each friend's id to a list. For response
             for friend in followings:
-                response['authors'].append(str(friend['author']))
+                friend_data = Helper_AuthorSerializers(Author.objects.get(id=friend['author'])).data 
+                response['authors'].append(friend_data)
             return HttpResponse(json.dumps(response), 200)
         except:
             response['authors'] = []
@@ -165,7 +166,8 @@ class AuthorFollower(APIView):
             followers = FollowerSerializers(current_user).data['follower']
             response['authors'] = []
             for friend in followers:
-                response['authors'].append(str(friend['author']))
+                friend_data = Helper_AuthorSerializers(Author.objects.get(id=friend['author'])).data 
+                response['authors'].append(friend_data)
             return Response(response)
         except:
             response['authors'] = []

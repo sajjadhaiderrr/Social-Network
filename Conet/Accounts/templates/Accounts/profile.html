@@ -9,12 +9,15 @@
         <script>
             const csrf_token = '{{ csrf_token }}';
             var current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
-            init_home_page(current_user);
+            user_be_viewed =  {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
+            init_home_page(user_be_viewed);
         </script>
-        <div class="content row">  
-            <div class='col-sm-3 card' style="height:fit-content">
+        <div class="content row">
+            <!-- card -->  
+            <div class='col-sm-3 card' style="height:fit-content;">
                 <h1 class="h1 text-primary center-text">{{ user.displayName }}</h1>
-                <div id='user-stats' class='row'>
+                <hr>
+                <div class='row'>
                     <div class='col-sm-6'>
                         <p class="text-secondary center-text stats" >Friends</p>
                         <h3 id="num-friends" class="text-primary center-text" style="text-align: center;"></h3>
@@ -23,16 +26,25 @@
                         <p class="text-secondary stats center-text">Posts</p>
                         <h3 id="num-posts" class="text-primary center-text" ></h3>
                     </div>
+                    
                 </div>
-                <a class="btn btn-primary" style="display: block;margin-left: auto; margin-right: auto; margin-bottom: 5%"  href="/posts/create/">Create a Post</a>
-                
+                <div class='row'>
+                    <div class='col-sm-6'>
+                        <p class="text-secondary stats center-text">Following</p>
+                        <h3 id="num-following" class="text-primary center-text" ></h3>
+                    </div>
+                    <div class='col-sm-6'>
+                        <p class="text-secondary stats center-text">Followers</p>
+                        <h3 id="num-follower" class="text-primary center-text" ></h3>
+                    </div>
+                </div>
+                <a id="profile-card-button" class="btn btn-primary"  href="/posts/create/">Create a Post</a>            
             </div>
+            <!-- end of card -->  
+
             <div class='col-sm-8' id="home_page_post_cards" style="margin-left:1%">
                 
             </div>
-            
-
-            
         </div>
     {% endif %}
 {% endblock %}
