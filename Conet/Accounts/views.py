@@ -37,7 +37,7 @@ class SignUpPage(View):
             formObj.save()
             user = Author.objects.get(username=username)
             user.host = 'http://'+request.META['HTTP_HOST']
-            user.url = user.host + "/author/" + str(user.id) + '/'
+            user.url = user.host + "/author/" + str(user.id)
             user.save()
             return redirect(self.success_url)
         else:

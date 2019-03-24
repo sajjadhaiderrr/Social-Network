@@ -5,8 +5,8 @@ from . import views
 
 
 urlpatterns = [
-    path('friendrequest', views.friend_request, name='friendrequest'),
-    path('unfriendrequest', views.unfriend_request, name='friendrequest'),
+    path('friendrequest', views.FriendRequestHandler.as_view(), name='friendrequest'),
+    path('unfriendrequest', views.UnfriendRequestHandler.as_view(), name='unfriendrequest'),
     path('notification', views.notification, name="frdreq_notification"),
     path('author/<uuid:pk>/following', views.AuthorFollowing.as_view(), name='authorfollowing'),
     path('author/<uuid:pk>/follower', views.AuthorFollower.as_view(), name='authorfollower'),

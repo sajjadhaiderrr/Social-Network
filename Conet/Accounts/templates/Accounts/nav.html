@@ -12,9 +12,11 @@
     
     <div class="collapse navbar-collapse" id="navbarColor02">
         <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-                <a class="nav-link" href='/notification'>N
-                <span class="badge badge-light"></span></a>
+            <li class="nav-item nav-bell"></li>
+                <a class="nav-link nav-notify" href='/notification'>
+                    <i class="fas fa-sm fa-bell" href='/notification'></i>
+                    <span class="badge badge-danger"></span>
+                </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{request.user.url}}">Home <span class="sr-only">(current)</span></a>
