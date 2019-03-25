@@ -27,10 +27,6 @@ class ReadSinglePost(APIView):
         if (not post):
             return Response("Post does not exist.", status=200)
         
-        #then we check if its unlisted
-        if (post.unlisted == True):
-            return Response("Post is unlisted.", status=200)
-        
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
         if (post.visibility == "PUBLIC"):
