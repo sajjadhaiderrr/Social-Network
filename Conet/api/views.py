@@ -89,9 +89,9 @@ class UnfriendRequestHandler(APIView):
 class FriendRequestHandler(APIView):
     def get(self, request):
         reqUsrId = request.user.id
+        print(reqUsrId)
         try:
             reqAuthor = Author.objects.get(pk=reqUsrId)
-            print("pass here")
             requestList = ApiHelper.get_all_friend_requests(reqAuthor)
             response = {'query': 'friendrequest',
                         'friends': requestList}

@@ -27,7 +27,7 @@
                     <div class="card friend-request">
                         <div class="card-body">
                             <h4>
-                                <a href="{{friend.url}}">{{friend.displayName}}</a>
+                                <a href="{{friend.url|add:'/'}}">{{friend.displayName}}</a>
                             </h4>
                             is following you.<br>
                             <a href="#" class="btn btn-primary btn-accept d-inline-block" onclick="acceptRequest(author, friends[{{forloop.counter0}}])">Follow Back</a>
