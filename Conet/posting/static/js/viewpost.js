@@ -45,7 +45,8 @@ function addComment(post_id)
     .then(response => {
         if (response.status === 200)
         {
-          alert("Success");
+          let url = window.location.href;
+          window.location = url;
         }
         else
         {
