@@ -40,8 +40,8 @@ class Post(models.Model):
 class Comment(models.Model):
 
     commentid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    author = models.ForeignKey('Accounts.Author', on_delete=models.CASCADE, related_name='author')
-    post = models.ForeignKey('Post', on_delete=models.CASCADE,related_name='post')
+    author = models.ForeignKey('Accounts.Author', on_delete=models.CASCADE, related_name='author', default=1)
+    post = models.ForeignKey('Post', on_delete=models.CASCADE,related_name='post', default=1)
     comment = models.CharField(max_length=500)
     contentType = models.CharField(max_length=32, choices=content_type_choice, default='text/plain')
     published = models.DateTimeField(auto_now_add=True)
