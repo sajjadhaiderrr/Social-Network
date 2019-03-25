@@ -8,6 +8,53 @@ from Accounts.models import Author
 from api.ApiHelper import get_friends
 import json
 
+
+def CheckPermissions(author, post):
+    #if the visibility is set to FRIENDS,
+    #lets check if the current author is in
+    #the posting authors friends list
+    author_of_post = post.author
+    if (post.visibility == "FRIENDS"):
+        friends = get_friends(author_of_post)
+        if (author.id not in friends):
+            return ("You are NOT a friend of the author.", False)
+        return ("You are a friend of the author.", True)
+    
+    #if the visibility is set to FOAF,
+    #lets check if the current author is in
+    #the posting authors friends of friends list
+    if (post.visibility == "FOAF"):
+        friends = get_friends(author_of_post)
+        friends_of_friends = []
+        for friend in friends:
+            friends_of_friends += get_friends(friend)
+        if (author.id not in friends_of_friends):
+            return ("You are NOT a FOAF of the author.", False)
+        return return ("You are a FOAF of the author.", True)
+
+    #if the visibility to SERVERONLY,
+    #we check if the current author is in
+    #the posting authors friends list
+    #and we check the posting authors
+    #host and compare it with the current authors
+    if (post.visibility == "SERVERONLY"):
+        local_server = author_of_post.host
+        friends = get_friends(author_of_post)
+        if (author.id not in friends):
+            return ("You are NOT a friend of the author.", False)
+        if (author.host != local_server):
+            return ("You are NOT on the same server as the author.", False)
+        return ("You are a friend of and on the same server as the author.", True)
+
+    #if the visibility is set to PRIVATE,
+    #we check if the current author is in
+    #the posts visibileTo field
+    if (post.visibility == "PRIVATE"):
+        if (author.id not in post.visibileTo):
+            return ("You are NOT one of the people this post is visible to.", False)
+        return ("You are one of the people this post is visible to.", True)
+    
+
 ### API START
 
 # path: /posts
@@ -43,53 +90,11 @@ class ReadSinglePost(APIView):
         
         author = Author.objects.get(id=request.user.id)
         
-        #if the visibility is set to FRIENDS,
-        #lets check if the current author is in
-        #the posting authors friends list
-        author_of_post = post.author
-        if (post.visibility == "FRIENDS"):
-            friends = get_friends(author_of_post)
-            if (author.id not in friends):
-                return Response("You are not a friend of the author.", status=200)
-            serializer = PostSerializer(post)
-            return Response(serializer.data, status=200)
-        
-        #if the visibility is set to FOAF,
-        #lets check if the current author is in
-        #the posting authors friends of friends list
-        if (post.visibility == "FOAF"):
-            friends = get_friends(author_of_post)
-            friends_of_friends = []
-            for friend in friends:
-                friends_of_friends += get_friends(friend)
-            if (author.id not in friends_of_friends):
-                return Response("You are not a FOAF of the author.", status=200)
-            serializer = PostSerializer(post)
-            return Response(serializer.data, status=200)
-
-        #if the visibility to SERVERONLY,
-        #we check if the current author is in
-        #the posting authors friends list
-        #and we check the posting authors
-        #host and compare it with the current authors
-        if (post.visibility == "SERVERONLY"):
-            local_server = author_of_post.host
-            friends = get_friends(author_of_post)
-            if (author.id not in friends):
-                return Response("You are not a friend of the author.", status=200)
-            if (author.host != local_server):
-                return Response("You are not on the same server as the author.", status=200)
-            serializer = PostSerializer(post)
-            return Response(serializer.data, status=200)
-        
-        #if the visibility is set to PRIVATE,
-        #we check if the current author is in
-        #the posts visibileTo field
-        if (post.visibility == "PRIVATE"):
-            if (author.id not in post.visibileTo):
-                return Response("You are not allowed to see this post.", status=200)
-            serializer = PostSerializer(post)
-            return Response(serializer.data, status=200)
+        check_permissions = CheckPermissions(author, post)
+        if (not check_permissions[1]):
+            return Response(check_permissions[0], status=200)
+        serializer = PostSerializer(posts)
+        return Response(serializer.data, status=200)
     
     # put: update single post with id = post_id
     def put(self, request, post_id):
