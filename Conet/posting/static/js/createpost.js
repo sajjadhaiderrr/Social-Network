@@ -5,14 +5,15 @@ function uploadFile() {
   var reader  = new FileReader();
   reader.onloadend = function () {
     uploadedImage = reader.result;
-    document.getElementById("content").value = encoded_img;
+    console.log("test1", reader.result);
+    document.getElementById("content").value = uploadedImage;
     let contentType = document.getElementById("contentType").value
     if (!uploadedImage.includes(contentType)) {
       alert("Invalid content type")
     }
+  }
   if (file) {
     reader.readAsDataURL(file);
-  }
   }
 }
 

@@ -189,7 +189,7 @@ function sendFriendsCallback(response) {
 
 // create a list of cards shows the friends
 function sendFollowingFollwerCallback(response) {
-    
+
     response = JSON.parse(response);
     friends = response.authors;
     for (var i of friends) {
@@ -272,7 +272,7 @@ function editProfile() {
 
     comfirmBtn.addEventListener("click", function () {
            fetchPutRequest(window.location.href, {
-            'email': data['email'].value, 
+            'email': data['email'].value,
             'bio': data['bio'].value,
             'first_name': data['first_name'].value,
             'last_name': data['last_name'].value,
@@ -296,13 +296,13 @@ function setMultiAttributes(obj, attributes){
 }
 
 /*
-#     #                                                        
-#     #  ####  #    # ######    #####    ##    ####  ######    
-#     # #    # ##  ## #         #    #  #  #  #    # #         
-####### #    # # ## # #####     #    # #    # #      #####     
-#     # #    # #    # #         #####  ###### #  ### #         
-#     # #    # #    # #         #      #    # #    # #         
-#     #  ####  #    # ######    #      #    #  ####  ######    
+#     #
+#     #  ####  #    # ######    #####    ##    ####  ######
+#     # #    # ##  ## #         #    #  #  #  #    # #
+####### #    # # ## # #####     #    # #    # #      #####
+#     # #    # #    # #         #####  ###### #  ### #
+#     # #    # #    # #         #      #    # #    # #
+#     #  ####  #    # ######    #      #    #  ####  ######
 
 */
 // set # of friends on home page to its # of friends
@@ -353,7 +353,6 @@ function get_visible_post_callback(response){
             console.log(post)
             var card = document.createElement("div");
             card.classList.add("card","home-page-post-card");
-            
 
             var card_body = document.createElement("div");
             card_body.classList.add("card-body");
@@ -362,13 +361,13 @@ function get_visible_post_callback(response){
             card_title.classList.add("card-title");
             card_title.innerText = post.title;
 
-            
+
             var author_name = document.createElement("a")
             author_name.classList.add("font-weight-light", "text-muted");
             author_name.innerText = post.postauthor.displayName;
             author_name.href= post.postauthor.url+"/";
-            
-            var publish_time = document.createElement("p");
+
+            var publish_time = document.createElement("a");
             publish_time.classList.add("font-weight-light", "text-muted");
             var publish_date_time = Date.parse(post.published);
             var now = new Date();
@@ -383,10 +382,11 @@ function get_visible_post_callback(response){
             }else{
                 publish_time.innerText = Math.round(days_ago) + " days ago";
             }
+            publish_time.href = '/posts/view/' + post.postid;
 
             var content = document.createElement("p");
             content.innerText = post.content;
-            
+
 
             card_body.appendChild(card_title);
             card_body.appendChild(author_name);
@@ -416,13 +416,13 @@ function init_home_page(user){
 }
 
 /*
- ###                                                        
-  #  #    # ######  ####     #####    ##    ####  ######    
-  #  ##   # #      #    #    #    #  #  #  #    # #         
-  #  # #  # #####  #    #    #    # #    # #      #####     
-  #  #  # # #      #    #    #####  ###### #  ### #         
-  #  #   ## #      #    #    #      #    # #    # #         
- ### #    # #       ####     #      #    #  ####  ######   
+ ###
+  #  #    # ######  ####     #####    ##    ####  ######
+  #  ##   # #      #    #    #    #  #  #  #    # #
+  #  # #  # #####  #    #    #    # #    # #      #####
+  #  #  # # #      #    #    #####  ###### #  ### #
+  #  #   ## #      #    #    #      #    # #    # #
+ ### #    # #       ####     #      #    #  ####  ######
 */
 
 // callback function after sending init
@@ -515,7 +515,7 @@ function get_profile_callback(response){
     var br = document.createElement("br");
     document.getElementById("profile-card-info").appendChild(br);
 }
- 
+
 function init_info_page(init, recv) {
     var request_body = { 'authors': "['" + recv.id + "']" };
     var profile_url = recv.url
