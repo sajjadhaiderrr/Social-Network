@@ -29,9 +29,14 @@
         <h4> Comments </h4>
     </div>
     <div class="row">
+      {% if comments|length == 0 %}
+        <p>No Comments</p>
+      {% endif %}
+      {% if comments|length != 0 %}
         {% for comment in comments %}
-          <p>{{comment.author}} wrote: {{ comment.comment }}<br></p>
+          <p>{{comment.author}} wrote: {{ comment.comment|linebreaks }}</p>
         {% endfor %}
+      {% endif %}
     </div>
         <textarea id="addcommenttext" hint="Add Comment" style="width: 100%"></textarea>
         <button id="addcommentbutton" onclick="addComment('{{post.postid}}')" > Add Comment </button>
