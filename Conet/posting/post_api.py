@@ -22,7 +22,7 @@ class ReadSinglePost(APIView):
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
         if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
-            return Response(status=200)
+            return Response(status=404)
         post = Post.objects.filter(pk=post_id)# pylint: disable=maybe-no-member
         serializer = PostSerializer(post[0])
         return Response(serializer.data)
@@ -107,7 +107,8 @@ class CommentReqHandler(APIView):
 
 
     def post(self, request):
-        serializer = CommentSerializer(data=request.data)
+        curAuthor = Author.objects.get(id=request.user.id)
+        serializer = CommentSerializer(data=request.data, context={'comment_author':curAuthor, 'comment_post': post})
         if serializer.is_valid():
             serializer.save()
             #Todo: response success message on json format

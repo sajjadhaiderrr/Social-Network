@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load bootstrap4 %}
+
+{% block title %} View Post {% endblock %}
+
+{% block content %}
+  {% if user.is_authenticated%}
+  <div class="content">
+    <div class="row">
+        {{post.author}}
+    </div>
+    <div class="row">
+      <h2>  {{post.title}}  </h2>
+    </div>
+    <div class="row">
+        {{post.description}}
+    </div>
+    <div class="row">
+        {{post.published}}
+    </div>
+    <div class="row">
+        {% if pictureContent%}
+          <img src={{ post.content }} width=20% height=20%>
+        {% else %}
+          {% autoescape off %}{{ post.content }}{% endautoescape %}
+        {% endif %}
+    </div>
+    <div class="row">
+        <h4> Comments </h4>
+        {% for comment in comments %}
+          <p>{{comment.comment_author}} wrote: {{ comment.comment }}</p>
+        {% endfor %}
+        <textarea id="addcommenttext" hint="Add Comment" style="width: 100%"></textarea>
+        <button id="addcommentbutton" onclick="addComment('{{post.postid}}')" > Add Comment </button>
+    </div>
+  </div>
+  {% endif %}
+{% endblock %}
