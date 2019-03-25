@@ -54,7 +54,6 @@ class Helper_FollowingSerializers(serializers.ModelSerializer):
 
 
 class FollowingSerializers(serializers.ModelSerializer):
-<<<<<<< HEAD
     #friends = Helper_FollowingSerializers(many=True, read_only=True)
     friends = serializers.SerializerMethodField()
 
@@ -62,9 +61,6 @@ class FollowingSerializers(serializers.ModelSerializer):
         friendships = Friendship.objects.filter(init_id=obj.id) # pylint: disable=maybe-no-member
         friends = Helper_FollowingSerializers(friendships, many=True)
         return friends.data
-=======
-    friends = Helper_FollowingSerializers(many=True, read_only=True)
->>>>>>> 4426d34ed13847c6279b9bb7cb36602e581067c1
 
     class Meta:
         model = Author
