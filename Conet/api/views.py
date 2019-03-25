@@ -121,7 +121,7 @@ class FriendRequestHandler(APIView):
 
         # try to get the current relationship between two authors
         try:
-            friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)
+            friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)   # pylint: disable=maybe-no-member
         except:  
             reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
             friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())

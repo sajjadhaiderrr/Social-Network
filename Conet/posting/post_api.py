@@ -6,9 +6,11 @@ from api.serializers import PostSerializer, CommentSerializer
 from django.shortcuts import render
 from Accounts.models import Author
 from api.ApiHelper import get_friends
-import json
 from django.core.paginator import Paginator
 
+import uuid
+import json
+import datetime
 
 def CheckPermissions(author, post):
     #if the visibility is set to FRIENDS,
@@ -54,7 +56,7 @@ def CheckPermissions(author, post):
         if (author.id not in post.visibileTo):
             return ("You are NOT one of the people this post is visible to.", False)
         return ("You are one of the people this post is visible to.", True)
-    
+
 
 ### API START
 
@@ -153,6 +155,7 @@ class ReadSinglePost(APIView):
         response_object["post"] = serializer.data
         return Response(response_object, status=status.HTTP_200_OK)
     
+
     # put: update single post with id = post_id
     def put(self, request, post_id):
         if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
@@ -186,6 +189,7 @@ class ReadSinglePost(APIView):
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
     # get: Get comments of a post
     def get(self, request, post_id):
+
         response_object = {
             "query":"getComments",
             "count": None,
@@ -359,13 +363,16 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         serializer = CommentSerializer(data=request.data, context={'author': author, 'post': post})
         if serializer.is_valid():
+            print("This is valid")
             serializer.save()
+
             response_object["type"] = True
             response_object["message"] = "Successfully added comment."
             return Response(response_object, status=status.HTTP_200_OK)
         response_object["type"] = False
         response_object["message"] = "Could not add comment."
-        return Response(response_object, status=status.HTTP_403_FORBIDDEN)
+        return Response(response_object, status=status.HTTP_400_BAD_REQUEST)
+
 
 ### API END
 
@@ -400,8 +407,14 @@ class CommentReqHandler(APIView):
         return Response(serializer.data)
 
 
-    def post(self, request):
-        serializer = CommentSerializer(data=request.data)
+    def post(self, request, post_id):
+        curAuthor = Author.objects.get(id=request.user.id)
+        post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
+        
+        data = request.data
+        data['author'] = curAuthor.id
+        data['post'] = post.postid
+        serializer = CommentSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             #Todo: response success message on json format
