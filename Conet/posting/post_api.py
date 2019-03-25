@@ -7,6 +7,7 @@ from django.shortcuts import render
 from Accounts.models import Author
 from api.ApiHelper import get_friends
 import json
+from django.core.paginator import Paginator
 
 
 def CheckPermissions(author, post):
@@ -30,7 +31,7 @@ def CheckPermissions(author, post):
             friends_of_friends += get_friends(friend)
         if (author.id not in friends_of_friends):
             return ("You are NOT a FOAF of the author.", False)
-        return return ("You are a FOAF of the author.", True)
+        return ("You are a FOAF of the author.", True)
 
     #if the visibility to SERVERONLY,
     #we check if the current author is in
@@ -70,31 +71,30 @@ class ReadSinglePost(APIView):
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
         #first we check to see if the post with the id exists
-        post = Post.object.get(pk = post_id).exists()
-        if (not post):
-            return Response("Post does not exist.", status=200)
+        if (not Post.objects.filter(pk=post_id).exists()):
+            return Response("Post does not exist.", status=status.HTTP_200_OK)
+        post = Post.objects.get(pk=post_id)
         
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
         if (post.visibility == "PUBLIC"):
             serializer = PostSerializer(post)
-            return Response(serializer.data, status=200)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         #otherwise, the other privacy settings
         #require that an author be logged in
 
-        #lets check if an author is logged in first
-        
-        if (not Author.objects.get(id=request.user.id).exists()):
-            return Response("Please log in.", status=200)
+        #lets check if an author is logged in first       
+        if (not Author.objects.filter(id=request.user.id).exists()):
+            return Response("Please log in.", status=status.HTTP_200_OK)
         
         author = Author.objects.get(id=request.user.id)
         
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
-            return Response(check_permissions[0], status=200)
-        serializer = PostSerializer(posts)
-        return Response(serializer.data, status=200)
+            return Response(check_permissions[0], status=status.HTTP_200_OK)
+        serializer = PostSerializer(post)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     
     # put: update single post with id = post_id
     def put(self, request, post_id):
@@ -129,15 +129,63 @@ class ReadSinglePost(APIView):
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
     # get: Get comments of a post
     def get(self, request, post_id):
-        comments = Comment.objects.filter(comment_post=post_id)# pylint: disable=maybe-no-member
+        #first we check to see if the post with the id exists
+        if (not Post.objects.filter(pk=post_id).exists()):
+            return Response("Post does not exist.", status=status.HTTP_200_OK)
+        post = Post.objects.get(pk=post_id)
+
+        #start off by  getting the 
+        #page and size from the query string
+        try:
+            page = int(request.GET.get("page", ""))
+        except:
+            page = ""
+        try:
+            size = int(request.GET.get("size", ""))
+        except:
+            size = ""
+        
+        #if the posts visibility is set
+        #to PUBLIC, we can return comments
+        if (post.visibility == "PUBLIC"):
+            comments = Comment.objects.filter(post=post_id)
+        
+            if (page and size):
+                paginator = Paginator(comments, size)
+                comments = paginator.get_page(page)
+
+            serializer = CommentSerializer(comments, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        #otherwise, the other privacy settings
+        #require that an author be logged in
+
+        #lets check if an author is logged in first       
+        if (not Author.objects.filter(id=request.user.id).exists()):
+            return Response("Please log in.", status=status.HTTP_200_OK)
+        
+        author = Author.objects.get(id=request.user.id)
+        
+        check_permissions = CheckPermissions(author, post)
+        if (not check_permissions[1]):
+            return Response(check_permissions[0], status=status.HTTP_200_OK)
+        
+        comments = Comment.objects.filter(post=post_id)
+        
+        if (page and size):
+            paginator = Paginator(comments, size)
+            comments = paginator.get_page(page)
+
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     # post: Add a comment to a post
     def post(self, request, post_id):
         curAuthor = Author.objects.get(id=request.user.id)
+        print(curAuthor.id)
         post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
-        serializer = CommentSerializer(data=request.data, context={'comment_author': curAuthor, 'comment_post': post})
+        print(post.postid)
+        serializer = CommentSerializer(data=request.data, context={'author': curAuthor, 'post': post})
         if serializer.is_valid():
             serializer.save()
             return Response(status=status.HTTP_200_OK)
