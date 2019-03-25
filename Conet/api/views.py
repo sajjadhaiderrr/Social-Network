@@ -397,7 +397,7 @@ class AuthorProfileHandler(APIView):
             return JsonResponse(serializer.data)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-# get a list of posts made by given author
+# get a list of ALL(including public, private, FOAF, friend, etc) posts made by given author. 
 class AuthorMadePostAPI(APIView):
     def get(self,request,pk):
         try:
