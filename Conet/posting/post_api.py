@@ -29,7 +29,7 @@ class ReadSinglePost(APIView):
         
         #then we check if its unlisted
         if (post.unlisted == True):
-            return Response("Post is unlisted", status=200)
+            return Response("Post is unlisted.", status=200)
         
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
@@ -45,7 +45,7 @@ class ReadSinglePost(APIView):
         if (not Author.objects.get(id=request.user.id).exists()):
             return Response("Please log in.", status=200)
         
-        author = request.user.id
+        author = Author.objects.get(id=request.user.id)
         
         #if the visibility is set to FRIENDS,
         #lets check if the current author is in
@@ -53,7 +53,7 @@ class ReadSinglePost(APIView):
         author_of_post = post.author
         if (post.visibility == "FRIENDS"):
             friends = get_friends(author_of_post)
-            if (author not in friends):
+            if (author.id not in friends):
                 return Response("You are not a friend of the author.", status=200)
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
@@ -66,7 +66,7 @@ class ReadSinglePost(APIView):
             friends_of_friends = []
             for friend in friends:
                 friends_of_friends += get_friends(friend)
-            if (author not in friends_of_friends):
+            if (author.id not in friends_of_friends):
                 return Response("You are not a FOAF of the author.", status=200)
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
@@ -79,7 +79,7 @@ class ReadSinglePost(APIView):
         if (post.visibility == "SERVERONLY"):
             local_server = author_of_post.host
             friends = get_friends(author_of_post)
-            if (author not in friends):
+            if (author.id not in friends):
                 return Response("You are not a friend of the author.", status=200)
             if (author.host != local_server):
                 return Response("You are not on the same server as the author.", status=200)
@@ -88,23 +88,13 @@ class ReadSinglePost(APIView):
         
         #if the visibility is set to PRIVATE,
         #we check if the current author is in
-        #posts visibileTo field
+        #the posts visibileTo field
         if (post.visibility == "PRIVATE"):
-            if (author not in author_of_post.visibileTo):
+            if (author.id not in post.visibileTo):
                 return Response("You are not allowed to see this post.", status=200)
             serializer = PostSerializer(post)
             return Response(serializer.data, status=200)
-            
-            
-
-
     
-
-        if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
-            return Response(status=200)
-        post = Post.objects.filter(pk=post_id)# pylint: disable=maybe-no-member
-        serializer = PostSerializer(post[0])
-        return Response(serializer.data)
     # put: update single post with id = post_id
     def put(self, request, post_id):
         if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
