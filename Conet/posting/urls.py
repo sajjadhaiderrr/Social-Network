@@ -14,8 +14,9 @@ urlpatterns = [
 
     ### API START
 
-    path('', post_api.PostReqHandler.as_view(), name='view_public_posts'),
+    path('', post_api.ReadAllPublicPosts.as_view(), name='view_public_posts'),
     path('<post_id>', post_api.ReadSinglePost.as_view(), name='view_post'),
+
     path('<post_id>/comments', post_api.ReadAndCreateAllCommentsOnSinglePost.as_view(), name='view_posts'),
 
     ### API END
