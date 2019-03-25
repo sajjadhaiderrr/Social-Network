@@ -129,6 +129,18 @@ class ReadSinglePost(APIView):
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
     # get: Get comments of a post
     def get(self, request, post_id):
+        response_object = {
+            "query":"comments",
+            "count": None,
+            "size": None,
+            "next": None,
+            "previous": None,
+            "comments": None
+        }
+
+        request_url = request.build_absolute_uri("/").strip("/")
+        previous_page = None
+
         #first we check to see if the post with the id exists
         if (not Post.objects.filter(pk=post_id).exists()):
             return Response("Post does not exist.", status=status.HTTP_200_OK)
@@ -151,11 +163,23 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             comments = Comment.objects.filter(post=post_id)
         
             if (page and size):
+                
                 paginator = Paginator(comments, size)
-                comments = paginator.get_page(page)
+                if (page > paginator.num_pages):
+                    comments = None
+                else:
+                    comments = paginator.get_page(page)
+                
+                response_object["size"] = size
+                if (page > 1):
+                    previous_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page-1, size)
+                next_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page+1, size)
+                response_object["next"] = next_page
+                response_object["previous"] = previous_page
 
             serializer = CommentSerializer(comments, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            response_object["comments"] = serializer.data
+            return Response(response_object, status=status.HTTP_200_OK)
 
         #otherwise, the other privacy settings
         #require that an author be logged in
@@ -181,6 +205,43 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
     # post: Add a comment to a post
     def post(self, request, post_id):
+        # #first we check to see if the post with the id exists
+        # if (not Post.objects.filter(pk=post_id).exists()):
+        #     return Response("Post does not exist.", status=status.HTTP_200_OK)
+        # post = Post.objects.get(pk=post_id)
+        
+        # #if the posts visibility is set
+        # #to PUBLIC, we can return comments
+        # if (post.visibility == "PUBLIC"):
+        #     comments = Comment.objects.filter(post=post_id)
+        
+        #     if (page and size):
+        #         paginator = Paginator(comments, size)
+        #         comments = paginator.get_page(page)
+
+        #     serializer = CommentSerializer(comments, many=True)
+        #     return Response(serializer.data, status=status.HTTP_200_OK)
+
+        # #otherwise, the other privacy settings
+        # #require that an author be logged in
+
+        # #lets check if an author is logged in first       
+        # if (not Author.objects.filter(id=request.user.id).exists()):
+        #     return Response("Please log in.", status=status.HTTP_200_OK)
+        
+        # author = Author.objects.get(id=request.user.id)
+        
+        # check_permissions = CheckPermissions(author, post)
+        # if (not check_permissions[1]):
+        #     return Response(check_permissions[0], status=status.HTTP_200_OK)
+        
+        # comments = Comment.objects.filter(post=post_id)
+
+
+
+
+
+
         curAuthor = Author.objects.get(id=request.user.id)
         print(curAuthor.id)
         post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
