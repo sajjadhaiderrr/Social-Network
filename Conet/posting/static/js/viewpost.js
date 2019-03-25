@@ -25,7 +25,7 @@ function addComment(post_id)
     let body = JSON.stringify(commentForm);
     let url = window.location.href.split("/")
     url = url[0] + "//" + url[2] ;
-    url + "/posts/" + url[5] + "/comments"
+    url = url + "/posts/"+post_id+"/comments"
     console.log("url", url);
     console.log(commentForm);
     return fetch(url , {

@@ -67,7 +67,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
     def post(self, request, post_id):
         curAuthor = Author.objects.get(id=request.user.id)
         post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
-        serializer = CommentSerializer(data=request.data, context={'comment_author': curAuthor, 'comment_post': post})
+        serializer = CommentSerializer(data=request.data, context={'author': curAuthor, 'post': post})
         if serializer.is_valid():
             serializer.save()
             return Response(status=status.HTTP_200_OK)
