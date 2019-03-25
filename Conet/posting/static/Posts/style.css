@@ -5,7 +5,7 @@
 
 }
 .body{
-    background-color: #eeeeee!important;
+    background-color: #e6ecf0!important;
 }
 
 .card.welcompage{
@@ -50,6 +50,13 @@
 
 .home-page-post-card{
     margin-top:5pt;
+}
+
+.shadow-textarea textarea.form-control::placeholder {
+    font-weight: 300;
+}
+.shadow-textarea textarea.form-control {
+    padding-left: 0.8rem;
 }
 
 @keyframes fadein{

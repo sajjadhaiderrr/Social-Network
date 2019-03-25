@@ -4,43 +4,77 @@
 {% block title %} View Post {% endblock %}
 
 {% block content %}
-  {% if user.is_authenticated%}
-  <div class="content">
-    <div class="row">
-        {{post.author}}
-    </div>
-    <div class="row">
-      <h2>  {{post.title}}  </h2>
-    </div>
-    <div class="row">
-        {{post.description}}
-    </div>
-    <div class="row">
-        {{post.published}}
-    </div>
-    <div class="row">
-        {% if pictureContent%}
-          <img src={{ post.content }} width=20% height=20%>
-        {% else %}
-          {% autoescape off %}{{ post.content }}{% endautoescape %}
+{% include 'Accounts/nav.html' %}
+  {% if user.is_authenticated %}
+    <script>
+    </script>
+    <div class="content">
+      
+      <div class="row">
+        <!-- info part -->
+        <div class="col-sm-4">
+          <h1 id="post-title"></h1>
+          <hr>
+          <a id="post-author-link"></a>
+          <p id="published"></p>
+        </div>
+
+        <!-- content part -->
+        <div class="col-sm-8">
+          <div id="post-image"> </div>
+          <div id="post-content"> </div>
+          <hr>
+          <div id="create-comment">
+            <div class="input-group shadow-textarea">
+              <textarea id="addcommenttext" class="form-control z-depth-1" id="exampleFormControlTextarea6" rows="1" placeholder="Comment..." style="resize:none"></textarea>
+              <span class="btn btn-primary" id="addcommentbutton" onclick="addComment('{{post.postid}}')" > Send </span>
+            </div>
+          </div>
+          <div id="post-comments"> </div>
+        </div>
+
+      </div>
+      <!-- 
+      <div class="row">
+          {{post.author}}
+      </div>
+      <div class="row">
+        <h2>  {{post.title}}  </h2>
+      </div>
+      <div class="row">
+          {{post.description}}
+      </div>
+      <div class="row">
+          {{post.published}}
+      </div>
+      <div class="row">
+          {% if pictureContent%}
+            <img src={{ post.content }} width=20% height=20%>
+          {% else %}
+            {% autoescape off %}{{ post.content }}{% endautoescape %}
+          {% endif %}
+      </div>
+      <div class="row">
+          <h4> Comments </h4>
+      </div>
+      <div class="form-group shadow-textarea">
+        <label for="exampleFormControlTextarea6">Shadow and placeholder</label>
+        <textarea class="form-control z-depth-1" id="exampleFormControlTextarea6" rows="3" placeholder="Write something here..."></textarea>
+      </div>
+      <div class="row">
+        {% if comments|length == 0 %}
+          <p>No Comments</p>
         {% endif %}
+        {% if comments|length != 0 %}
+          {% for comment in comments %}
+            <p>{{comment.author}} wrote: {{ comment.comment|linebreaks }}</p>
+          {% endfor %}
+        {% endif %}
+      </div>
+          <textarea id="addcommenttext" hint="Add Comment" style="width: 100%"></textarea>
+          <button id="addcommentbutton" onclick="addComment('{{post.postid}}')" > Add Comment </button>
+      </div>
     </div>
-    <div class="row">
-        <h4> Comments </h4>
-    </div>
-    <div class="row">
-      {% if comments|length == 0 %}
-        <p>No Comments</p>
-      {% endif %}
-      {% if comments|length != 0 %}
-        {% for comment in comments %}
-          <p>{{comment.author}} wrote: {{ comment.comment|linebreaks }}</p>
-        {% endfor %}
-      {% endif %}
-    </div>
-        <textarea id="addcommenttext" hint="Add Comment" style="width: 100%"></textarea>
-        <button id="addcommentbutton" onclick="addComment('{{post.postid}}')" > Add Comment </button>
-    </div>
-  </div>
+    -->
   {% endif %}
 {% endblock %}

@@ -382,7 +382,7 @@ function get_visible_post_callback(response){
             }else{
                 publish_time.innerText = Math.round(days_ago) + " days ago";
             }
-            publish_time.href = '/posts/view/' + post.postid;
+            publish_time.href = '/posts/' + post.postid + "/";
 
             if (post.contentType=="text/plain" || post.contentType=="text/markdown") {
               var content = document.createElement("p");
@@ -397,6 +397,7 @@ function get_visible_post_callback(response){
 
             card_body.appendChild(card_title);
             card_body.appendChild(author_name);
+            card_body.appendChild(document.createElement("br"));
             card_body.appendChild(publish_time);
             card_body.appendChild(document.createElement("hr"));
             card_body.appendChild(content);

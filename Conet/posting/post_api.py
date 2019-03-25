@@ -67,11 +67,14 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
     def post(self, request, post_id):
         curAuthor = Author.objects.get(id=request.user.id)
         post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
+        
         serializer = CommentSerializer(data=request.data, context={'author': curAuthor, 'post': post})
+        print("==============================")
+        print(serializer.initial_data)
         if serializer.is_valid():
             serializer.save()
             return Response(status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_403_FORBIDDEN)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 ### API END
 
