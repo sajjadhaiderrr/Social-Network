@@ -384,9 +384,16 @@ function get_visible_post_callback(response){
             }
             publish_time.href = '/posts/view/' + post.postid;
 
-            var content = document.createElement("p");
-            content.innerText = post.content;
-
+            if (post.contentType=="text/plain" || post.contentType=="text/markdown") {
+              var content = document.createElement("p");
+              content.innerText = post.content;
+            }
+            else {
+              var content = document.createElement("img");
+              content.setAttribute("src", post.content);
+              content.setAttribute("width", "20%");
+              content.setAttribute("height", "20%");
+            }
 
             card_body.appendChild(card_title);
             card_body.appendChild(author_name);

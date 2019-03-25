@@ -48,7 +48,7 @@ def createPost(request):
     return render(request, "createpost.html")
 
 def viewPost(request, post_id):
-    #comments = Comment.objects.filter(comment_post_id=post_id)
+    comments = Comment.objects.filter(post=post_id)
     post = Post.objects.get(pk=post_id)
     verification = currentPostUserVerification(post, request)
 
@@ -60,7 +60,7 @@ def viewPost(request, post_id):
 
         return render(request, "viewpost.html", {
                                          'pictureContent': pictureContent,
-                                         'post':post
+                                         'post':post, 'comments': comments
                                              })
     else:
         raise Http404("Post not found")

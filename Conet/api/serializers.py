@@ -144,11 +144,11 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('commentid','comment_author', 'comment_post', 'comment', 'contentType', 'published')
+        fields = ('commentid','author', 'post', 'comment', 'contentType', 'published')
 
     def create(self, validated_data):
-        author = self.context['comment_author']
-        post = self.context['comment_post']
+        author = self.context['author']
+        post = self.context['post']
         comment = Comment.objects.create(author=author,post=post, **validated_data)  # pylint: disable=maybe-no-member
         comment.save()
         return comment
