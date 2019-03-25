@@ -138,6 +138,13 @@ class ReadSinglePost(APIView):
         except:
             return Response(response_object, status=status.HTTP_200_OK)
         
+        #check if its the currently authenticated
+        #users post
+        if (author.id == post.author.id):
+            serializer = PostSerializer(post)
+            response_object["post"] = serializer.data
+            return Response(response_object, status=status.HTTP_200_OK)
+        
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
             return Response(response_object, status=status.HTTP_200_OK)
@@ -242,6 +249,32 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             author = Author.objects.get(id=request.user.id)
         except:
             return Response(response_object, status=status.HTTP_200_OK)
+
+        #check if its the currently authenticated
+        #users post
+        if (author.id == post.author.id):
+            comments = Comment.objects.filter(post=post_id)
+            count = comments.count()
+        
+            if (page and size):           
+                paginator = Paginator(comments, size)
+
+                if (page > paginator.num_pages):
+                    comments = None
+                else:
+                    comments = paginator.get_page(page)
+                
+                response_object["size"] = size
+                if (page > 1):
+                    previous_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page-1, size)
+                next_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page+1, size)
+                response_object["next"] = next_page
+                response_object["previous"] = previous_page
+
+            serializer = CommentSerializer(comments, many=True)
+            response_object["comments"] = serializer.data
+            response_object["count"] = count
+            return Response(response_object, status=status.HTTP_200_OK)
         
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
@@ -295,6 +328,19 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         
         if (post.visibility == "PUBLIC"):
+            serializer = CommentSerializer(data=request.data, context={'author': author, 'post': post})
+            if serializer.is_valid():
+                serializer.save()
+                response_object["type"] = True
+                response_object["message"] = "Successfully added comment."
+                return Response(response_object, status=status.HTTP_200_OK)
+            response_object["type"] = False
+            response_object["message"] = "Could not add comment."
+            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
+
+        #check if its the currently authenticated
+        #users post
+        if (author.id == post.author.id):
             serializer = CommentSerializer(data=request.data, context={'author': author, 'post': post})
             if serializer.is_valid():
                 serializer.save()
