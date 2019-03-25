@@ -59,7 +59,7 @@ class ReadSinglePost(APIView):
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
     # get: Get comments of a post
     def get(self, request, post_id):
-        comments = Comment.objects.filter(comment_post=post_id)# pylint: disable=maybe-no-member
+        comments = Comment.objects.filter(post=post_id)# pylint: disable=maybe-no-member
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
