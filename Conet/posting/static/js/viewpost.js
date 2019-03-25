@@ -26,7 +26,7 @@ function addComment(post_id)
     let url = window.location.href.split("/")
     url = url[0] + "//" + url[2] ;
     console.log(commentForm);
-    return fetch(url + "/posts/" + post_id + "/comments" , {
+    return fetch(url + "/posts/" + url[5] + "/comments" , {
         method: "POST",
         mode: "cors",
         cache: "no-cache",

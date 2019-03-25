@@ -47,7 +47,8 @@ def currentPostUserVerification(post, request):
 def createPost(request):
     return render(request, "createpost.html")
 
-def viewPost(request, post_id):
+def viewPost(request):
+    post_id = 'cf288e8c-89bb-45d4-918d-da16d8e5cda0'
     #comments = Comment.objects.filter(comment_post_id=post_id)
     post = Post.objects.get(pk=post_id)
     verification = currentPostUserVerification(post, request)

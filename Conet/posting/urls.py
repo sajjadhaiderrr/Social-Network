@@ -7,7 +7,7 @@ urlpatterns = [
     path('api/posts', post_api.PostReqHandler.as_view(), name='view_posts'),
     path('api/comments', post_api.CommentReqHandler.as_view(), name='view_comments'),
     path('create/', Helper.createPost, name='create_post'),
-    path('view/', Helper.viewPost, name='post_details'),
+    path('view/<post_id>/', Helper.viewPost, name='post_details'),
 
     ### HELPER END
 
