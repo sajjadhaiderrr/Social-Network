@@ -27,9 +27,12 @@
     </div>
     <div class="row">
         <h4> Comments </h4>
+    </div>
+    <div class="row">
         {% for comment in comments %}
-          <p>{{comment.comment_author}} wrote: {{ comment.comment }}</p>
+          <p>{{comment.author}} wrote: {{ comment.comment }}<br></p>
         {% endfor %}
+    </div>
         <textarea id="addcommenttext" hint="Add Comment" style="width: 100%"></textarea>
         <button id="addcommentbutton" onclick="addComment('{{post.postid}}')" > Add Comment </button>
     </div>
