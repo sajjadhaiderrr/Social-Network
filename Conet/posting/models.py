@@ -28,7 +28,7 @@ class Post(models.Model):
     source = models.URLField(null=True)
     origin = models.URLField(null=True)
     description = models.CharField(max_length=200)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, default=1, related_name="postauthor")
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="postauthor")
     contentType = models.CharField(max_length=32, choices=content_type_choice, default='text/plain')
     content = models.TextField(blank=True)
     categories = models.CharField(max_length=250)
@@ -40,8 +40,8 @@ class Post(models.Model):
 class Comment(models.Model):
 
     commentid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    comment_author = models.ForeignKey('Accounts.Author', on_delete=models.CASCADE, related_name='author', default=1)
-    comment_post = models.ForeignKey('Post', on_delete=models.CASCADE,related_name='post', default=1)
+    comment_author = models.ForeignKey('Accounts.Author', on_delete=models.CASCADE, related_name='author')
+    comment_post = models.ForeignKey('Post', on_delete=models.CASCADE,related_name='post')
     comment = models.CharField(max_length=500)
     contentType = models.CharField(max_length=32, choices=content_type_choice, default='text/plain')
     published = models.DateTimeField(auto_now_add=True)

@@ -55,7 +55,7 @@ class Helper_FollowingSerializers(serializers.ModelSerializer):
 
 class FollowingSerializers(serializers.ModelSerializer):
     friends = Helper_FollowingSerializers(many=True, read_only=True)
-    
+
     class Meta:
         model = Author
         fields = ('friends',)
@@ -127,10 +127,10 @@ class CommentSerializer(serializers.ModelSerializer):
 
     # def get_author(self, obj):
     #     return Helper_AuthorSerializers(Author.objects.get(id=obj.author.id)).data
-    
+
     def get_post(self,obj):
         return obj.comment_post.id
-    
+
     class Meta:
         model = Comment
         fields = ('commentid','comment_author', 'comment_post', 'comment', 'contentType', 'published')
@@ -138,7 +138,7 @@ class CommentSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         author = self.context['comment_author']
         post = self.context['comment_post']
-        comment = Comment.objects.create(comment_author=author, comment_post=post, **validated_data)  # pylint: disable=maybe-no-member
+        comment = Comment.objects.create(comment_author=author,comment_post=post, **validated_data)  # pylint: disable=maybe-no-member
         comment.save()
         return comment
     # def create(self, validated_data):
