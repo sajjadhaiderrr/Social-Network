@@ -71,9 +71,10 @@ class ReadSinglePost(APIView):
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
         #first we check to see if the post with the id exists
-        if (not Post.objects.filter(pk=post_id).exists()):
-            return Response("Post does not exist.", status=status.HTTP_200_OK)
-        post = Post.objects.get(pk=post_id)
+        try:
+            post = Post.objects.get(pk=post_id)
+        except:
+            return Response(response_object, status=status.HTTP_200_OK)
         
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
@@ -85,10 +86,10 @@ class ReadSinglePost(APIView):
         #require that an author be logged in
 
         #lets check if an author is logged in first       
-        if (not Author.objects.filter(id=request.user.id).exists()):
-            return Response("Please log in.", status=status.HTTP_200_OK)
-        
-        author = Author.objects.get(id=request.user.id)
+        try:
+            author = Author.objects.get(id=request.user.id)
+        except:
+            return Response(response_object, status=status.HTTP_200_OK)
         
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
@@ -162,10 +163,11 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         #to PUBLIC, we can return comments
         if (post.visibility == "PUBLIC"):
             comments = Comment.objects.filter(post=post_id)
+            count = comments.count()
         
-            if (page and size):
-                
+            if (page and size):           
                 paginator = Paginator(comments, size)
+
                 if (page > paginator.num_pages):
                     comments = None
                 else:
@@ -180,6 +182,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
             serializer = CommentSerializer(comments, many=True)
             response_object["comments"] = serializer.data
+            response_object["count"] = count
             return Response(response_object, status=status.HTTP_200_OK)
 
         #otherwise, the other privacy settings
@@ -193,16 +196,30 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
-            return Response(check_permissions[0], status=status.HTTP_200_OK)
+            return Response(response_object, status=status.HTTP_200_OK)
         
         comments = Comment.objects.filter(post=post_id)
+        count = comments.count()
         
         if (page and size):
             paginator = Paginator(comments, size)
-            comments = paginator.get_page(page)
+
+            if (page > paginator.num_pages):
+                comments = None
+            else:
+                comments = paginator.get_page(page)
+            
+            response_object["size"] = size
+            if (page > 1):
+                previous_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page-1, size)
+            next_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page+1, size)
+            response_object["next"] = next_page
+            response_object["previous"] = previous_page
 
         serializer = CommentSerializer(comments, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        response_object["comments"] = serializer.data
+        response_object["count"] = count
+        return Response(response_object, status=status.HTTP_200_OK)
 
     # post: Add a comment to a post
     def post(self, request, post_id):
