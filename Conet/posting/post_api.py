@@ -142,9 +142,10 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         previous_page = None
 
         #first we check to see if the post with the id exists
-        if (not Post.objects.filter(pk=post_id).exists()):
-            return Response("Post does not exist.", status=status.HTTP_200_OK)
-        post = Post.objects.get(pk=post_id)
+        try:
+            post = Post.objects.get(pk=post_id)
+        except:
+            return Response(response_object, status=status.HTTP_200_OK)
 
         #start off by  getting the 
         #page and size from the query string
@@ -184,11 +185,11 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         #otherwise, the other privacy settings
         #require that an author be logged in
 
-        #lets check if an author is logged in first       
-        if (not Author.objects.filter(id=request.user.id).exists()):
-            return Response("Please log in.", status=status.HTTP_200_OK)
-        
-        author = Author.objects.get(id=request.user.id)
+        #lets check if an author is logged in first
+        try:
+            author = Author.objects.get(id=request.user.id)
+        except:
+            return Response(response_object, status=status.HTTP_200_OK)
         
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
