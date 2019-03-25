@@ -117,7 +117,7 @@ class PostSerializer(serializers.ModelSerializer):
         author = self.context['author']
         origin = self.context['origin']
         post = Post.objects.create(author=author, origin=origin, source=origin, **validated_data)  # pylint: disable=maybe-no-member
-        src = origin+''+str(post.postid)+'/'    # pylint: disable=maybe-no-member
+        src = origin+'posts/'+str(post.postid)   # pylint: disable=maybe-no-member
         post.source = post.origin = src
         post.save()
         return post

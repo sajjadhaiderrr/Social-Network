@@ -357,9 +357,12 @@ function get_visible_post_callback(response){
             var card_body = document.createElement("div");
             card_body.classList.add("card-body");
 
-            var card_title = document.createElement("h3");
+            var card_title = document.createElement("a");
             card_title.classList.add("card-title");
-            card_title.innerText = post.title;
+            card_title.href = '/posts/' + post.postid + "/";
+            var link_to_post_page = document.createElement("h3");
+            link_to_post_page.innerText = post.title;
+            card_title.appendChild(link_to_post_page);
 
 
             var author_name = document.createElement("a")

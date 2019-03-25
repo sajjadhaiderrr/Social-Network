@@ -7,20 +7,21 @@
 {% include 'Accounts/nav.html' %}
   {% if user.is_authenticated %}
     <script>
+    init_single_post_page('{{ post.origin }}');
     </script>
     <div class="content">
       
-      <div class="row">
+      <div class="row" style="margin-left:10%; margin-right:10%;">
         <!-- info part -->
-        <div class="col-sm-4">
-          <h1 id="post-title"></h1>
+        <div class="col-sm-3">
+          <h1 id="post-title" class="h1 text-primary"></h1>
           <hr>
-          <a id="post-author-link"></a>
-          <p id="published"></p>
+          <a id="post-author-link" class="text-secondary"></a>
+          <p id="published" class="text-secondary"></p>
         </div>
 
         <!-- content part -->
-        <div class="col-sm-8">
+        <div class="col-sm-9">
           <div id="post-image"> </div>
           <div id="post-content"> </div>
           <hr>
