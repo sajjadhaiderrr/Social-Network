@@ -5,7 +5,9 @@ from posting.models import Post, Comment
 from api.serializers import PostSerializer, CommentSerializer
 from django.shortcuts import render
 from Accounts.models import Author
+import uuid
 import json
+import datetime
 
 ### API START
 
@@ -67,11 +69,17 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
     def post(self, request, post_id):
         curAuthor = Author.objects.get(id=request.user.id)
         post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
+        data = request.data
+        data['author'] = curAuthor.id
+        data['post'] = post.postid
         
-        serializer = CommentSerializer(data=request.data, context={'author': curAuthor, 'post': post})
-        print("==============================")
+        serializer = CommentSerializer(data=data)
+
+        print("serializer is done")
         print(serializer.initial_data)
+        print(serializer.is_valid())
         if serializer.is_valid():
+            print("This is valid")
             serializer.save()
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -109,9 +117,14 @@ class CommentReqHandler(APIView):
         return Response(serializer.data)
 
 
-    def post(self, request):
+    def post(self, request, post_id):
         curAuthor = Author.objects.get(id=request.user.id)
-        serializer = CommentSerializer(data=request.data, context={'comment_author':curAuthor, 'comment_post': post})
+        post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
+        
+        data = request.data
+        data['author'] = curAuthor.id
+        data['post'] = post.postid
+        serializer = CommentSerializer(data=data)
         if serializer.is_valid():
             serializer.save()
             #Todo: response success message on json format
