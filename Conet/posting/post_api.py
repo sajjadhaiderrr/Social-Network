@@ -62,9 +62,51 @@ def CheckPermissions(author, post):
 class ReadAllPublicPosts(APIView):
     # get: All posts marked as public on the server
     def get(self, request):
-        posts = Post.objects.filter(visibility="PUBLIC") # pylint: disable=maybe-no-member
+        response_object = {
+            "query":"getPosts",
+            "count": None,
+            "size": None,
+            "next": None,
+            "previous": None,
+            "comments": None
+        }
+
+        request_url = request.build_absolute_uri("/").strip("/")
+        previous_page = None
+
+        #start off by  getting the 
+        #page and size from the query string
+        try:
+            page = int(request.GET.get("page", ""))
+        except:
+            page = ""
+        try:
+            size = int(request.GET.get("size", ""))
+        except:
+            size = ""
+
+        posts = Post.objects.filter(visibility="PUBLIC", unlisted = False)
+        count = posts.count()
+    
+        if (page and size):           
+            paginator = Paginator(posts, size)
+
+            if (page > paginator.num_pages):
+                posts = None
+            else:
+                posts = paginator.get_page(page)
+            
+            response_object["size"] = size
+            if (page > 1):
+                previous_page = request_url + "/posts?page={}&size={}".format(page-1, size)
+            next_page = request_url + "/posts?page={}&size={}".format(page+1, size)
+            response_object["next"] = next_page
+            response_object["previous"] = previous_page
+
         serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
+        response_object["comments"] = serializer.data
+        response_object["count"] = count
+        return Response(response_object, status=status.HTTP_200_OK)
 
 # path: /posts/{post_id}
 class ReadSinglePost(APIView):
