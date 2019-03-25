@@ -272,52 +272,54 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
     # post: Add a comment to a post
     def post(self, request, post_id):
-        # #first we check to see if the post with the id exists
-        # if (not Post.objects.filter(pk=post_id).exists()):
-        #     return Response("Post does not exist.", status=status.HTTP_200_OK)
-        # post = Post.objects.get(pk=post_id)
+        response_object = {
+            "query":"addComment",
+            "type": None,
+            "message": None,
+        }
+
+        #first we check to see if the post with the id exists
+        try:
+            post = Post.objects.get(pk=post_id)
+        except:
+            response_object["type"] = False
+            response_object["message"] = "Post does not exist."
+            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
+
+        #lets check if an author is logged in first
+        try:
+            author = Author.objects.get(id=request.user.id)
+        except:
+            response_object["type"] = False
+            response_object["message"] = "Log in to add a comment."
+            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         
-        # #if the posts visibility is set
-        # #to PUBLIC, we can return comments
-        # if (post.visibility == "PUBLIC"):
-        #     comments = Comment.objects.filter(post=post_id)
+        if (post.visibility == "PUBLIC"):
+            serializer = CommentSerializer(data=request.data, context={'author': author, 'post': post})
+            if serializer.is_valid():
+                serializer.save()
+                response_object["type"] = True
+                response_object["message"] = "Successfully added comment."
+                return Response(response_object, status=status.HTTP_200_OK)
+            response_object["type"] = False
+            response_object["message"] = "Could not add comment."
+            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         
-        #     if (page and size):
-        #         paginator = Paginator(comments, size)
-        #         comments = paginator.get_page(page)
+        check_permissions = CheckPermissions(author, post)
+        if (not check_permissions[1]):
+            response_object["type"] = False
+            response_object["message"] = "You do not have permissions to add a comment to this post."
+            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
 
-        #     serializer = CommentSerializer(comments, many=True)
-        #     return Response(serializer.data, status=status.HTTP_200_OK)
-
-        # #otherwise, the other privacy settings
-        # #require that an author be logged in
-
-        # #lets check if an author is logged in first       
-        # if (not Author.objects.filter(id=request.user.id).exists()):
-        #     return Response("Please log in.", status=status.HTTP_200_OK)
-        
-        # author = Author.objects.get(id=request.user.id)
-        
-        # check_permissions = CheckPermissions(author, post)
-        # if (not check_permissions[1]):
-        #     return Response(check_permissions[0], status=status.HTTP_200_OK)
-        
-        # comments = Comment.objects.filter(post=post_id)
-
-
-
-
-
-
-        curAuthor = Author.objects.get(id=request.user.id)
-        print(curAuthor.id)
-        post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
-        print(post.postid)
-        serializer = CommentSerializer(data=request.data, context={'author': curAuthor, 'post': post})
+        serializer = CommentSerializer(data=request.data, context={'author': author, 'post': post})
         if serializer.is_valid():
             serializer.save()
-            return Response(status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_403_FORBIDDEN)
+            response_object["type"] = True
+            response_object["message"] = "Successfully added comment."
+            return Response(response_object, status=status.HTTP_200_OK)
+        response_object["type"] = False
+        response_object["message"] = "Could not add comment."
+        return Response(response_object, status=status.HTTP_403_FORBIDDEN)
 
 ### API END
 
