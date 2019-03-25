@@ -68,7 +68,6 @@ class UnfriendRequestHandler(APIView):
         # try to delete the relationship with given init_user and recv_user
         reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
         friendship = Friendship.objects.filter(init_id=init_user, recv_id=recv_user) # pylint: disable=maybe-no-member
-        print("reverse: ", reverse_friendship)
         if (friendship.exists() or reverse_friendship.exists()):
             #case: there's reverse relationship between two users and there's a pending friend
             #request from recv_user to init_user
@@ -109,14 +108,11 @@ class FriendRequestHandler(APIView):
         send_id = request_body['author']['id'].replace(request_body['author']['host']+'/author/','')
         rcv_id = request_body['friend']['id'].replace(request_body['friend']['host']+'/author/','')
 
-        print("send_id: ", send_id)
-        print("rcv_id: ", rcv_id)
         try:
             init_user = Author.objects.get(id=send_id)
             recv_user = Author.objects.get(id=rcv_id)
         except:
             response['message'] = 'Request author or request friend does not exist.'
-            print("eror here1")
             return HttpResponse(json.dumps(response), status=400)
 
         # try to get the current relationship between two authors
@@ -125,7 +121,6 @@ class FriendRequestHandler(APIView):
         except:  
             reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
             friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
-            print("reverse: ", reverse_friendship)
             #If there's a reverse relation between init_user and recv_user, they become friend
             #case1: init_user accepts friend request from recv_user
             #case2: both init_user and recv_user send friend request to each other
@@ -299,13 +294,12 @@ class AuthorPostsAPI(APIView):
 
         for friend in friends:
             friend = Author.objects.get(pk=friend)       
-            newposts = Post.objects.filter(author = friend, visibility = "FRIENDS") # pylint: disable=maybe-no-member
+            newposts = Post.objects.filter(author = friend, visibility = "FRIENDS", unlisted=False) # pylint: disable=maybe-no-member
             posts |= newposts
 
         #get all public posts
-        public = Post.objects.filter(visibility="PUBLIC")   # pylint: disable=maybe-no-member
+        public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
         posts |= public
-        posts = posts.order_by(F("published").desc())
 
         #get posts that satisfy FOAF
         allfoafs = set()
@@ -320,19 +314,26 @@ class AuthorPostsAPI(APIView):
                 allfoafs.add(each)
         
         for foaf in allfoafs:
-            newposts = Post.objects.filter(visibility="FOAF", author=foaf) # pylint: disable=maybe-no-member
+            newposts = Post.objects.filter(visibility="FOAF", author=foaf, unlisted=False) # pylint: disable=maybe-no-member
             posts |= newposts
-        
-        for post in posts:
-            allposts.append(post)
         #foaf end
 
         #private
-        '''
         for friend in friends:
-            posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
-            for post in posts:
-                post.visibleTo'''
+            newposts = Post.objects.filter(author=friend, visibility="PRIVATE", unlisted=False) # pylint: disable=maybe-no-member
+            for post in newposts:
+                visibleList = json.loads(post.visibleTo)
+                if str(current_user.id) in visibleList:
+                    posts |= post         
+        #private end
+
+        #Todo: SERVERONLY
+
+        posts = posts.order_by(F("published").desc())
+        
+        for post in posts:
+            allposts.append(post)
+                
         #there are some repeat operations above, might combine later    
 
         try:

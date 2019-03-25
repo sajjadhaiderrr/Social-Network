@@ -10,7 +10,7 @@ content_type_choice = (
     ('text/markdown', 'text/markdown'),
     ('application/base64', 'application/base64'),
     ('image/png;base64', 'image/png;base64'),
-    ('image/jpeg;base64 ', 'image/jpeg;base64 '),
+    ('image/jpeg;base64 ', 'image/jpeg;base64'),
 )
 
 class Post(models.Model):
