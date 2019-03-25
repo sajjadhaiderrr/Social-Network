@@ -70,6 +70,10 @@ class ReadAllPublicPosts(APIView):
 class ReadSinglePost(APIView):
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
+        response_object = {
+            "query":"getPost",
+            "post": None
+        }
         #first we check to see if the post with the id exists
         try:
             post = Post.objects.get(pk=post_id)
@@ -80,7 +84,8 @@ class ReadSinglePost(APIView):
         #to PUBLIC, we are ok to return it
         if (post.visibility == "PUBLIC"):
             serializer = PostSerializer(post)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            response_object["post"] = serializer.data
+            return Response(response_object, status=status.HTTP_200_OK)
 
         #otherwise, the other privacy settings
         #require that an author be logged in
@@ -93,9 +98,11 @@ class ReadSinglePost(APIView):
         
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
-            return Response(check_permissions[0], status=status.HTTP_200_OK)
+            return Response(response_object, status=status.HTTP_200_OK)
+
         serializer = PostSerializer(post)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        response_object["post"] = serializer.data
+        return Response(response_object, status=status.HTTP_200_OK)
     
     # put: update single post with id = post_id
     def put(self, request, post_id):
@@ -131,7 +138,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
     # get: Get comments of a post
     def get(self, request, post_id):
         response_object = {
-            "query":"comments",
+            "query":"getComments",
             "count": None,
             "size": None,
             "next": None,
