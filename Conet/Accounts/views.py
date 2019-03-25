@@ -37,7 +37,7 @@ class SignUpPage(View):
             formObj.save()
             user = Author.objects.get(username=username)
             user.host = 'http://'+request.META['HTTP_HOST']
-            user.url = user.host + "/author/" + str(user.id) + "/"
+            user.url = user.host + "/author/" + str(user.id)
             user.save()
             return redirect(self.success_url)
         else:
@@ -64,7 +64,7 @@ class ProfilePage(View):
         current_user = request.user
 
         if(current_user != user_be_viewed):
-            return HttpResponseRedirect(user_be_viewed.url+"info/")
+            return HttpResponseRedirect(user_be_viewed.url+"/info/")
         return render(request, self.template_name, {'user_be_viewed':user_be_viewed, 'current_user':current_user})
             
 

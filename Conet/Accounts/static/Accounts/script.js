@@ -108,69 +108,70 @@ function load_user_profile(current_user, user_be_viewed) {
 
 function create_card_showing_friends(friend){
     var friend_card = document.createElement("div");
-        friend_card.classList.add("card", "search-results");
+    friend_card.classList.add("card", "search-results");
 
-        var row_div = document.createElement("div");
-        row_div.classList.add("row");
+    var row_div = document.createElement("div");
+    row_div.classList.add("row");
 
-        var card_body = document.createElement("div");
-        card_body.classList.add("card-body", "col-sm-8");
+    var card_body = document.createElement("div");
+    card_body.classList.add("card-body", "col-sm-8");
 
-        var card_title = document.createElement("h3");
-        card_title.innerText = friend.displayName;
-        card_body.appendChild(card_title);
+    var card_title = document.createElement("h3");
+    card_title.innerText = friend.displayName;
+    card_body.appendChild(card_title);
 
-        var row = document.createElement("dl");
-        row.classList.add("row");
+    var row = document.createElement("dl");
+    row.classList.add("row");
 
-        var bio_title = document.createElement("dt");
-        bio_title.classList.add("col-sm-3");
-        bio_title.innerText = "Biography";
-        var bio_dd = document.createElement("dd");
-        bio_dd.classList.add("col-sm-9");
-        bio_dd.innerText = friend.bio;
-        row.appendChild(bio_title);
-        row.appendChild(bio_dd);
+    var bio_title = document.createElement("dt");
+    bio_title.classList.add("col-sm-3");
+    bio_title.innerText = "Biography";
+    var bio_dd = document.createElement("dd");
+    bio_dd.classList.add("col-sm-9");
+    bio_dd.innerText = friend.bio;
+    row.appendChild(bio_title);
+    row.appendChild(bio_dd);
 
 
-        var host_title = document.createElement("dt");
-        host_title.classList.add("col-sm-3");
-        host_title.innerText = "Host";
-        var host_dd = document.createElement("dd");
-        host_dd.classList.add("col-sm-9");
-        var link = document.createElement("a");
-        link.href = friend.host;
-        link.innerText = friend.host;
-        host_dd.appendChild(link);
-        row.appendChild(host_title);
-        row.appendChild(host_dd);
+    var host_title = document.createElement("dt");
+    host_title.classList.add("col-sm-3");
+    host_title.innerText = "Host";
+    var host_dd = document.createElement("dd");
+    host_dd.classList.add("col-sm-9");
+    var link = document.createElement("a");
+    link.href = friend.host;
+    link.innerText = friend.host;
+    host_dd.appendChild(link);
+    row.appendChild(host_title);
+    row.appendChild(host_dd);
 
-        var git_title = document.createElement("dt");
-        git_title.classList.add("col-sm-3");
-        git_title.innerText = "Github";
-        var git_dd = document.createElement("dd");
-        git_dd.classList.add("col-sm-9");
-        var link = document.createElement("a");
-        link.href = friend.github;
-        link.innerText = friend.github;
-        git_dd.appendChild(link);
-        row.appendChild(git_title);
-        row.appendChild(git_dd);
+    var git_title = document.createElement("dt");
+    git_title.classList.add("col-sm-3");
+    git_title.innerText = "Github";
+    var git_dd = document.createElement("dd");
+    git_dd.classList.add("col-sm-9");
+    var link = document.createElement("a");
+    link.href = friend.github;
+    link.innerText = friend.github;
+    git_dd.appendChild(link);
+    row.appendChild(git_title);
+    row.appendChild(git_dd);
 
-        var button_div = document.createElement("div");
-        button_div.classList.add("card-body", "col-sm-2");
-        var link = document.createElement("a");
-        link.classList.add("btn", "btn-primary", "align-middle")
-        link.href = friend.url;
-        link.innerText = "View more";
-        button_div.appendChild(link);
+    var button_div = document.createElement("div");
+    button_div.classList.add("card-body", "col-sm-2");
+    var link = document.createElement("a");
+    link.classList.add("btn", "btn-primary", "align-middle")
+    link.href = friend.url+"/";
+    console.log(friend.url);
+    link.innerText = "View more";
+    button_div.appendChild(link);
 
-        card_body.appendChild(row);
-        row_div.appendChild(card_body);
-        row_div.appendChild(button_div);
-        friend_card.appendChild(row_div);
+    card_body.appendChild(row);
+    row_div.appendChild(card_body);
+    row_div.appendChild(button_div);
+    friend_card.appendChild(row_div);
 
-        return friend_card;
+    return friend_card;
 }
 
 
@@ -201,19 +202,19 @@ function sendFollowingFollwerCallback(response) {
 
 // function to get a list of friends of current user.
 function getFriends(user) {
-    url = user.slice(0, -1);
+    url = user
     request_body = {};
     sendJSONHTTPGet(url, request_body, sendFriendsCallback);
 }
 
 function getFollowers(user) {
-    url = user+"follower";
+    url = user+"/follower";
     request_body = {};
     sendJSONHTTPGet(url, request_body, sendFollowingFollwerCallback);
 }
 
 function getFollowing(user) {
-    url = user+"following";
+    url = user+"/following";
     request_body = {};
     sendJSONHTTPGet(url, request_body, sendFollowingFollwerCallback);
 }
@@ -310,7 +311,7 @@ function get_num_friend_callback(response){
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
-    aTag.href = user_be_viewed.url + 'friends/';
+    aTag.href = user_be_viewed.url + '/friends/';
     document.getElementById("num-friends").appendChild(aTag);
 }
 
@@ -319,7 +320,7 @@ function get_num_follower_callback(response){
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
-    aTag.href = user_be_viewed.url + 'followers/';
+    aTag.href = user_be_viewed.url + '/followers/';
     document.getElementById("num-follower").appendChild(aTag);
 }
 
@@ -328,7 +329,7 @@ function get_num_following_callback(response){
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
-    aTag.href = user_be_viewed.url + 'following/';
+    aTag.href = user_be_viewed.url + '/following/';
     document.getElementById("num-following").appendChild(aTag);
 }
 
@@ -337,7 +338,7 @@ function get_num_posts_made_callback(response){
     var num_posts_made = response.posts.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_posts_made;
-    aTag.href = user_be_viewed.url + 'posts/';
+    aTag.href = user_be_viewed.url + '/posts/';
     document.getElementById("num-posts").appendChild(aTag);
 }
 
@@ -365,7 +366,7 @@ function get_visible_post_callback(response){
             var author_name = document.createElement("a")
             author_name.classList.add("font-weight-light", "text-muted");
             author_name.innerText = post.postauthor.displayName;
-            author_name.href= post.postauthor.url;
+            author_name.href= post.postauthor.url+"/";
             
             var publish_time = document.createElement("p");
             publish_time.classList.add("font-weight-light", "text-muted");
@@ -402,10 +403,10 @@ function get_visible_post_callback(response){
 function init_home_page(user){
     page_number = 0;
     var request_body = {};
-    var friend_url = user.url + "friends";
-    var made_posts_url = user.url+"madeposts";
-    var follower_url = user.url+"follower";
-    var following_url = user.url + "following";
+    var friend_url = user.url + "/friends";
+    var made_posts_url = user.url+"/madeposts";
+    var follower_url = user.url+"/follower";
+    var following_url = user.url + "/following";
     var fetch_posts_url = user.host + "/author/posts" + "?page="+page_number;
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
@@ -517,11 +518,11 @@ function get_profile_callback(response){
  
 function init_info_page(init, recv) {
     var request_body = { 'authors': "['" + recv.id + "']" };
-    var profile_url = recv.url.slice(0,-1)
-    var friend_url = recv.url + "friends";
-    var made_posts_url = recv.url+"madeposts";
-    var follower_url = recv.url+"follower";
-    var following_url = recv.url + "following";
+    var profile_url = recv.url
+    var friend_url = recv.url + "/friends";
+    var made_posts_url = recv.url+"/madeposts";
+    var follower_url = recv.url+"/follower";
+    var following_url = recv.url + "/following";
     sendJSONHTTPGet(profile_url, {}, get_profile_callback);
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
