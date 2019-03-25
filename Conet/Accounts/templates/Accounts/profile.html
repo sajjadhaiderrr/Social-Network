@@ -13,7 +13,7 @@
             init_home_page(user_be_viewed);
         </script>
         <div class="content row">
-            <!-- card -->  
+            <!-- card -->
             <div class='col-sm-3 card' style="height:fit-content;">
                 <h1 class="h1 text-primary center-text">{{ user.displayName }}</h1>
                 <hr>
@@ -26,7 +26,7 @@
                         <p class="text-secondary stats center-text">Posts</p>
                         <h3 id="num-posts" class="text-primary center-text" ></h3>
                     </div>
-                    
+
                 </div>
                 <div class='row'>
                     <div class='col-sm-6'>
@@ -38,12 +38,12 @@
                         <h3 id="num-follower" class="text-primary center-text" ></h3>
                     </div>
                 </div>
-                <a id="profile-card-button" class="btn btn-primary"  href="/posts/create/">Create a Post</a>            
+                <a id="profile-card-button" class="btn btn-primary"  href="/posts/create/">Create a Post</a>
             </div>
-            <!-- end of card -->  
+            <!-- end of card -->
 
             <div class='col-sm-8' id="home_page_post_cards" style="margin-left:1%">
-                
+
             </div>
         </div>
     {% endif %}
