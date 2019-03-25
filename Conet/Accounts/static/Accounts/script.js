@@ -342,8 +342,9 @@ function get_num_posts_made_callback(response){
 }
 
 // loading and creating cards of post cards
-function home_page_get_visible_post_callback(response){
+function get_visible_post_callback(response){
     var response = JSON.parse(response);
+    console.log(response)
     if(response.next == "None" && response.posts==[]){
         console.log("The end");
     }else{
@@ -410,7 +411,7 @@ function init_home_page(user){
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
     sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
     sendJSONHTTPGet(following_url, request_body, get_num_following_callback);
-    sendJSONHTTPGet(fetch_posts_url, request_body, home_page_get_visible_post_callback);
+    sendJSONHTTPGet(fetch_posts_url, request_body, get_visible_post_callback);
 }
 
 /*
@@ -449,8 +450,7 @@ function sendInitInfoRequestCallback(response) {
 
 function get_profile_callback(response){
     var response = JSON.parse(response);
-    
-    console.log(response)
+
     // adding first name
     var fn = document.createElement("p");
     fn.classList.add("text-secondary", "profile-card-content");
@@ -513,11 +513,8 @@ function get_profile_callback(response){
     document.getElementById("profile-card-info").appendChild(host);
     var br = document.createElement("br");
     document.getElementById("profile-card-info").appendChild(br);
-
-    
-    
 }
-
+ 
 function init_info_page(init, recv) {
     var request_body = { 'authors': "['" + recv.id + "']" };
     var profile_url = recv.url.slice(0,-1)
@@ -533,4 +530,5 @@ function init_info_page(init, recv) {
     if(init.id != recv.id){
         sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
     }
+    sendJSONHTTPGet(made_posts_url, request_body, get_visible_post_callback);
 }
