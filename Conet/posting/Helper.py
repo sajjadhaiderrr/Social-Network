@@ -3,6 +3,7 @@ from posting.models import Post, Comment
 from Accounts.models import Author
 from django.shortcuts import redirect, render, get_object_or_404
 from django.http import HttpResponse, HttpResponseNotFound, Http404
+from .post_api import CheckPermissions
 
 
 ''' VERIFICATION HELPER START'''
@@ -50,9 +51,9 @@ def createPost(request):
 def viewPost(request, post_id):
     comments = Comment.objects.filter(post=post_id)
     post = Post.objects.get(pk=post_id)
-    verification = currentPostUserVerification(post, request)
-
-    if verification:
+    
+    verification = CheckPermissions(request.user, post)
+    if verification[1]:
         if post.contentType == "image/png;base64" or post.contentType == "image/jpeg;base64":
             pictureContent = True
         else:

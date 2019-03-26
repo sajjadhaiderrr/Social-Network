@@ -16,6 +16,7 @@ function getPost(url)
 
 function addComment(post_id)
 {
+    console.log(post_id)
     let commentForm = {
           "comment":"",
           "contentType":"text/plain"
@@ -76,7 +77,9 @@ function init_single_post_page(origin){
         if (response.status === 200){
             return response.json();
         }else{
-            alert(response.status);
+            var status_code = document.createElement("h1");
+            status_code.innerText = response.status + ": " + response.statusText;
+            document.getElementById("post-content").appendChild(status_code);
         }
     }).then(json =>{
         console.log(json);
@@ -111,7 +114,25 @@ function init_single_post_page(origin){
             document.getElementById("post-content").appendChild(content);
         }
 
-        // display comment
+        // display comment box
+        var commentbox = document.createElement("div");
+        commentbox.classList.add("input-group", "shadow-textarea");
+        var comment_textarea = document.createElement("textarea");
+        comment_textarea.classList.add('form-control','z-depth-1');
+        comment_textarea.id = "addcommenttext";
+        comment_textarea.setAttribute("rows", "1");
+        comment_textarea.setAttribute("placeholder", "Comment...");
+        comment_textarea.setAttribute("style", "resize:none");
         
+        var comment_btn = document.createElement("span");
+        comment_btn.classList.add("btn", "btn-primary");
+        comment_btn.id = "addcommentbutton";
+        comment_btn.onclick = function(){addComment(json.post.postid)} ;
+        comment_btn.innerText = "Send";
+
+        commentbox.appendChild(comment_textarea);
+        commentbox.appendChild(comment_btn);
+        console.log(commentbox)
+        document.getElementById("create-comment").appendChild(commentbox);
     });
 } 

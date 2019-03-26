@@ -16,10 +16,16 @@ def CheckPermissions(author, post):
     #if the visibility is set to FRIENDS,
     #lets check if the current author is in
     #the posting authors friends list
+    if (post.visibility == 'PUBLIC'):
+        return ("This is a public post.", True)
+
+    if (post.author.id == author.id):
+        return ("This is your post", True)
+
     author_of_post = post.author
     if (post.visibility == "FRIENDS"):
         friends = get_friends(author_of_post)
-        if (author.id not in friends):
+        if (str(author.id) not in friends):
             return ("You are NOT a friend of the author.", False)
         return ("You are a friend of the author.", True)
     
@@ -30,8 +36,9 @@ def CheckPermissions(author, post):
         friends = get_friends(author_of_post)
         friends_of_friends = []
         for friend in friends:
-            friends_of_friends += get_friends(friend)
-        if (author.id not in friends_of_friends):
+            friends_of_friends += get_friends(Author.objects.get(pk=friend))
+        friends_of_friends += friends
+        if (str(author.id) not in friends_of_friends):
             return ("You are NOT a FOAF of the author.", False)
         return ("You are a FOAF of the author.", True)
 
@@ -53,7 +60,7 @@ def CheckPermissions(author, post):
     #we check if the current author is in
     #the posts visibileTo field
     if (post.visibility == "PRIVATE"):
-        if (author.id not in post.visibileTo):
+        if (str(author.id) not in post.visibleTo):
             return ("You are NOT one of the people this post is visible to.", False)
         return ("You are one of the people this post is visible to.", True)
 
@@ -87,7 +94,7 @@ class ReadAllPublicPosts(APIView):
         except:
             size = ""
 
-        posts = Post.objects.filter(visibility="PUBLIC", unlisted = False)
+        posts = Post.objects.filter(visibility="PUBLIC", unlisted = False)  # pylint: disable=maybe-no-member
         count = posts.count()
     
         if (page and size):           
@@ -120,7 +127,7 @@ class ReadSinglePost(APIView):
         }
         #first we check to see if the post with the id exists
         try:
-            post = Post.objects.get(pk=post_id)
+            post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
         except:
             return Response(response_object, status=status.HTTP_200_OK)
         
@@ -149,7 +156,7 @@ class ReadSinglePost(APIView):
         
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
-            return Response(response_object, status=status.HTTP_200_OK)
+            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
 
         serializer = PostSerializer(post)
         response_object["post"] = serializer.data
@@ -204,7 +211,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         #first we check to see if the post with the id exists
         try:
-            post = Post.objects.get(pk=post_id)
+            post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
         except:
             return Response(response_object, status=status.HTTP_200_OK)
 
@@ -222,7 +229,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         #if the posts visibility is set
         #to PUBLIC, we can return comments
         if (post.visibility == "PUBLIC"):
-            comments = Comment.objects.filter(post=post_id)
+            comments = Comment.objects.filter(post=post_id) # pylint: disable=maybe-no-member
             count = comments.count()
         
             if (page and size):           
@@ -257,7 +264,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         #check if its the currently authenticated
         #users post
         if (author.id == post.author.id):
-            comments = Comment.objects.filter(post=post_id)
+            comments = Comment.objects.filter(post=post_id) # pylint: disable=maybe-no-member
             count = comments.count()
         
             if (page and size):           
@@ -284,7 +291,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         if (not check_permissions[1]):
             return Response(response_object, status=status.HTTP_200_OK)
         
-        comments = Comment.objects.filter(post=post_id)
+        comments = Comment.objects.filter(post=post_id) # pylint: disable=maybe-no-member
         count = comments.count()
         
         if (page and size):
@@ -314,14 +321,18 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             "type": None,
             "message": None,
         }
+        # initializing data
+        data = request.data
+        data['author'] = request.user.id
+        data['post'] = post_id
 
         #first we check to see if the post with the id exists
         try:
-            post = Post.objects.get(pk=post_id)
+            post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
         except:
             response_object["type"] = False
             response_object["message"] = "Post does not exist."
-            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
+            return Response(response_object, status=status.HTTP_404_NOT_FOUND)
 
         #lets check if an author is logged in first
         try:
@@ -331,8 +342,10 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["message"] = "Log in to add a comment."
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         
+        # need to check this part. 'Friend' visibility cannot work?
         if (post.visibility == "PUBLIC"):
-            serializer = CommentSerializer(data=request.data, context={'author': author, 'post': post})
+            print(data)
+            serializer = CommentSerializer(data=data, context={'author': author, 'post': post})
             if serializer.is_valid():
                 serializer.save()
                 response_object["type"] = True
@@ -340,12 +353,12 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
                 return Response(response_object, status=status.HTTP_200_OK)
             response_object["type"] = False
             response_object["message"] = "Could not add comment."
-            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
+            return Response(response_object, status=status.HTTP_400_BAD_REQUEST)
 
         #check if its the currently authenticated
         #users post
         if (author.id == post.author.id):
-            serializer = CommentSerializer(data=request.data, context={'author': author, 'post': post})
+            serializer = CommentSerializer(data=data, context={'author': author, 'post': post})
             if serializer.is_valid():
                 serializer.save()
                 response_object["type"] = True
@@ -361,9 +374,8 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["message"] = "You do not have permissions to add a comment to this post."
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = CommentSerializer(data=request.data, context={'author': author, 'post': post})
+        serializer = CommentSerializer(data=data, context={'author': author, 'post': post})
         if serializer.is_valid():
-            print("This is valid")
             serializer.save()
 
             response_object["type"] = True
@@ -410,7 +422,7 @@ class CommentReqHandler(APIView):
     def post(self, request, post_id):
         curAuthor = Author.objects.get(id=request.user.id)
         post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
-        
+
         data = request.data
         data['author'] = curAuthor.id
         data['post'] = post.postid

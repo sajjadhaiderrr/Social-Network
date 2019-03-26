@@ -15,4 +15,5 @@ urlpatterns = [
     path('author/<author_id1>/friends/<author_id2>', views.TwoAuthorsRelation.as_view(), name='two_authors_relation'),
     path('author/posts', views.AuthorPostsAPI.as_view(), name='authorizedposts'),
     path('author/<uuid:pk>/madeposts', views.AuthorMadePostAPI.as_view(), name='authormadeposts'),
+    path('author/<uuid:pk>/posts', views.ViewAuthorPostAPI.as_view(), name='authoridposts'),
 ]
