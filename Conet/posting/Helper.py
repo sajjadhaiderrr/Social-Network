@@ -64,5 +64,5 @@ def viewPost(request, post_id):
                                          'post':post, 'comments': comments
                                              })
     else:
-        raise Http404("Post not found")
+        return HttpResponse(b"You do not have access to this post", status=403)
 ''' VIEW HELPER END '''

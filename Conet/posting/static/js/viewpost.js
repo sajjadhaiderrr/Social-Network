@@ -14,7 +14,7 @@ function getPost(url)
     .then(response => response.json());
 }
 
-function addComment(post_id)
+function addCommentOnSinglePage(post_id)
 {
     console.log(post_id)
     let commentForm = {
@@ -55,8 +55,8 @@ function addComment(post_id)
 }
 
 
-function init_single_post_page(origin){
-    console.log(origin);
+function init_single_post_page(origin, authenticated){
+    console.log(authenticated);
     url = origin;
     return fetch(url , {
         method: "GET",
@@ -127,12 +127,16 @@ function init_single_post_page(origin){
         var comment_btn = document.createElement("span");
         comment_btn.classList.add("btn", "btn-primary");
         comment_btn.id = "addcommentbutton";
-        comment_btn.onclick = function(){addComment(json.post.postid)} ;
+        if(authenticated == true){
+            comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid)} ;
+        }else{
+            comment_btn.onclick = function(){console.log("asdfasdf");window.location.replace(json.post.postauthor.host);} ;
+        }
+        
         comment_btn.innerText = "Send";
 
         commentbox.appendChild(comment_textarea);
         commentbox.appendChild(comment_btn);
-        console.log(commentbox)
         document.getElementById("create-comment").appendChild(commentbox);
     });
 } 

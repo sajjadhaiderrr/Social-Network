@@ -5,9 +5,9 @@
 
 {% block content %}
 {% include 'Accounts/nav.html' %}
-  {% if user.is_authenticated %}
+  
     <script>
-    init_single_post_page('{{ post.origin }}');
+    init_single_post_page('{{ post.origin }}', '{{ user.is_authenticated }}');
     </script>
     <div class="content">
       
@@ -73,5 +73,5 @@
       </div>
     </div>
     -->
-  {% endif %}
+
 {% endblock %}

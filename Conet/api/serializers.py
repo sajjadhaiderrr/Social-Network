@@ -148,7 +148,6 @@ class CommentSerializer(serializers.ModelSerializer):
 
     
     def create(self, validated_data):
-        print("====")
         comment = Comment.objects.create(**validated_data)  # pylint: disable=maybe-no-member
         comment.save()
         return comment
