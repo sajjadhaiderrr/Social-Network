@@ -4,53 +4,67 @@
 {% block title %} Create Post {% endblock %}
 
 {% block content %}
-<div class="createpost-back">
-  <div class="container">
-    <div class="d-flex justify-content-center h-100 ">
-      <div class="card">
-        <h3 class="card-header" >Create Post</h3>
-        <div class="card-body">
-          <form class="form" id="createform"action="" method="post">
-            <select name="content-type" id=contentType>
-              <option value="text/plain" selected> Text </option>
-              <option value="image/png;base64"> PNG </option>
-              <option value="image/jpeg;base64"> JPEG </option>
-              <option value="image/png;base64"> Application </option>
-              <option value="image/png;base64"> Markdown </option>
-            </select>
-            <h3> Title </h3>
-            <input id=title type="text" name="Title" placeholder="Title" > <br>
-            <h3> Description </h3>
-            <input id=description type="text" name="Description" placeholder="Description" > <br>
-            <h3> Categories </h3>
-            <input id=categories type="text" name="Categories" placeholder="Categories" > <br>
-            <h3> Content </h3>
-            <textarea style="width: 100%; height:12em;" id=content type="text" name="Content" placeholder="What would you like to share?" > </textarea>
-
-            <form id="imageContent" enctype="multipart/form-data" method="post">
-              <input type="file" id="imageFile" name="imageFile" onchange="uploadFile()">
-            </form><br>
-
-            <form> Who should see this? <br>
-              <select id="visibility" id="visibility">
-                <option value="PUBLIC" selected> Public </option>
-                <option value="FRIENDS" > Friends </option>
-                <option value="FOAF" > Friend of a Friend </option>
-                <option value="PRIVATE" > Private </option>
-                <option value="SERVERONLY" > Server Only </option>
+  {% if user.is_authenticated %}
+  <script>
+      var current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
+  </script>
+    <div class="createpost-back">
+      <div class="container">
+        <div class="d-flex justify-content-center h-100 ">
+          <div class="card">
+            <h3 class="card-header" >Create Post</h3>
+            <div class="card-body">
+              <form class="form" id="createform"action="" method="post">
+                <select name="content-type" id=contentType onchange="contentEnable()">
+                  <option value="text/plain" selected> Text </option>
+                  <option value="image/png;base64"> PNG </option>
+                  <option value="image/jpeg;base64"> JPEG </option>
+                  <option value="application/base64"> Application </option>
+                  <option value="text/markdown"> Markdown </option>
                 </select>
-            </form>
+                <h3> Title </h3>
+                <input id=title type="text" name="Title" placeholder="Title" > <br>
+                <h3> Description </h3>
+                <input id=description type="text" name="Description" placeholder="Description" > <br>
+                <h3> Categories </h3>
+                <input id=categories type="text" name="Categories" placeholder="Categories" > <br>
+                <h3> Content </h3>
+                <textarea  placeholder="What would you like to share?" style="width: 100%; height:12em;" id=content type="text" name="Content" > </textarea>
 
-            Unlisted?
-            Yes: <input name="unlisted" value="Yes" type="radio"/>
-            No: <input name="unlisted" value="No" type="radio" checked/>
+                <form id="imageContent" enctype="multipart/form-data" method="post">
+                  <input type="file" id="imageFile" name="imageFile" onchange="uploadFile()">
+                </form><br>
+
+                <form> Who should see this? <br>
+                  <select name="visibilityOptions" id="visibility" onchange="selectFriends()">
+                    <option value="PUBLIC" selected> Public </option>
+                    <option value="FRIENDS" > Friends </option>
+                    <option value="FOAF" > Friend of a Friend </option>
+                    <option value="PRIVATE" > Private To </option>
+                    <option value="SERVERONLY" > Server Only </option>
+                  </select>
+                </form>
+
+                <!-- Reference:
+                stackoverflow.com/questions/30190588/html-select-multiple-as-dropdown
+                 -->
+                <form method="post" enctype="multipart/form-data">
+                  <select id= "selectFriends" class="chosen-select" name="friends" data-placeholder="Enabled for Private posts only" multiple="true" disabled="true"> </select>
+                    <script>$(".chosen-select").chosen({width: "40%"});</script>
+                </form>
 
 
-            <button type="submit" class="btn btn-primary btn-block" onclick="createPost()"> Create Post </button>
-          </form>
+                Unlisted?
+                Yes: <input name="unlisted" value="Yes" type="radio"/>
+                No: <input name="unlisted" value="No" type="radio" checked/>
+
+
+                <button type="submit" class="btn btn-primary btn-block" onclick="createPost()"> Create Post </button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-</div>
+  {% endif %}
 {% endblock %}
