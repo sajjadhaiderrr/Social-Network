@@ -26,13 +26,13 @@ class Friendship(models.Model):
     class Meta:
         unique_together = ('init_id', 'recv_id')
 
-'''
-class FriendRequestHandler(models.Model):
-    init_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='friends')
-    recv_id = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='follower')
-    starting_date = models.DateTimeField(auto_now=True)
-
-    # track the status of the friendship. 
-    # 0: pending; 
-    # 1: completed (which should be ignored in the future);
-    status = models.IntegerField(default=0)'''
+#This model is used for validation of remote nodes
+class Node(models.Model):
+    # used for validation of remote nodes
+    foreignHost = models.URLField(primary_key=True, default="")
+    authUser = models.OneToOneField(Author, on_delete=models.CASCADE, related_name="node")
+    sharePosts = models.BooleanField(default=True)
+    shareImgs = models.BooleanField(default=True)
+    # use for accessing endpoints on remote nodes
+    remoteUsername = models.CharField(max_length=50)
+    remotePassword = models.CharField(max_length=200)

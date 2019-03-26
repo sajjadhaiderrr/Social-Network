@@ -6,9 +6,13 @@ from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View, generic
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 from django.db.models import Q
 from django.http import JsonResponse
 
@@ -25,11 +29,16 @@ from . import ApiHelper
 # api for /author
 class AuthorAPI(APIView):
     model = Author
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request,*args, **kwargs):
+        authorId = kwargs['pk']
         response = {"query":'author'}
         try:
             # get current user
-            current_user = Author.objects.get(id=kwargs['pk'])
+            current_user = Author.objects.get(id=authorId)
             # get current user's data. Note that friends' data is excluded
             author_data = ExtendAuthorSerializers(current_user).data
             
@@ -88,7 +97,6 @@ class UnfriendRequestHandler(APIView):
 class FriendRequestHandler(APIView):
     def get(self, request):
         reqUsrId = request.user.id
-        print(reqUsrId)
         try:
             reqAuthor = Author.objects.get(pk=reqUsrId)
             requestList = ApiHelper.get_all_friend_requests(reqAuthor)
@@ -221,6 +229,10 @@ class AuthorFollower(APIView):
 
 # for api/author/{author_id}/friends
 class AuthorFriends(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     # get a list of ids who is friend of given user.
     def get(self, request,*args, **kwargs):
         response = {"query":'friends'}
@@ -263,6 +275,10 @@ class AuthorFriends(APIView):
 
 # service/author/<authorid>/friends/<authorid>
 class TwoAuthorsRelation(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request, author_id1, author_id2):
         response = {}
         response['query'] = 'friends'
@@ -306,8 +322,6 @@ class AuthorPostsAPI(APIView):
         for friend in friends:
             #direct friend with posts "FOAF" should visible to current user
             friend = Author.objects.get(pk=friend)
-            #newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
-            #posts |= newposts
             allfoafs.add(friend)
             foafs = ApiHelper.get_friends(friend)
             for each in foafs:
