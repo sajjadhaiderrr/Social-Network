@@ -64,5 +64,10 @@ This project is consisted by three apps:
             - `/posts/{post_id}/comments`
                 - `GET`: Get comments of a post
                 - `POST`: Add a comment to a post
+
+## Reference
+- Django Rest framework: https://www.django-rest-framework.org/
+- django-bootstrap4: https://pypi.org/project/django-bootstrap4/
+- showdownjs: http://showdownjs.com/
              
             
