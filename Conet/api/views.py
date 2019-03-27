@@ -34,31 +34,32 @@ class AuthorAPI(APIView):
     #Authentication
     authentication_classes = (SessionAuthentication, BasicAuthentication)
     permission_classes = (IsAuthenticated,)
-
+    
+    # Todo: check correctness
     def get(self, request,*args, **kwargs):
         authorId = kwargs['pk']
         response = {"query":'author'}
         try:
             current_user = Author.objects.get(id=authorId)
-            print("Host: ", request.get_host())
             # current requested user is on local
-            if ApiHelper.local_author(current_user, request.get_host()):
-                # get current user's data. Note that friends' data is excluded
-                author_data = ExtendAuthorSerializers(current_user).data
-                
-                # append each data to response
-                for i in author_data.keys():
-                    response[i] = author_data[i]
-                friends = ApiHelper.get_friends(current_user)
-                # append friend's detailed information to response
-                response['friends'] = []
-                for friend in friends:
-                    friend_data = Helper_AuthorSerializers(Author.objects.get(id=friend)).data 
-                    response['friends'].append(json.dumps(friend_data))
-                return Response(response, status=200)
-            else:
-                response, code = ApiHelper.get_from_remote_server(current_user)
-                return Response(response, status=code)
+            #if ApiHelper.local_author(current_user, request.get_host()):
+            
+            # get current user's data. Note that friends' data is excluded
+            author_data = ExtendAuthorSerializers(current_user).data
+            
+            # append each data to response
+            for i in author_data.keys():
+                response[i] = author_data[i]
+            friends = ApiHelper.get_friends(current_user)
+            # append friend's detailed information to response
+            response['friends'] = []
+            for friend in friends:
+                friend_data = Helper_AuthorSerializers(Author.objects.get(id=friend)).data 
+                response['friends'].append(json.dumps(friend_data))
+            return Response(response, status=200)
+            #else:
+            #    response, code = ApiHelper.get_from_remote_server(current_user)
+            #    return Response(response, status=code)
         except:
             response['authors'] = []
             return Response(response, status=400)
@@ -67,6 +68,11 @@ class AuthorAPI(APIView):
 # /unfriendrequest
 # getting POST request from client. Un-friend given initiator and receiver.
 class UnfriendRequestHandler(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
+    # Todo: check if recv_id is from foreign user
     def post(self, request):
         # parse request body
         request_body = request.data
@@ -270,33 +276,37 @@ class AuthorFriends(APIView):
 
     # get a list of ids who is friend of given user.
     def get(self, request,*args, **kwargs):
+        is_local = ApiHelper.is_local_request(request)
         response = {"query":'friends'}
+
         try:
             # get current user on URL
             current_user = Author.objects.get(id=kwargs['pk'])
             
-            if ApiHelper.local_author(current_user, request.get_host()):
+            if is_local:
                 # current requested user is on local
-                friends = ApiHelper.get_friends(current_user)
-                response['authors'] = friends
+                friends = ApiHelper.update_friends(current_user, request.get_host())
+                response['author'] = friends
                 return Response(response)
             else:
                 # current requested user is from remote server
-                response, code = ApiHelper.get_from_remote_server(current_user, mode='friends')
-                return Response(response, status=code)
+                friends = ApiHelper.get_friends(current_user)
+                response['authors'] = friends
+                return Response(response)         
         except Exception:
             response['authors'] = []
             return Response(response, status=400)
     
     # Ask a service if anyone in the list is a friend
     def post(self, request,*args, **kwargs):
+        # Todo
+        is_local = ApiHelper.is_local_request(request)
         # parse request body
         request_body = json.loads(request.body.decode())
 
         # get the authors who are checked be a friend of author shows in URL
         request_friends = request_body['authors']
-        for friend in request_friends:
-            friend = str(friend)
+
         response = {"query":'friends'}
         try:
             # get current user on URL
@@ -305,8 +315,8 @@ class AuthorFriends(APIView):
             friends = ApiHelper.get_friends(current_user)
             response['authors'] = []
             for friend in friends:
-                if str(friend) in request_friends:
-                    response['authors'].append(str(friend))
+                if friend in request_friends:
+                    response['authors'].append(friend)
             return Response(response)
         except:
             response['authors'] = []
@@ -315,6 +325,7 @@ class AuthorFriends(APIView):
 #reference: https://docs.djangoproject.com/en/2.1/ref/request-response/
 
 # service/author/<authorid>/friends/<authorid>
+# Todo: handle remote part
 class TwoAuthorsRelation(APIView):
     #Authentication
     authentication_classes = (SessionAuthentication, BasicAuthentication)
@@ -358,7 +369,7 @@ class AuthorPostsAPI(APIView):
         posts |= public
 
         #get posts that satisfy FOAF
-        allfoafs = set(friends)
+        allfoafs = set()
         for friend in friends:
             #direct friend with posts "FOAF" should visible to current user
             friend = Author.objects.get(pk=friend)
@@ -373,12 +384,15 @@ class AuthorPostsAPI(APIView):
         #foaf end
 
         #private
+        visible_post = []
         for friend in friends:
             newposts = Post.objects.filter(author=friend, visibility="PRIVATE", unlisted=False) # pylint: disable=maybe-no-member
             for post in newposts:
                 visibleList = json.loads(post.visibleTo)
                 if str(current_user.id) in visibleList:
-                    posts |= post         
+                    visible_post.append(post.postid)
+
+        posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
         #private end
 
         #Todo: SERVERONLY
