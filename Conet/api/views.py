@@ -2,7 +2,7 @@ import datetime
 import json
 from django.db.models import F
 from django.http import HttpResponse, HttpResponseNotAllowed
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View, generic
@@ -121,7 +121,7 @@ class FriendRequestHandler(APIView):
 
         # try to get the current relationship between two authors
         try:
-            friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)
+            friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)   # pylint: disable=maybe-no-member
         except:  
             reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
             friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
@@ -305,10 +305,10 @@ class AuthorPostsAPI(APIView):
         #get all public posts
         public = Post.objects.filter(visibility="PUBLIC")   # pylint: disable=maybe-no-member
         posts |= public
-        posts = posts.order_by(F("published").desc())
+        
 
         #get posts that satisfy FOAF
-        allfoafs = set()
+        allfoafs = set(friends)
         for friend in friends:
             #direct friend with posts "FOAF" should visible to current user
             friend = Author.objects.get(pk=friend)
@@ -322,7 +322,8 @@ class AuthorPostsAPI(APIView):
         for foaf in allfoafs:
             newposts = Post.objects.filter(visibility="FOAF", author=foaf) # pylint: disable=maybe-no-member
             posts |= newposts
-        
+
+        posts = posts.order_by(F("published").desc())
         for post in posts:
             allposts.append(post)
         #foaf end
@@ -398,15 +399,111 @@ class AuthorProfileHandler(APIView):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 # get a list of ALL(including public, private, FOAF, friend, etc) posts made by given author. 
+# for author/{author_id}/madeposts
 class AuthorMadePostAPI(APIView):
     def get(self,request,pk):
+        if request.user.id == pk:
+            try:
+                response = {}
+                response['query'] = "madeposts"
+                author = Author.objects.get(pk=pk)
+                posts = Post.objects.filter(author = author).order_by(F("published").desc())   # pylint: disable=maybe-no-member
+                serializer = PostSerializer(posts, many=True)
+                response['posts'] = serializer.data
+                return Response(response, status=status.HTTP_200_OK) 
+            except:
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+# author/{author_id}/posts
+class ViewAuthorPostAPI(APIView):
+    def get(self, request, pk):
+        allposts = []
+        page_size = 10
+        posts = Post.objects.none() # pylint: disable=maybe-no-member
+
+        #get the posts of all your friends whos visibility is set to FRIENDS
         try:
-            response = {}
-            response['query'] = "madeposts"
-            author = Author.objects.get(pk=pk)
-            posts = Post.objects.filter(author = author).order_by(F("published").desc())   # pylint: disable=maybe-no-member
-            serializer = PostSerializer(posts, many=True)
-            response['posts'] = serializer.data
-            return Response(response, status=status.HTTP_200_OK) 
+            author_be_viewed = Author.objects.get(pk=pk)
+            current_user = Author.objects.get(pk=request.user.id)
+            user_not_login = False
         except:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            user_not_login = True
+            posts = Post.objects.filter(author=author_be_viewed, visibility="PUBLIC")
+
+        if not user_not_login:
+            if current_user == author_be_viewed:
+                posts = Post.objects.filter(author=current_user)    # pylint: disable=maybe-no-member
+            else:
+                friends = ApiHelper.get_friends(current_user)
+                posts = Post.objects.filter(author=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
+                print(friends)
+                if str(author_be_viewed.id) in friends:
+                    print("friends")
+                    newposts = Post.objects.filter(author=author_be_viewed, visibility = "FRIENDS") # pylint: disable=maybe-no-member
+                    posts |= newposts
+
+                #get posts that satisfy FOAF
+                allfoafs = set(friends)
+                for friend in friends:
+                    #direct friend with posts "FOAF" should visible to current user
+                    friend = Author.objects.get(pk=friend)
+                    #newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
+                    #posts |= newposts
+                    allfoafs.add(friend)
+                    foafs = ApiHelper.get_friends(friend)
+                    for each in foafs:
+                        allfoafs.add(each)
+                
+                if str(author_be_viewed.id) in allfoafs:
+                    newposts = Post.objects.filter(visibility="FOAF", author=author_be_viewed) # pylint: disable=maybe-no-member
+                    posts |= newposts
+
+        posts = posts.order_by(F("published").desc())
+        for post in posts:
+            allposts.append(post)
+        #foaf end
+
+            #private
+            '''
+            for friend in friends:
+                posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
+                for post in posts:
+                    post.visibleTo'''
+            #there are some repeat operations above, might combine later    
+
+        try:
+            page = int(request.GET.get("page", 0))
+            if (page < 0):
+                raise Exception()
+            if ((page+1)*page_size >= len(allposts)):
+                last_page = True
+            else:
+                last_page = False
+            response_posts = allposts[page * page_size : min((page+1)*page_size, len(allposts))]
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        response = {}
+        response['query'] = "posts"
+        response['count'] = len(allposts)
+        response['size'] = len(response_posts)
+        if(page>0):
+            response['previous'] = current_user.host + "/author/posts?page="+str(page-1)
+        else:
+            response['previous'] = "None"
+
+        if(not last_page):
+            response['next'] = current_user.host + "/author/posts?page="+str(page+1)
+        else:
+            response['next'] = "None"
+
+        response['posts'] = []
+        for post in response_posts:
+            serializer = PostSerializer(post).data
+            serializer['postid'] = str(serializer['postid'])
+            response['posts'].append(serializer)
+        
+        return Response(response)
