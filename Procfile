@@ -1,1 +1,1 @@
-web: gunicorn Conet.wsgi
+web: gunicorn Conet.Conet.wsgi
