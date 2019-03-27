@@ -4,7 +4,6 @@ from Accounts.models import Author
 #from django.apps import apps
 
 # Create your models here.
-
 content_type_choice = (
     ('text/plain', 'text/plain'),
     ('text/markdown', 'text/markdown'),
@@ -36,7 +35,7 @@ class Post(models.Model):
     visibility = models.CharField(max_length=10, choices=visible_type_choice, default='PUBLIC')
     visibleTo = models.TextField(blank=True)
     unlisted = models.BooleanField(default=False)
-
+    
 class Comment(models.Model):
 
     commentid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
