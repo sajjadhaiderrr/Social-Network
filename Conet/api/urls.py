@@ -3,7 +3,6 @@ from django.urls import path, include
 from django.views.decorators.csrf import csrf_exempt
 from . import views
 
-
 urlpatterns = [
     path('friendrequest', views.FriendRequestHandler.as_view(), name='friendrequest'),
     path('unfriendrequest', views.UnfriendRequestHandler.as_view(), name='unfriendrequest'),

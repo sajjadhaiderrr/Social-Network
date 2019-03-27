@@ -356,10 +356,6 @@ class AuthorPostsAPI(APIView):
         #get all public posts
         public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
         posts |= public
-<<<<<<< HEAD
-=======
-        
->>>>>>> e5c551d34069bd6b7db465877df1e479ae73c7cb
 
         #get posts that satisfy FOAF
         allfoafs = set(friends)
@@ -374,13 +370,6 @@ class AuthorPostsAPI(APIView):
         for foaf in allfoafs:
             newposts = Post.objects.filter(visibility="FOAF", author=foaf, unlisted=False) # pylint: disable=maybe-no-member
             posts |= newposts
-<<<<<<< HEAD
-=======
-
-        posts = posts.order_by(F("published").desc())
-        for post in posts:
-            allposts.append(post)
->>>>>>> e5c551d34069bd6b7db465877df1e479ae73c7cb
         #foaf end
 
         #private
@@ -496,7 +485,7 @@ class ViewAuthorPostAPI(APIView):
             user_not_login = False
         except:
             user_not_login = True
-            posts = Post.objects.filter(author=author_be_viewed, visibility="PUBLIC")
+            posts = Post.objects.filter(author=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
 
         if not user_not_login:
             if current_user == author_be_viewed:
@@ -525,19 +514,19 @@ class ViewAuthorPostAPI(APIView):
                 if str(author_be_viewed.id) in allfoafs:
                     newposts = Post.objects.filter(visibility="FOAF", author=author_be_viewed) # pylint: disable=maybe-no-member
                     posts |= newposts
+                #foaf ends
 
-        posts = posts.order_by(F("published").desc())
-        for post in posts:
-            allposts.append(post)
-        #foaf end
+                #private
+                '''
+                for friend in friends:
+                    posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
+                    for post in posts:
+                        post.visibleTo'''
+                #there are some repeat operations above, might combine later  
 
-            #private
-            '''
-            for friend in friends:
-                posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
-                for post in posts:
-                    post.visibleTo'''
-            #there are some repeat operations above, might combine later    
+            posts = posts.order_by(F("published").desc())
+            for post in posts:
+                allposts.append(post)
 
         try:
             page = int(request.GET.get("page", 0))
