@@ -16,7 +16,6 @@ function getPost(url)
 
 function addCommentOnSinglePage(post_id)
 {
-    console.log(post_id)
     let commentForm = {
           "comment":"",
           "contentType":"text/plain"
@@ -56,7 +55,6 @@ function addCommentOnSinglePage(post_id)
 
 
 function init_single_post_page(origin, authenticated){
-    console.log(authenticated);
     url = origin;
     return fetch(url , {
         method: "GET",
@@ -82,8 +80,6 @@ function init_single_post_page(origin, authenticated){
             document.getElementById("post-content").appendChild(status_code);
         }
     }).then(json =>{
-        console.log(json);
-
         // display title
         document.getElementById("post-title").innerText = json.post.title;
         
@@ -112,6 +108,19 @@ function init_single_post_page(origin, authenticated){
             var content = document.createElement("p");
             content.innerText = json.post.content;
             document.getElementById("post-content").appendChild(content);
+        }else if(json.post.contentType=="text/markdown"){
+            var converter = new showdown.Converter();
+            var md = json.post.content;
+            var html = converter.makeHtml(md);
+            var content = document.createElement("div");
+            content.innerHTML = html;
+            document.getElementById("post-content").appendChild(content);
+        }else {
+            var content = document.createElement("img");
+            content.setAttribute("src", json.post.content);
+            content.setAttribute("width", "100%");
+            content.setAttribute("height", "auto");
+            document.getElementById("post-image").appendChild(content);
         }
 
         // display comment box
@@ -127,10 +136,10 @@ function init_single_post_page(origin, authenticated){
         var comment_btn = document.createElement("span");
         comment_btn.classList.add("btn", "btn-primary");
         comment_btn.id = "addcommentbutton";
-        if(authenticated == true){
+        if(authenticated == "True"){
             comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid)} ;
         }else{
-            comment_btn.onclick = function(){console.log("asdfasdf");window.location.replace(json.post.postauthor.host);} ;
+            comment_btn.onclick = function(){window.location.replace(json.post.postauthor.host);} ;
         }
         
         comment_btn.innerText = "Send";

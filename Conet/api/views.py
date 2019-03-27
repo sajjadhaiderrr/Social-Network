@@ -417,7 +417,7 @@ class AuthorMadePostAPI(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
 
-
+# author/{author_id}/posts
 class ViewAuthorPostAPI(APIView):
     def get(self, request, pk):
         allposts = []
@@ -425,40 +425,46 @@ class ViewAuthorPostAPI(APIView):
         posts = Post.objects.none() # pylint: disable=maybe-no-member
 
         #get the posts of all your friends whos visibility is set to FRIENDS
-        current_user = Author.objects.get(pk=request.user.id)
-        author_be_viewed = Author.objects.get(pk=pk)
+        try:
+            author_be_viewed = Author.objects.get(pk=pk)
+            current_user = Author.objects.get(pk=request.user.id)
+            user_not_login = False
+        except:
+            user_not_login = True
+            posts = Post.objects.filter(author=author_be_viewed, visibility="PUBLIC")
 
-        if current_user == author_be_viewed:
-            posts = Post.objects.filter(author=current_user)    # pylint: disable=maybe-no-member
-        else:
-            friends = ApiHelper.get_friends(current_user)
-            posts = Post.objects.filter(author=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
-            print(friends)
-            if str(author_be_viewed.id) in friends:
-                print("friends")
-                newposts = Post.objects.filter(author=author_be_viewed, visibility = "FRIENDS") # pylint: disable=maybe-no-member
-                posts |= newposts
+        if not user_not_login:
+            if current_user == author_be_viewed:
+                posts = Post.objects.filter(author=current_user)    # pylint: disable=maybe-no-member
+            else:
+                friends = ApiHelper.get_friends(current_user)
+                posts = Post.objects.filter(author=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
+                print(friends)
+                if str(author_be_viewed.id) in friends:
+                    print("friends")
+                    newposts = Post.objects.filter(author=author_be_viewed, visibility = "FRIENDS") # pylint: disable=maybe-no-member
+                    posts |= newposts
 
-            #get posts that satisfy FOAF
-            allfoafs = set(friends)
-            for friend in friends:
-                #direct friend with posts "FOAF" should visible to current user
-                friend = Author.objects.get(pk=friend)
-                #newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
-                #posts |= newposts
-                allfoafs.add(friend)
-                foafs = ApiHelper.get_friends(friend)
-                for each in foafs:
-                    allfoafs.add(each)
-            
-            if str(author_be_viewed.id) in allfoafs:
-                newposts = Post.objects.filter(visibility="FOAF", author=author_be_viewed) # pylint: disable=maybe-no-member
-                posts |= newposts
+                #get posts that satisfy FOAF
+                allfoafs = set(friends)
+                for friend in friends:
+                    #direct friend with posts "FOAF" should visible to current user
+                    friend = Author.objects.get(pk=friend)
+                    #newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
+                    #posts |= newposts
+                    allfoafs.add(friend)
+                    foafs = ApiHelper.get_friends(friend)
+                    for each in foafs:
+                        allfoafs.add(each)
+                
+                if str(author_be_viewed.id) in allfoafs:
+                    newposts = Post.objects.filter(visibility="FOAF", author=author_be_viewed) # pylint: disable=maybe-no-member
+                    posts |= newposts
 
-            posts = posts.order_by(F("published").desc())
-            for post in posts:
-                allposts.append(post)
-            #foaf end
+        posts = posts.order_by(F("published").desc())
+        for post in posts:
+            allposts.append(post)
+        #foaf end
 
             #private
             '''
@@ -468,17 +474,17 @@ class ViewAuthorPostAPI(APIView):
                     post.visibleTo'''
             #there are some repeat operations above, might combine later    
 
-            try:
-                page = int(request.GET.get("page", 0))
-                if (page < 0):
-                    raise Exception()
-                if ((page+1)*page_size >= len(allposts)):
-                    last_page = True
-                else:
-                    last_page = False
-                response_posts = allposts[page * page_size : min((page+1)*page_size, len(allposts))]
-            except:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+        try:
+            page = int(request.GET.get("page", 0))
+            if (page < 0):
+                raise Exception()
+            if ((page+1)*page_size >= len(allposts)):
+                last_page = True
+            else:
+                last_page = False
+            response_posts = allposts[page * page_size : min((page+1)*page_size, len(allposts))]
+        except:
+            return Response(status=status.HTTP_404_NOT_FOUND)
 
         response = {}
         response['query'] = "posts"

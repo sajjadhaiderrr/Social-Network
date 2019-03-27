@@ -16,12 +16,13 @@ def CheckPermissions(author, post):
     #if the visibility is set to FRIENDS,
     #lets check if the current author is in
     #the posting authors friends list
+    '''
     if (post.visibility == 'PUBLIC'):
         return ("This is a public post.", True)
 
     if (post.author.id == author.id):
         return ("This is your post", True)
-
+    '''
     author_of_post = post.author
     if (post.visibility == "FRIENDS"):
         friends = get_friends(author_of_post)
@@ -128,6 +129,7 @@ class ReadSinglePost(APIView):
         #first we check to see if the post with the id exists
         try:
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
+            
         except:
             return Response(response_object, status=status.HTTP_200_OK)
         
@@ -137,15 +139,16 @@ class ReadSinglePost(APIView):
             serializer = PostSerializer(post)
             response_object["post"] = serializer.data
             return Response(response_object, status=status.HTTP_200_OK)
-
+        
         #otherwise, the other privacy settings
         #require that an author be logged in
 
-        #lets check if an author is logged in first       
+        # lets check if an author is logged in first    
+        # here, author has to login in order to view the posts,
         try:
             author = Author.objects.get(id=request.user.id)
         except:
-            return Response(response_object, status=status.HTTP_200_OK)
+            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         
         #check if its the currently authenticated
         #users post
@@ -155,9 +158,12 @@ class ReadSinglePost(APIView):
             return Response(response_object, status=status.HTTP_200_OK)
         
         check_permissions = CheckPermissions(author, post)
+
+        # if current author has no permission:
         if (not check_permissions[1]):
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
-
+        
+        # current user has permission
         serializer = PostSerializer(post)
         response_object["post"] = serializer.data
         return Response(response_object, status=status.HTTP_200_OK)
@@ -180,10 +186,10 @@ class ReadSinglePost(APIView):
                 return Response("Invalid data", status=400)
 
     def delete(self, request, post_id):
-        if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
+        if (not Post.objects.filter(pk=post_id).exists()):  # pylint: disable=maybe-no-member
             return Response("Invalid Post", status=404)
         else:
-            post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
+            post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
             current_user = Author.objects.get(pk=request.user.id)
 
             if current_user.id == post.author.id:

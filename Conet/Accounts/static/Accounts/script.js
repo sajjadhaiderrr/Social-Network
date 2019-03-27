@@ -369,7 +369,7 @@ function get_num_posts_made_callback(response){
     var num_posts_made = response.posts.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_posts_made;
-    aTag.href = user_be_viewed.url + '/posts/';
+    aTag.href = user_be_viewed.url + '/info/';
     document.getElementById("num-posts").appendChild(aTag);
 }
 
@@ -417,15 +417,20 @@ function get_visible_post_callback(response){
             }
             publish_time.href = '/posts/' + post.postid + "/";
 
-            if (post.contentType=="text/plain" || post.contentType=="text/markdown") {
+            if (post.contentType=="text/plain") {
               var content = document.createElement("p");
               content.innerText = post.content;
-            }
-            else {
+            }else if(post.contentType=="text/markdown"){
+                var converter = new showdown.Converter();
+                var md = post.content;
+                var html = converter.makeHtml(md);
+                var content = document.createElement("div");
+                content.innerHTML = html;
+            }else {
               var content = document.createElement("img");
               content.setAttribute("src", post.content);
-              content.setAttribute("width", "20%");
-              content.setAttribute("height", "20%");
+              content.setAttribute("width", "100%");
+              content.setAttribute("height", "auto");
             }
             
             var hr = document.createElement("hr");
@@ -442,8 +447,13 @@ function get_visible_post_callback(response){
             var comment_btn = document.createElement("span");
             comment_btn.classList.add("btn", "btn-primary");
             comment_btn.id = "addcommentbutton"+num_post_counter;
-            //comment_btn.onclick = function(){addComment(post, comment_textarea.id)} ;
-            comment_btn.setAttribute("onClick","addComment('" + post.origin+ "','"+comment_textarea.id+"');");
+            // if user is logged in, give him permision to add comment
+            if(current_user.id != "None"){
+                comment_btn.setAttribute("onClick","addComment('" + post.origin+ "','"+comment_textarea.id+"');");
+            }else{
+                // else: redirect to login page
+                comment_btn.onclick = function(){window.location.replace(post.postauthor.host);}
+            }
             comment_btn.innerText = "Send";
             commentbox.appendChild(comment_textarea);
             commentbox.appendChild(comment_btn);
@@ -467,6 +477,7 @@ function get_visible_post_callback(response){
 function init_home_page(user){
     num_post_counter = 0;
     page_number = 0;
+    current_user = user;
     var request_body = {};
     var friend_url = user.url + "/friends";
     var made_posts_url = user.url+"/madeposts";
@@ -583,6 +594,7 @@ function get_profile_callback(response){
 
 function init_info_page(init, recv) {
     num_post_counter = 0;
+    current_user = init;
     var request_body = { 'authors': "['" + recv.id + "']" };
     var profile_url = recv.url
     var friend_url = recv.url + "/friends";
@@ -594,7 +606,9 @@ function init_info_page(init, recv) {
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
     sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
     sendJSONHTTPGet(following_url, request_body, get_num_following_callback);
-    if(init.id != recv.id){
+
+    // loading follow and unfollow btn
+    if(init.id != recv.id && init.id!="None"){
         sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
     }
     sendJSONHTTPGet(made_posts_url, request_body, get_visible_post_callback);

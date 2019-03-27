@@ -4,7 +4,6 @@
 {% block title %}Info{% endblock %}
 {% load static %}
 {% block content %}
-    {% if user.is_authenticated%}
         {% include 'Accounts/nav.html' %}
         <script>
             const csrf_token = "{{ csrf_token }}"
@@ -43,8 +42,10 @@
                     </div>
                 </div>
                 {% if not from_one_author %}
-                    <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Follow</a>
-                    <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfollow</a>
+                    {% if user.is_authenticated %}
+                        <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Follow</a>
+                        <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfollow</a>
+                    {% endif %}
                 {% else %}
                     <button id="btn-edit" class="btn btn-primary" onclick="editProfile()">Edit</button>
                 {% endif %}
@@ -65,9 +66,4 @@
             {% endif %}
             -->
         </div>
-    {% else %}
-        <a href="{% url 'login' %}">Login</a>
-        <br>
-        <a href="{% url 'signup' %}">Create an account</a>
-    {% endif %}
 {% endblock %}  

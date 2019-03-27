@@ -52,17 +52,13 @@ def viewPost(request, post_id):
     comments = Comment.objects.filter(post=post_id)
     post = Post.objects.get(pk=post_id)
     
-    verification = CheckPermissions(request.user, post)
-    if verification[1]:
-        if post.contentType == "image/png;base64" or post.contentType == "image/jpeg;base64":
-            pictureContent = True
-        else:
-            pictureContent = False
-
-        return render(request, "viewpost.html", {
+    if post.contentType == "image/png;base64" or post.contentType == "image/jpeg;base64":
+        pictureContent = True
+    else:
+        pictureContent = False
+    print("good for now")
+    return render(request, "viewpost.html", {
                                          'pictureContent': pictureContent,
                                          'post':post, 'comments': comments
                                              })
-    else:
-        return HttpResponse(b"You do not have access to this post", status=403)
 ''' VIEW HELPER END '''
