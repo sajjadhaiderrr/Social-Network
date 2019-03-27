@@ -24,6 +24,12 @@ class Helper_AuthorSerializers(serializers.ModelSerializer):
         model = Author
         fields = ('id', 'email', 'bio', 'host', 'first_name', 'last_name', 'displayName', 'url', 'github')
 
+# Helper serializer for the api/author/{author_id}
+class Helper_CommentSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ('commentid','author', 'post', 'comment', 'contentType', 'published')
+
 # Helper serializer for the api/author/{authod_id}
 class Helper_AuthorFriendSerializers(serializers.ModelSerializer):
     author = serializers.SerializerMethodField('get_receiver')
@@ -101,16 +107,19 @@ class PostSerializer(serializers.ModelSerializer):
     postauthor = serializers.SerializerMethodField('get_author')
     def get_author(self, obj):
         return Helper_AuthorSerializers(Author.objects.get(id=obj.author.id)).data
-
-
+    
+    commentslist = serializers.SerializerMethodField('get_comments')
+    def get_comments(self, obj):
+        try:
+            allcomments = Comment.objects.filter(post=obj.postid).order_by('published')
+            serializer = Helper_CommentSerializers(allcomments, many=True)
+            return serializer.data
+        except Exception as e:
+            return None
+            
     class Meta:
         model = Post
-        fields = ('postid', 'postauthor', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted')
-
-    def get_comment(self, obj):
-        comments = Comment.objects.filter(post=obj.postid).order_by('published')    # pylint: disable=maybe-no-member
-        serializer = CommentSerializer(comments, many=True)
-        return serializer.data
+        fields = ('postid', 'postauthor', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted', 'commentslist')
 
     def create(self, validated_data):
         #for fields which are no belonged to, might need to pop that data
