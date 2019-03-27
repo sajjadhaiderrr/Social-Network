@@ -20,10 +20,10 @@ def CheckPermissions(author, post):
     if (post.visibility == 'PUBLIC'):
         return ("This is a public post.", True)
 
-    if (post.author.id == author.id):
+    if (post.postauthor.id == author.id):
         return ("This is your post", True)
     '''
-    author_of_post = post.author
+    author_of_post = post.postauthor
     if (post.visibility == "FRIENDS"):
         friends = get_friends(author_of_post)
         if (str(author.id) not in friends):
@@ -152,7 +152,7 @@ class ReadSinglePost(APIView):
         
         #check if its the currently authenticated
         #users post
-        if (author.id == post.author.id):
+        if (author.id == post.postauthor.id):
             serializer = PostSerializer(post)
             response_object["post"] = serializer.data
             return Response(response_object, status=status.HTTP_200_OK)
@@ -177,7 +177,7 @@ class ReadSinglePost(APIView):
             post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
             current_user = Author.objects.get(pk=request.user.id)
 
-            if current_user.id == post.author.id:
+            if current_user.id == post.postauthor.id:
                 serializer = PostSerializer(post, data=request.data, partial=True)
 
                 if serializer.is_valid():
@@ -192,7 +192,7 @@ class ReadSinglePost(APIView):
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
             current_user = Author.objects.get(pk=request.user.id)
 
-            if current_user.id == post.author.id:
+            if current_user.id == post.postauthor.id:
                 post.delete()
                 return Response()
             return Response("Invalid data", status=400)
@@ -269,7 +269,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         #check if its the currently authenticated
         #users post
-        if (author.id == post.author.id):
+        if (author.id == post.postauthor.id):
             comments = Comment.objects.filter(post=post_id) # pylint: disable=maybe-no-member
             count = comments.count()
         
@@ -363,7 +363,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         #check if its the currently authenticated
         #users post
-        if (author.id == post.author.id):
+        if (author.id == post.postauthor.id):
             serializer = CommentSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()

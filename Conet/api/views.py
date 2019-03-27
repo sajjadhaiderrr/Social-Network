@@ -295,11 +295,11 @@ class AuthorPostsAPI(APIView):
         current_user = Author.objects.get(pk=request.user.id)
         friends = ApiHelper.get_friends(current_user)
 
-        posts = Post.objects.filter(author=request.user)  # pylint: disable=maybe-no-member
+        posts = Post.objects.filter(postauthor=request.user)  # pylint: disable=maybe-no-member
 
         for friend in friends:
             friend = Author.objects.get(pk=friend)       
-            newposts = Post.objects.filter(author = friend, visibility = "FRIENDS") # pylint: disable=maybe-no-member
+            newposts = Post.objects.filter(postauthor = friend, visibility = "FRIENDS") # pylint: disable=maybe-no-member
             posts |= newposts
 
         #get all public posts
@@ -320,7 +320,7 @@ class AuthorPostsAPI(APIView):
                 allfoafs.add(each)
         
         for foaf in allfoafs:
-            newposts = Post.objects.filter(visibility="FOAF", author=foaf) # pylint: disable=maybe-no-member
+            newposts = Post.objects.filter(visibility="FOAF", postauthor=foaf) # pylint: disable=maybe-no-member
             posts |= newposts
 
         posts = posts.order_by(F("published").desc())
@@ -407,9 +407,10 @@ class AuthorMadePostAPI(APIView):
                 response = {}
                 response['query'] = "madeposts"
                 author = Author.objects.get(pk=pk)
-                posts = Post.objects.filter(author = author).order_by(F("published").desc())   # pylint: disable=maybe-no-member
+                posts = Post.objects.filter(postauthor = author).order_by(F("published").desc())   # pylint: disable=maybe-no-member
                 serializer = PostSerializer(posts, many=True)
                 response['posts'] = serializer.data
+                response['count'] = len(serializer.data)
                 return Response(response, status=status.HTTP_200_OK) 
             except:
                 return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -431,18 +432,18 @@ class ViewAuthorPostAPI(APIView):
             user_not_login = False
         except:
             user_not_login = True
-            posts = Post.objects.filter(author=author_be_viewed, visibility="PUBLIC")
+            posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")
 
         if not user_not_login:
             if current_user == author_be_viewed:
-                posts = Post.objects.filter(author=current_user)    # pylint: disable=maybe-no-member
+                posts = Post.objects.filter(postauthor=current_user)    # pylint: disable=maybe-no-member
             else:
                 friends = ApiHelper.get_friends(current_user)
-                posts = Post.objects.filter(author=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
+                posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
                 print(friends)
                 if str(author_be_viewed.id) in friends:
                     print("friends")
-                    newposts = Post.objects.filter(author=author_be_viewed, visibility = "FRIENDS") # pylint: disable=maybe-no-member
+                    newposts = Post.objects.filter(postauthor=author_be_viewed, visibility = "FRIENDS") # pylint: disable=maybe-no-member
                     posts |= newposts
 
                 #get posts that satisfy FOAF
@@ -458,7 +459,7 @@ class ViewAuthorPostAPI(APIView):
                         allfoafs.add(each)
                 
                 if str(author_be_viewed.id) in allfoafs:
-                    newposts = Post.objects.filter(visibility="FOAF", author=author_be_viewed) # pylint: disable=maybe-no-member
+                    newposts = Post.objects.filter(visibility="FOAF", postauthor=author_be_viewed) # pylint: disable=maybe-no-member
                     posts |= newposts
 
         posts = posts.order_by(F("published").desc())

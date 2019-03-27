@@ -53,7 +53,7 @@ function addCommentOnSinglePage(post_id)
     });
 }
 
-
+// need to be modified for remote functionality
 function init_single_post_page(origin, authenticated){
     url = origin;
     return fetch(url , {
@@ -84,8 +84,8 @@ function init_single_post_page(origin, authenticated){
         document.getElementById("post-title").innerText = json.post.title;
         
         // display who is author
-        document.getElementById("post-author-link").innerText = json.post.postauthor.displayName;
-        document.getElementById("post-author-link").href = json.post.postauthor.url + "/";
+        document.getElementById("post-author-link").innerText = json.post.author.displayName;
+        document.getElementById("post-author-link").href = json.post.author.url + "/";
         
         // display times 
         var publish_date_time = Date.parse(json.post.published);
@@ -139,7 +139,7 @@ function init_single_post_page(origin, authenticated){
         if(authenticated == "True"){
             comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid)} ;
         }else{
-            comment_btn.onclick = function(){window.location.replace(json.post.postauthor.host);} ;
+            comment_btn.onclick = function(){window.location.replace(json.post.author.host);} ;
         }
         
         comment_btn.innerText = "Send";

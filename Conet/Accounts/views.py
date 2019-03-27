@@ -58,14 +58,14 @@ class ProfilePage(View):
         return super().dispatch(*args, **kwargs)
 
     # if receive a GET request, create a new form
-    def get(self, request, *args, **kwargs):
+    def get(self, request, pk):
         # get current user and user that is being viewed
-        user_be_viewed = Author.objects.get(pk=request.get_full_path().split("/")[2])
+        user_be_viewed_id = pk
         current_user = request.user
 
-        if(current_user != user_be_viewed):
-            return HttpResponseRedirect(user_be_viewed.url+"/info/")
-        return render(request, self.template_name, {'user_be_viewed':user_be_viewed, 'current_user':current_user})
+        if(str(current_user.id) != str(user_be_viewed_id)):
+            return HttpResponseRedirect(403)
+        return render(request, self.template_name, {'user_be_viewed_id':user_be_viewed_id, 'current_user':current_user})
             
 
 class HomePage(View):
@@ -96,8 +96,10 @@ class InfoPage(APIView):
     template_name = 'Accounts/info.html'
     
     def get(self, request, authorId):
-        host = request.GET['host']
+        host = request.GET['host'][7:]
         remote = {}
+        print(host)
+        print(request.get_host())
         # need to merge
         if(request.get_host() == host):
             remote['host'] = host

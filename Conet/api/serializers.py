@@ -98,14 +98,14 @@ class PostSerializer(serializers.ModelSerializer):
     #  count
     #  size
     #  ...
-    postauthor = serializers.SerializerMethodField('get_author')
-    def get_author(self, obj):
-        return Helper_AuthorSerializers(Author.objects.get(id=obj.author.id)).data
+    author = serializers.SerializerMethodField('get_author_data')
+    def get_author_data(self, obj):
+        return Helper_AuthorSerializers(Author.objects.get(id=obj.postauthor.id)).data
 
 
     class Meta:
         model = Post
-        fields = ('postid', 'postauthor', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted')
+        fields = ('postid', 'author', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted')
 
     def get_comment(self, obj):
         comments = Comment.objects.filter(post=obj.postid).order_by('published')    # pylint: disable=maybe-no-member

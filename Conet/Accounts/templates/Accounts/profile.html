@@ -8,14 +8,14 @@
         {% include 'Accounts/nav.html' %}
         <script>
             const csrf_token = '{{ csrf_token }}';
-            var current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
-            user_be_viewed =  {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
+            var user_be_viewed =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
+            user_be_viewed_id = '{{user_be_viewed_id}}'; 
             init_home_page(user_be_viewed);
         </script>
         <div class="content row">
             <!-- card -->
             <div class='col-sm-3 card' style="height:fit-content;">
-                <h1 class="h1 text-primary center-text">{{ user.displayName }}</h1>
+                <h1 id="displayName"class="h1 text-primary center-text">{{request.user.displayName}}</h1>
                 <hr>
                 <div class='row'>
                     <div class='col-sm-6'>
