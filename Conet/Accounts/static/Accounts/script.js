@@ -1,4 +1,40 @@
+function addComment(post_url, id){
+    console.log(id)
+    let commentForm = {
+          "comment":"",
+          "contentType":"text/plain"
+    }
 
+    commentForm.comment = document.getElementById(id).value;
+    let body = JSON.stringify(commentForm);
+    url = post_url + "/comments"
+    console.log(url)
+    return fetch(url , {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        body: body,
+        headers: {
+            "Content-Type": 'application/json',
+            "Accept": 'application/json',
+            "x-csrftoken": csrf_token
+        },
+        redirect: "follow",
+        referrer: "no-referrer",
+    })
+    .then(response => {
+        if (response.status === 200)
+        {
+          let url = window.location.href;
+          window.location = url;
+        }
+        else
+        {
+            alert(response.status);
+        }
+    });
+}
 // function to send JSON Http post request
 function sendJSONHTTPPost(url, objects, callback) {
     var xhr = new XMLHttpRequest();
@@ -162,7 +198,6 @@ function create_card_showing_friends(friend){
     var link = document.createElement("a");
     link.classList.add("btn", "btn-primary", "align-middle")
     link.href = friend.url+"/";
-    console.log(friend.url);
     link.innerText = "View more";
     button_div.appendChild(link);
 
@@ -177,7 +212,6 @@ function create_card_showing_friends(friend){
 
 // create a list of cards shows the friends
 function sendFriendsCallback(response) {
-    console.log(response)
     response = JSON.parse(response);
     friends = response.friends;
     for (var i of friends) {
@@ -193,7 +227,6 @@ function sendFollowingFollwerCallback(response) {
     response = JSON.parse(response);
     friends = response.authors;
     for (var i of friends) {
-        console.log(i)
         var friend = i;
         var friend_card = create_card_showing_friends(friend);
         document.getElementById('friend-div').appendChild(friend_card);
@@ -266,7 +299,6 @@ function editProfile() {
         input_field.setAttribute("name", intendToEdit[idx].id);
         input_field.value = intendToEdit[idx].innerText;
         data[input_field.name] = input_field;
-        console.log(intendToEdit[idx].parentNode);
         intendToEdit[idx].parentNode.replaceChild(input_field, intendToEdit[idx]);
     }
 
@@ -290,7 +322,6 @@ function editProfile() {
 
 function setMultiAttributes(obj, attributes){
     for (attr in attributes){
-        console.log(attr);
         obj.setAttribute(attr, attributes[attr]);
     }
 }
@@ -338,28 +369,30 @@ function get_num_posts_made_callback(response){
     var num_posts_made = response.posts.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_posts_made;
-    aTag.href = user_be_viewed.url + '/posts/';
+    aTag.href = user_be_viewed.url + '/info/';
     document.getElementById("num-posts").appendChild(aTag);
 }
 
 // loading and creating cards of post cards
 function get_visible_post_callback(response){
     var response = JSON.parse(response);
-    console.log(response)
     if(response.next == "None" && response.posts==[]){
         console.log("The end");
     }else{
+        
         for(post of response.posts){
-            console.log(post)
             var card = document.createElement("div");
             card.classList.add("card","home-page-post-card");
 
             var card_body = document.createElement("div");
             card_body.classList.add("card-body");
 
-            var card_title = document.createElement("h3");
+            var card_title = document.createElement("a");
             card_title.classList.add("card-title");
-            card_title.innerText = post.title;
+            card_title.href = '/posts/' + post.postid + "/";
+            var link_to_post_page = document.createElement("h3");
+            link_to_post_page.innerText = post.title;
+            card_title.appendChild(link_to_post_page);
 
 
             var author_name = document.createElement("a")
@@ -382,33 +415,69 @@ function get_visible_post_callback(response){
             }else{
                 publish_time.innerText = Math.round(days_ago) + " days ago";
             }
-            publish_time.href = '/posts/view/' + post.postid;
+            publish_time.href = '/posts/' + post.postid + "/";
 
-            if (post.contentType=="text/plain" || post.contentType=="text/markdown") {
+            if (post.contentType=="text/plain") {
               var content = document.createElement("p");
               content.innerText = post.content;
-            }
-            else {
+            }else if(post.contentType=="text/markdown"){
+                var converter = new showdown.Converter();
+                var md = post.content;
+                var html = converter.makeHtml(md);
+                var content = document.createElement("div");
+                content.innerHTML = html;
+            }else {
               var content = document.createElement("img");
               content.setAttribute("src", post.content);
-              content.setAttribute("width", "20%");
-              content.setAttribute("height", "20%");
+              content.setAttribute("width", "100%");
+              content.setAttribute("height", "auto");
             }
+            
+            var hr = document.createElement("hr");
+
+            var commentbox = document.createElement("div");
+            commentbox.classList.add("input-group", "shadow-textarea");
+            var comment_textarea = document.createElement("textarea");
+            comment_textarea.classList.add('form-control','z-depth-1');
+            comment_textarea.id = "addcommenttext"+num_post_counter;
+            comment_textarea.setAttribute("rows", "1");
+            comment_textarea.setAttribute("placeholder", "Comment...");
+            comment_textarea.setAttribute("style", "resize:none");
+            
+            var comment_btn = document.createElement("span");
+            comment_btn.classList.add("btn", "btn-primary");
+            comment_btn.id = "addcommentbutton"+num_post_counter;
+            // if user is logged in, give him permision to add comment
+            if(current_user.id != "None"){
+                comment_btn.setAttribute("onClick","addComment('" + post.origin+ "','"+comment_textarea.id+"');");
+            }else{
+                // else: redirect to login page
+                comment_btn.onclick = function(){window.location.replace(post.postauthor.host);}
+            }
+            comment_btn.innerText = "Send";
+            commentbox.appendChild(comment_textarea);
+            commentbox.appendChild(comment_btn);
 
             card_body.appendChild(card_title);
             card_body.appendChild(author_name);
+            card_body.appendChild(document.createElement("br"));
             card_body.appendChild(publish_time);
             card_body.appendChild(document.createElement("hr"));
             card_body.appendChild(content);
+            card_body.appendChild(hr);
+            card_body.appendChild(commentbox);
             card.appendChild(card_body);
             document.getElementById("home_page_post_cards").appendChild(card);
+            num_post_counter += 1;
         }
     }
 }
 
 // function for initializing home page
 function init_home_page(user){
+    num_post_counter = 0;
     page_number = 0;
+    current_user = user;
     var request_body = {};
     var friend_url = user.url + "/friends";
     var made_posts_url = user.url+"/madeposts";
@@ -524,10 +593,12 @@ function get_profile_callback(response){
 }
 
 function init_info_page(init, recv) {
+    num_post_counter = 0;
+    current_user = init;
     var request_body = { 'authors': "['" + recv.id + "']" };
     var profile_url = recv.url
     var friend_url = recv.url + "/friends";
-    var made_posts_url = recv.url+"/madeposts";
+    var made_posts_url = recv.url+"/posts";
     var follower_url = recv.url+"/follower";
     var following_url = recv.url + "/following";
     sendJSONHTTPGet(profile_url, {}, get_profile_callback);
@@ -535,7 +606,9 @@ function init_info_page(init, recv) {
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
     sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
     sendJSONHTTPGet(following_url, request_body, get_num_following_callback);
-    if(init.id != recv.id){
+
+    // loading follow and unfollow btn
+    if(init.id != recv.id && init.id!="None"){
         sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
     }
     sendJSONHTTPGet(made_posts_url, request_body, get_visible_post_callback);
