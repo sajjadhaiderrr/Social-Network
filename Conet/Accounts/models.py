@@ -5,10 +5,10 @@ import socket
 
 class Author(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    bio = models.CharField(max_length=200, default="None", null=True)
+    bio = models.CharField(max_length=200, default="None", null=True, blank=True)
     host = models.CharField(default="", max_length=50)
     displayName = models.CharField(max_length=30, default="")
-    github = models.URLField(default="")
+    github = models.URLField(default="", blank=True, null=True)
     url = models.URLField(default="", max_length=100)
     
     class Meta(AbstractUser.Meta):

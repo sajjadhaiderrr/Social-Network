@@ -13,7 +13,7 @@ class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
         #fields = '__all__'
-        fields = ('id', 'bio', 'displayName', 'github', 'url')
+        fields = ('id', 'bio', 'host', 'displayName', 'github', 'url')
 
     def get_url(self, obj):
         return "{}/author/{}".format(obj.host, obj.id)

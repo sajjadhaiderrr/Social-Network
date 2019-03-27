@@ -1,5 +1,9 @@
-from Accounts.models import Author, Friendship 
+from Accounts.models import Author, Friendship, Node 
 from .serializers import FollowerSerializers, FollowingSerializers
+
+import requests
+from requests.auth import HTTPBasicAuth
+import json
 
 def check_friend_of_friend():
     
@@ -45,3 +49,16 @@ def get_friends(user):
     # find who is both followed by current user and following current user
     friends = list(set(following_id) & set(follower_id))
     return friends
+
+def get_from_remote_server(authorObj, mode=None):
+    if mode == 'friends':
+        url = '{}/author/{}/friends'.format(authorObj.host, authorObj.id)
+    else:
+        url = '{}/author/{}'.format(authorObj.host, authorObj.id)
+
+    node = Node.objects.get(foreignHost=authorObj.host) # pylint: disable=maybe-no-member
+    res = requests.get(url, auth=HTTPBasicAuth(node.remoteUsername, node.remotePassword))
+    return (json.loads(res.text), res.status_code)
+
+def local_author(authorObj, host):
+    return True if authorObj.host == ('http://' + host) else False
