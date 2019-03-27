@@ -96,13 +96,21 @@ class InfoPage(APIView):
     template_name = 'Accounts/info.html'
     
     def get(self, request, authorId):
-        user_be_viewed = Author.objects.get(id=authorId)
-        print("authorId: ", authorId)
-        print(request.user.id)
-        print(user_be_viewed.id)
-        from_one_author = True if(request.user.id == user_be_viewed.id) else False
-        print(from_one_author)
-        return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed':user_be_viewed})
+        host = request.GET['host']
+        remote = {}
+        # need to merge
+        if(request.get_host() == host):
+            remote['host'] = host
+            from_one_host = True
+        else:
+            from_one_host = False
+            node = Node.objects.get(host=host)
+            remote['host'] = host
+            remote['username'] = node.remoteUsername
+            remote['password'] = node.remotePassword
+
+        from_one_author = True if(request.user.id == authorId) else False
+        return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed_id':authorId, 'remote':remote, 'from_one_host':from_one_host})
 
     def put(self, request, authorId):
         try:
