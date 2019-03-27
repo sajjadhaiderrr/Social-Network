@@ -1,22 +1,24 @@
 <!-- templates/base.html -->
 <!DOCTYPE html>
 <script> var csrf_token = "{{ csrf_token }}";</script>
-{% load bootstrap4 %}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
 <script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
+{% load bootstrap4 %}
 {% load staticfiles %}
 <script src="{% static "js/createpost.js" %}"></script>
 <script src="{% static "js/viewpost.js" %}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.0/showdown.min.js"></script>
+
 <link rel="stylesheet" type="text/css" href="{% static 'Posts/style.css' %}">
+<link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet"/>
 <html lang="en-ca">
 <head>
     <meta charset="utf-8">
     <title>{% block title %}{% endblock %}</title>
     {% bootstrap_css %}
-    {% bootstrap_javascript jquery='full' %}
     {% bootstrap_messages %}
 </head>
-<body>
+<body style="background-color: #FFFFFF;">
   {% block content %}
 
   {% endblock %}
