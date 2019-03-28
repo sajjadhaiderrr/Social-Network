@@ -5,6 +5,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 import socket
+import uuid
 
 def check_friend_of_friend():
     
@@ -29,8 +30,21 @@ def get_two_authors_relation(authorObj1, authorObj2):
     #reverse_friendship = Friendship.objects.filter(init_id=authorObj2, recv_id=authorObj1)
     return None
 
+def obtain_from_remote_node(url, host, method='GET', send_query=None):
+    header = {'Content-Type': 'application/json'}
+    node = Node.objects.get(foreignHost=host)  # pylint: disable=maybe-no-member
+    authentication = HTTPBasicAuth(node.remoteUsername, node.remotePassword)
+    
+    if method == 'GET':
+        res = requests.get(url, auth=authentication)
+    elif method == 'POST':
+        res = requests.post(url, header=header, data=send_query, auth=authentication)
+    else:
+        return {'code': 405}
+    print("response json: ", res.json())
+    return (res.json(), res.status_code)
 
-# get a list of friends of given user
+# get a list of friends of given user on local database
 def get_friends(user):
     # Todo: change id to url format
     followings = FollowingSerializers(user).data['friends']
@@ -53,6 +67,7 @@ def get_friends(user):
     #friends = update_remote_friends(user, friends, 'http://' + hostname)
     return friends
 
+# get a friend by updating local friendship database if needed
 def update_friends(user, host):
     host = 'http://' + host
     local_friends = list()
@@ -66,7 +81,7 @@ def update_friends(user, host):
         for following in following_frdships:
             if follower.init_id == following.recv_id:
                 if follower.init_id.host == host:
-                    local_friends.append(follower.init_id.url)
+                    local_friends.append(str(follower.init_id.id))
                 else:
                     remote_host = follower.init_id.host
                     remote_friends[remote_host] = remote_friends.get(remote_host, [])
@@ -80,43 +95,41 @@ def update_friends(user, host):
                  'authors': friends}
 
         print('friends_api: ', friends_api)
-        
-        node = Node.objects.get(foreignHost=host)  # pylint: disable=maybe-no-member
-        res = requests.post(friends_api, data=json.dumps(send_query), 
-                            auth=HTTPBasicAuth(node.remoteUsername, node.remotePassword))
-        friend_query = res.json()
-        #Todo: convert urls to ids
-
+        friend_query, _ = obtain_from_remote_node(url=friends_api, host=host, 
+            method='POST', send_query=json.dumps(send_query))
         #add = list(set(friend_query['authors']) - set(friends))
-        remove_list = list(set(friends) - set(friend_query['authors']))
-        new_remote_friends += list(set(friends) & set(friend_query['authors']))
+        friends = {friend.replace(host+'/author/', '') for friend in friends}
+        friend_query['authors'] = {friend.replace(host+'/author/', '') for friend in friend_query['authors']}
+        remove_list = list(friends - friend_query['authors'])
+        new_remote_friends += list(friends & friend_query['authors'])
         remove_remote_friends(user, remove_list)
-
+    
     return local_friends + new_remote_friends
 
 def remove_remote_friends(local_author, remove_list):
-    friendship = Friendship.objects.filter(init_id=local_author, recv_id__in=remove_list)  # pylint: disable=maybe-no-member
-    reverse_friendship = Friendship.objects.filter(init_id__in=remove_list, recv_id=local_author)  # pylint: disable=maybe-no-member
+    remote_authors = Author.objects.filter(id=remove_list)
+    print("remove_remote_authors: ", remote_authors)
+    friendship = Friendship.objects.filter(init_id=local_author, recv_id__in=list(remote_authors))  # pylint: disable=maybe-no-member
+    reverse_friendship = Friendship.objects.filter(init_id__in=list(remote_authors), recv_id=local_author)  # pylint: disable=maybe-no-member
     friendship.delete()
     reverse_friendship.delete()
-    return
-
 
 def create_remote_author(authorObj):
     username = authorObj['id']
     password = '!@#$%^&*'
-    
+
     try:
         author = Author(username=username, password=password, 
                         id=authorObj['id'], host=authorObj['host'], 
                         displayName=authorObj['displayname'], url=authorObj['url'])
         author.save()
     except:
-        return False
-    return True
+        return (False, None)
+    print("create_remote_author: ", author)
+    return (True, author)
 
-def local_author(authorObj, host):
-    return True if authorObj.host == ('http://' + host) else False
+def local_author(author_host, localhost):
+    return True if author_host == ('http://' + localhost) else False
 
 def is_local_request(request):
     try:

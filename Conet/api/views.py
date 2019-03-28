@@ -34,8 +34,7 @@ class AuthorAPI(APIView):
     #Authentication
     authentication_classes = (SessionAuthentication, BasicAuthentication)
     permission_classes = (IsAuthenticated,)
-    
-    # Todo: check correctness
+
     def get(self, request,*args, **kwargs):
         authorId = kwargs['pk']
         response = {"query":'author'}
@@ -61,8 +60,9 @@ class AuthorAPI(APIView):
             #    response, code = ApiHelper.get_from_remote_server(current_user)
             #    return Response(response, status=code)
         except:
+            # Todo: might need to change this
             response['authors'] = []
-            return Response(response, status=400)
+            return Response(response, status=404)
 
 
 # /unfriendrequest
@@ -124,6 +124,7 @@ class FriendRequestHandler(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
     def post(self, request):
+        is_local = ApiHelper.is_local_request(request)
         # parse request body
         request_body = request.data
         # response body
@@ -133,31 +134,125 @@ class FriendRequestHandler(APIView):
         send_id = request_body['author']['id'].replace(request_body['author']['host']+'/author/','')
         rcv_id = request_body['friend']['id'].replace(request_body['friend']['host']+'/author/','')
 
-        try:
-            remoteNode = request.user.node
-        except:
-            # friend request from local
-            fromLocal = True
-        
-        if fromLocal:
+        if is_local:
+            #reqeust from local user
+            friend_host = request_body['friend']['host']
+            frd_req_url = friend_host + '/friendrequest'
+
             try:
                 init_user = Author.objects.get(id=send_id)
+            except:
+                response['success'] = False
+                response['message'] = 'Request author does not exist.'
+                return HttpResponse(json.dumps(response), status=404)
+
+            try:
                 recv_user = Author.objects.get(id=rcv_id)
             except:
-                response['message'] = 'Request author or request friend does not exist.'
-                return HttpResponse(json.dumps(response), status=400)
-            # try to get the current relationship between two authors
+                #request friend user is not on local database
+                if ApiHelper.local_author(friend_host, request.get_host()):
+                    #request friend user is from local server
+                    response['success'] = False
+                    response['message'] = 'Request friends does not exist.'
+                    return HttpResponse(json.dumps(response), status=404)
+                else:
+                    #request friend user is from remote server
+                    response, status_code = ApiHelper.obtain_from_remote_node(url=frd_req_url, 
+                        host=friend_host, method='POST', send_query=json.dumps(request_body))
+
+                    if status_code == 200:
+                        #create remote author object
+                        success, recv_user = ApiHelper.create_remote_author(request_body['friend'])
+                        #add following status if atuhor is created successfully
+                        if success:
+                            friendship = Friendship(init_id=init_user, recv_id=recv_user, 
+                                status=1, starting_date=datetime.datetime.now())
+                            friendship.save()
+                        else:
+                            response['success'] = False
+                            response['message'] = 'Failed to create remote author on server'
+                            return Response(response, status=500)
+                    
+                    return Response(response, status=status_code)
+            else:
+                #request friend user is on local database
+                try:
+                    friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)
+                except:  
+                    reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
+                    friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
+                    
+                    if ApiHelper.local_author(friend_host, request.get_host()):
+                        #request friend user is from local server
+                        #If there's a reverse relation between init_user and recv_user, they become friend
+                        #case1: init_user accepts friend request from recv_user
+                        #case2: both init_user and recv_user send friend request to each other
+                        #case3: recv_user is following init_user
+                        if reverse_friendship.exists():
+                            reverse_friendship.update(state=1, starting_date = datetime.datetime.now())
+                            friendship.state = 1
+                            friendship.save()
+                            response['message'] = 'Your friend request is accepted.'
+                        #init_user sends a friend request to recv_user and there's no reverse relationship
+                        else:
+                            friendship.state = 0
+                            friendship.save()
+                            response['message'] = 'Your friend request is sent successfully.'
+                        response['success'] = True
+                        return HttpResponse(json.dumps(response), 200)
+                    else:
+                        #request friend user is from remote server
+                        response, status_code = ApiHelper.obtain_from_remote_node(url=frd_req_url,
+                            host=friend_host, method='POST', send_query=json.dumps(request_body))
+                        
+                        if status_code == 200:
+                            #remote friend request is sent successfully, set init_id following recv_id
+                            if reverse_friendship.exists():
+                                reverse_friendship.update(state=1, starting_date=datetime.datetime.now())
+                            friendship.state = 1
+                            friendship.save()
+                            response['success'] = True
+                            response['message'] = 'Your friend request is sent successfully.'
+                            return Response(response, status=200)
+
+                        return Response(response, status=status_code)
+                else:        
+                    #friend request is sent already or init_user is already followed to recv_user
+                    response['message'] = 'You are already followed this user.'
+                    return HttpResponse(json.dumps(response), status=404)
+        else:
+            # request from foreign host
             try:
-                friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)
-            except:  
-                reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
+                recv_user = Author.objects.get(id=rcv_id)
+            except:
+                response['success'] = False
+                response['message'] = "Friend with id: {} does not exist".format(rcv_id)
+                return Response(recv_user, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                init_user = Author.objects.get(id=send_id)
+            except:
+                #remote user does not exists on local db, create a new author on it
+                success, init_user = ApiHelper.create_remote_author(request_body['friend'])
+                #add following status if atuhor is created successfully
+                if success:
+                    friendship = Friendship(init_id=init_user, recv_id=recv_user,
+                        status=0, starting_date=datetime.datetime.now())
+                    friendship.save()
+                    response['success'] = True
+                    response['message'] = 'Friendrequest is sent successfully'
+                    return Response(response, status=200)
+                else:
+                    response['success'] = False
+                    response['message'] = 'Failed to create remote author on server'
+                    return Response(response, status=500)
+            else:
+                #remote user exists on local db
                 friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
-                #If there's a reverse relation between init_user and recv_user, they become friend
-                #case1: init_user accepts friend request from recv_user
-                #case2: both init_user and recv_user send friend request to each other
-                #case3: recv_user is following init_user
+                reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user)
+
                 if reverse_friendship.exists():
-                    reverse_friendship.update(state=1, starting_date = datetime.datetime.now())
+                    reverse_friendship.update(state=1, starting_date=datetime.datetime.now())
                     friendship.state = 1
                     friendship.save()
                     response['message'] = 'Your friend request is accepted.'
@@ -166,31 +261,9 @@ class FriendRequestHandler(APIView):
                     friendship.state = 0
                     friendship.save()
                     response['message'] = 'Your friend request is sent successfully.'
+                    
                 response['success'] = True
                 return HttpResponse(json.dumps(response), 200)
-                #friend request is sent already or init_user is already followed to recv_user
-            if friendship.state == 0:
-                response['message'] = 'You are already sent a friend request to this user.'
-            else:
-                response['message'] = 'You are already followed this user.'
-            return HttpResponse(json.dumps(response), status=400)
-        else:
-            # request from foreign host
-            try:
-                recv_user = Author.objects.get(id=rcv_id).filter()
-            except:
-                response['success'] = False
-                response['message'] = "Receiver with id: {} does not exist".format(rcv_id)
-                return Response(recv_user, status=status.HTTP_404_NOT_FOUND)
-
-            try:
-                init_user = Author.objects.get(id=send_id)
-            except:
-                #remote user does not exists on data base, create a new author on it
-                pass
-            else:
-                pass
-            return
 
 
 #/notification
@@ -286,7 +359,8 @@ class AuthorFriends(APIView):
             if is_local:
                 # current requested user is on local
                 friends = ApiHelper.update_friends(current_user, request.get_host())
-                response['author'] = friends
+                print('friends: ', friends)
+                response['authors'] = friends
                 return Response(response)
             else:
                 # current requested user is from remote server
