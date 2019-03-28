@@ -119,6 +119,7 @@ def create_remote_author(authorObj):
     password = '!@#$%^&*'
 
     try:
+        print('authorObj: ', authorObj)
         author = Author(username=username, password=password, 
                         id=authorObj['id'], host=authorObj['host'], 
                         displayName=authorObj['displayname'], url=authorObj['url'])
