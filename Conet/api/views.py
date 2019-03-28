@@ -581,8 +581,7 @@ class ViewAuthorPostAPI(APIView):
             user_not_login = False
         except:
             user_not_login = True
-            posts = Post.objects.filter(
-                postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
+            posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
 
         if not user_not_login:
             if current_user == author_be_viewed:
