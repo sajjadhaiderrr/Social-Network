@@ -53,12 +53,11 @@ function addCommentOnSinglePage(post_id)
     });
 }
 
-
+// need to be modified for remote functionality
 function init_single_post_page(origin, authenticated){
     url = origin;
     return fetch(url , {
         method: "GET",
-        /*
         mode: "cors",
         cache: "no-cache",
         credentials: "same-origin",
@@ -69,7 +68,7 @@ function init_single_post_page(origin, authenticated){
         },
         redirect: "follow",
         referrer: "no-referrer",
-        */
+
     })
     .then(response => {
         if (response.status === 200){
@@ -82,12 +81,12 @@ function init_single_post_page(origin, authenticated){
     }).then(json =>{
         // display title
         document.getElementById("post-title").innerText = json.post.title;
-        
+
         // display who is author
-        document.getElementById("post-author-link").innerText = json.post.postauthor.displayName;
-        document.getElementById("post-author-link").href = json.post.postauthor.url + "/";
-        
-        // display times 
+        document.getElementById("post-author-link").innerText = json.post.author.displayName;
+        document.getElementById("post-author-link").href = json.post.author.url + "/";
+
+        // display times
         var publish_date_time = Date.parse(json.post.published);
         var now = new Date();
         var sec_ago = (now - publish_date_time)/1000;
@@ -115,13 +114,22 @@ function init_single_post_page(origin, authenticated){
             var content = document.createElement("div");
             content.innerHTML = html;
             document.getElementById("post-content").appendChild(content);
-        }else {
+        }else if(json.post.contentType=="image/png;base64" || json.post.contentType=="image/jpeg;base64" ){
             var content = document.createElement("img");
             content.setAttribute("src", json.post.content);
             content.setAttribute("width", "100%");
             content.setAttribute("height", "auto");
             document.getElementById("post-image").appendChild(content);
         }
+        else if(json.post.contentType=="application/base64"){
+            var content = document.createElement("a");
+            content.setAttribute('href',json.post.content);
+            content.innerText = "View "+json.post.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
+            content.click()
+            document.getElementById("post-image").appendChild(content);
+        }
+
+
 
         // display comment box
         var commentbox = document.createElement("div");
@@ -132,20 +140,20 @@ function init_single_post_page(origin, authenticated){
         comment_textarea.setAttribute("rows", "1");
         comment_textarea.setAttribute("placeholder", "Comment...");
         comment_textarea.setAttribute("style", "resize:none");
-        
+
         var comment_btn = document.createElement("span");
         comment_btn.classList.add("btn", "btn-primary");
         comment_btn.id = "addcommentbutton";
         if(authenticated == "True"){
             comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid)} ;
         }else{
-            comment_btn.onclick = function(){window.location.replace(json.post.postauthor.host);} ;
+            comment_btn.onclick = function(){window.location.replace(json.post.author.host);} ;
         }
-        
+
         comment_btn.innerText = "Send";
 
         commentbox.appendChild(comment_textarea);
         commentbox.appendChild(comment_btn);
         document.getElementById("create-comment").appendChild(commentbox);
     });
-} 
+}

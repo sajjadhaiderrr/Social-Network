@@ -104,28 +104,30 @@ class PostSerializer(serializers.ModelSerializer):
     #  count
     #  size
     #  ...
-    postauthor = serializers.SerializerMethodField('get_author')
-    def get_author(self, obj):
-        return Helper_AuthorSerializers(Author.objects.get(id=obj.author.id)).data
-    
-    commentslist = serializers.SerializerMethodField('get_comments')
-    def get_comments(self, obj):
+    author = serializers.SerializerMethodField('get_author_data')
+    def get_author_data(self, obj):
+        return Helper_AuthorSerializers(Author.objects.get(id=obj.postauthor.id)).data
+
+    comments = serializers.SerializerMethodField('get_comments_list')
+    def get_comments_list(self, obj):
         try:
             allcomments = Comment.objects.filter(post=obj.postid).order_by('published')
             serializer = Helper_CommentSerializers(allcomments, many=True)
             return serializer.data
         except Exception as e:
             return None
-            
+
     class Meta:
         model = Post
-        fields = ('postid', 'postauthor', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted', 'commentslist')
+        fields = ('postid', 'author', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted','comments')
+
+    
 
     def create(self, validated_data):
         #for fields which are no belonged to, might need to pop that data
         author = self.context['author']
         origin = self.context['origin']
-        post = Post.objects.create(author=author, origin=origin, source=origin, **validated_data)  # pylint: disable=maybe-no-member
+        post = Post.objects.create(postauthor=author, origin=origin, source=origin, **validated_data)  # pylint: disable=maybe-no-member
         src = origin+'posts/'+str(post.postid)   # pylint: disable=maybe-no-member
         post.source = post.origin = src
         post.save()

@@ -9,13 +9,12 @@
     <script>
     init_single_post_page('{{ post.origin }}', '{{ user.is_authenticated }}');
     </script>
-    <div class="content">
+    <div class="content" style="margin-left:10%; margin-right:10%;">
       
-      <div class="row" style="margin-left:10%; margin-right:10%;">
+      <div class="row" >
         <!-- info part -->
         <div class="col-sm-3">
           <h1 id="post-title" class="h1 text-primary"></h1>
-          <hr>
           <a id="post-author-link" class="text-secondary"></a>
           <p id="published" class="text-secondary"></p>
         </div>
@@ -24,7 +23,6 @@
         <div class="col-sm-9">
           <div id="post-image"> </div>
           <div id="post-content"> </div>
-          <hr>
           <div id="create-comment">
           </div>
           <div id="post-comments"> </div>
