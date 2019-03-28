@@ -8,17 +8,14 @@
         <script>
             const csrf_token = "{{ csrf_token }}"
             current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
-            
+            user_be_viewed = {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' }
             user_be_viewed_id = '{{user_be_viewed_id}}';
             var remote = {"username":'{{ remote.username }}', "password":"{{remote.password}}"}
-            var user_be_viewed_url = "http://"+'{{remote.host}}'+'/author/'+'{{user_be_viewed_id}}';
             // send request to given host about given authorId
             if ('{{ from_one_host }}' == "True"){
-                user_be_viewed = current_user
-                init_info_page(current_user, user_be_viewed_url, '{{user_be_viewed_id}}', remote, true);
+                init_info_page(current_user, user_be_viewed, remote, true);
             }else{
-                user_be_viewed = {"host": '{{ remote.host }}'}
-                init_info_page(current_user, user_be_viewed_url, '{{user_be_viewed_id}}', remote, false);
+                init_info_page(current_user, user_be_viewed, remote, false);
             }
                 
                 //load_user_profile(current_user, user_be_viewed)
@@ -57,8 +54,8 @@
                 {% endif %}
                 {% if not from_one_author %}
                     {% if user.is_authenticated %}
-                        <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Follow</a>
-                        <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfollow</a>
+                        <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest(current_user, user_be_viewed)">Follow</a>
+                        <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest(current_user, user_be_viewed)">Unfollow</a>
                     {% endif %}
                 {% else %}
                     <button id="btn-edit" class="btn btn-primary" onclick="editProfile()">Edit</button>

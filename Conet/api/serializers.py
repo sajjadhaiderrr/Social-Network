@@ -116,7 +116,7 @@ class PostSerializer(serializers.ModelSerializer):
         #for fields which are no belonged to, might need to pop that data
         author = self.context['author']
         origin = self.context['origin']
-        post = Post.objects.create(author=author, origin=origin, source=origin, **validated_data)  # pylint: disable=maybe-no-member
+        post = Post.objects.create(postauthor=author, origin=origin, source=origin, **validated_data)  # pylint: disable=maybe-no-member
         src = origin+'posts/'+str(post.postid)   # pylint: disable=maybe-no-member
         post.source = post.origin = src
         post.save()

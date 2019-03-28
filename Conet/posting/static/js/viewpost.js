@@ -58,7 +58,6 @@ function init_single_post_page(origin, authenticated){
     url = origin;
     return fetch(url , {
         method: "GET",
-        /*
         mode: "cors",
         cache: "no-cache",
         credentials: "same-origin",
@@ -69,7 +68,7 @@ function init_single_post_page(origin, authenticated){
         },
         redirect: "follow",
         referrer: "no-referrer",
-        */
+        
     })
     .then(response => {
         if (response.status === 200){

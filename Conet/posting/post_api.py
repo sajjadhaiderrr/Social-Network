@@ -172,7 +172,7 @@ class ReadSinglePost(APIView):
     # put: update single post with id = post_id
     def put(self, request, post_id):
         if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
-            return Response("Invalid Post", status=404)
+            return Response("Invalid Post", status=400)
         else:
             post = Post.objects.get(pk=post_id)# pylint: disable=maybe-no-member
             current_user = Author.objects.get(pk=request.user.id)

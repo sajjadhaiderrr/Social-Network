@@ -345,7 +345,7 @@ function get_num_friend_callback(response){
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
-    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed_id+'/friends/';
+    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id+'/friends/';
     document.getElementById("num-friends").appendChild(aTag);
 }
 
@@ -354,7 +354,7 @@ function get_num_follower_callback(response){
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
-    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed_id + '/followers/';
+    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id + '/followers/';
     document.getElementById("num-follower").appendChild(aTag);
 }
 
@@ -363,7 +363,7 @@ function get_num_following_callback(response){
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
-    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed_id+ '/following/';
+    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id+ '/following/';
     document.getElementById("num-following").appendChild(aTag);
 }
 
@@ -372,7 +372,7 @@ function get_num_posts_made_callback(response){
     var num_posts_made = response.count;
     var aTag = document.createElement("a");
     aTag.innerText=num_posts_made;
-    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed_id + '/info/?host=' + user_be_viewed.host;
+    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id + '/info/?host=' + user_be_viewed.host;
     document.getElementById("num-posts").appendChild(aTag);
 }
 
@@ -510,7 +510,7 @@ function sendInitInfoRequestCallback(response) {
     console.log(response);
     var following = false;
     for(var relation of response.authors){
-        if(relation.id == user_be_viewed_id){
+        if(relation.id == user_be_viewed.id){
             following = true;
             break;
         }
@@ -600,18 +600,18 @@ function get_profile_callback(response){
 }
 
 
-function init_info_page(init, recv_url, recv_id, remote, from_one_host) {
+function init_info_page(init, recv, remote, from_one_host) {
     num_post_counter = 0;
     current_user = init;
     var request_body = {};
-    var profile_url = recv_url;
-    var friend_url = recv_url + "/friends";
-    var posts_url = recv_url+"/posts";
+    var profile_url = recv.url;
+    var friend_url = recv.url + "/friends";
+    var posts_url = recv.url+"/posts";
     // for author from one host, display follower and followings
     if(from_one_host){
         
-        var follower_url = recv_url +"/follower";
-        var following_url = recv_url + "/following";
+        var follower_url = recv.url +"/follower";
+        var following_url = recv.url + "/following";
         sendJSONHTTPGet(profile_url, {}, get_profile_callback);
         sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
         sendJSONHTTPGet(posts_url, request_body, get_num_posts_made_callback);
@@ -625,8 +625,7 @@ function init_info_page(init, recv_url, recv_id, remote, from_one_host) {
     }
 
     // loading follow and unfollow btn
-    if(init.id != recv_id && init.id!="None"){
-        console.log(init.id != recv_id);
+    if(init.id != recv.id && init.id!="None"){
         sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
     }
     sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback);

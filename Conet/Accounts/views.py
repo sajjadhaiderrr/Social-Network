@@ -96,6 +96,9 @@ class InfoPage(APIView):
     template_name = 'Accounts/info.html'
     
     def get(self, request, authorId):
+        url = request.GET['host']+"/author/"+ str(authorId)
+        
+        user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"I don't know"}
         host = request.GET['host'][7:]
         remote = {}
         print(host)
@@ -112,7 +115,7 @@ class InfoPage(APIView):
             remote['password'] = node.remotePassword
 
         from_one_author = True if(request.user.id == authorId) else False
-        return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed_id':authorId, 'remote':remote, 'from_one_host':from_one_host})
+        return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed':user_be_viewed, 'remote':remote, 'from_one_host':from_one_host})
 
     def put(self, request, authorId):
         try:

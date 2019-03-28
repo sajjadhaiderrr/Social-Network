@@ -184,7 +184,7 @@ class AuthorFollowing(View):
         try:
             # get current user based on URL on browser. It is the id of user who is currently being viewed.
             current_user = Author.objects.get(id=kwargs['pk'])
-
+            
             # get people whom this user is following.
             followings = FollowingSerializers(current_user).data['friends']
             response['authors'] = []
