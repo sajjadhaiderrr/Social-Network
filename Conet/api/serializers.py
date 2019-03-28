@@ -108,19 +108,20 @@ class PostSerializer(serializers.ModelSerializer):
     def get_author_data(self, obj):
         return Helper_AuthorSerializers(Author.objects.get(id=obj.postauthor.id)).data
 
-
-    class Meta:
-        model = Post
-        fields = ('postid', 'author', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted','comments')
-
-    comments = serializers.SerializerMethodField('get_comments')
-    def get_comments(self, obj):
+    comments = serializers.SerializerMethodField('get_comments_list')
+    def get_comments_list(self, obj):
         try:
             allcomments = Comment.objects.filter(post=obj.postid).order_by('published')
             serializer = Helper_CommentSerializers(allcomments, many=True)
             return serializer.data
         except Exception as e:
             return None
+
+    class Meta:
+        model = Post
+        fields = ('postid', 'author', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted','comments')
+
+    
 
     def create(self, validated_data):
         #for fields which are no belonged to, might need to pop that data
