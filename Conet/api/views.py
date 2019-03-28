@@ -133,11 +133,13 @@ class FriendRequestHandler(APIView):
         # instanciate initiator and receiver as Author object
         send_id = request_body['author']['id'].replace(request_body['author']['host']+'/author/','')
         rcv_id = request_body['friend']['id'].replace(request_body['friend']['host']+'/author/','')
-
         if is_local:
             #reqeust from local user
             friend_host = request_body['friend']['host']
             frd_req_url = friend_host + '/friendrequest'
+            
+            print('send author: ',  request_body['author']['displayName'])
+            print('rcv author: ', request_body['friend']['displayName'])
 
             try:
                 init_user = Author.objects.get(id=send_id)
@@ -166,7 +168,7 @@ class FriendRequestHandler(APIView):
                         #add following status if atuhor is created successfully
                         if success:
                             friendship = Friendship(init_id=init_user, recv_id=recv_user, 
-                                status=1, starting_date=datetime.datetime.now())
+                                state=1, starting_date=datetime.datetime.now())
                             friendship.save()
                         else:
                             response['success'] = False
@@ -233,11 +235,11 @@ class FriendRequestHandler(APIView):
                 init_user = Author.objects.get(id=send_id)
             except:
                 #remote user does not exists on local db, create a new author on it
-                success, init_user = ApiHelper.create_remote_author(request_body['friend'])
+                success, init_user = ApiHelper.create_remote_author(request_body['author'])
                 #add following status if atuhor is created successfully
                 if success:
                     friendship = Friendship(init_id=init_user, recv_id=recv_user,
-                        status=0, starting_date=datetime.datetime.now())
+                        state=0, starting_date=datetime.datetime.now())
                     friendship.save()
                     response['success'] = True
                     response['message'] = 'Friendrequest is sent successfully'
@@ -248,22 +250,29 @@ class FriendRequestHandler(APIView):
                     return Response(response, status=500)
             else:
                 #remote user exists on local db
-                friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
-                reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user)
+                try:
+                    friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)
+                except:
+                    friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
+                    reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user)
 
-                if reverse_friendship.exists():
-                    reverse_friendship.update(state=1, starting_date=datetime.datetime.now())
-                    friendship.state = 1
-                    friendship.save()
-                    response['message'] = 'Your friend request is accepted.'
-                #init_user sends a friend request to recv_user and there's no reverse relationship
+                    if reverse_friendship.exists():
+                        reverse_friendship.update(state=1, starting_date=datetime.datetime.now())
+                        friendship.state = 1
+                        friendship.save()
+                        response['message'] = 'Your friend request is accepted.'
+                    #init_user sends a friend request to recv_user and there's no reverse relationship
+                    else:
+                        friendship.state = 0
+                        friendship.save()
+                        response['message'] = 'Your friend request is sent successfully.'
+                        
+                    response['success'] = True
+                    return HttpResponse(json.dumps(response), 200)
                 else:
-                    friendship.state = 0
-                    friendship.save()
-                    response['message'] = 'Your friend request is sent successfully.'
-                    
-                response['success'] = True
-                return HttpResponse(json.dumps(response), 200)
+                    #friend request is sent already or init_user is already followed to recv_user
+                    response['message'] = 'You are already followed this user.'
+                    return HttpResponse(json.dumps(response), status=404)
 
 
 #/notification
@@ -352,35 +361,33 @@ class AuthorFriends(APIView):
         is_local = ApiHelper.is_local_request(request)
         response = {"query":'friends'}
 
-        try:
-            # get current user on URL
-            current_user = Author.objects.get(id=kwargs['pk'])
-            
-            if is_local:
-                # current requested user is on local
-                friends = ApiHelper.update_friends(current_user, request.get_host())
-                print('friends: ', friends)
-                response['authors'] = friends
-                return Response(response)
-            else:
-                # current requested user is from remote server
-                friends = ApiHelper.get_friends(current_user)
-                response['authors'] = friends
-                return Response(response)         
-        except Exception:
-            response['authors'] = []
-            return Response(response, status=400)
+    #try:
+        # get current user on URL
+        current_user = Author.objects.get(id=kwargs['pk'])
+        if is_local:
+            # current requested user is on local
+            friends = ApiHelper.update_friends(current_user, request.get_host())
+            print('friends: ', friends)
+            response['authors'] = friends
+            return Response(response)
+        else:
+            # current requested user is from remote server
+            friends = ApiHelper.get_friends(current_user)
+            response['authors'] = friends
+            return Response(response)         
+        # except Exception as e:
+        #     print('author friends exception: ', e)
+        #     response['authors'] = []
+        #     return Response(response, status=400)
     
     # Ask a service if anyone in the list is a friend
     def post(self, request,*args, **kwargs):
-        # Todo
         is_local = ApiHelper.is_local_request(request)
         # parse request body
         request_body = json.loads(request.body.decode())
 
         # get the authors who are checked be a friend of author shows in URL
-        request_friends = request_body['authors']
-
+        request_friends = ApiHelper.urls_to_ids(request_body['authors'])
         response = {"query":'friends'}
         try:
             # get current user on URL
