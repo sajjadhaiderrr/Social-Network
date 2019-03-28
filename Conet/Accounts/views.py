@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from .forms import SearchUserForm, SignUpForm
-from .models import Author, Friendship
+from .models import Author, Friendship, Node
 from api.serializers import AuthorSerializer
 
 
@@ -109,7 +109,7 @@ class InfoPage(APIView):
             from_one_host = True
         else:
             from_one_host = False
-            node = Node.objects.get(host=host)
+            node = Node.objects.get(foreignHost=request.GET['host'])
             remote['host'] = host
             remote['username'] = node.remoteUsername
             remote['password'] = node.remotePassword
