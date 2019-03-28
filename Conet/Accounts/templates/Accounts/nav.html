@@ -22,7 +22,7 @@
                     <a class="nav-link" href='{{request.user.url|add:"/"}}'>Home <span class="sr-only">(current)</span></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href='{{request.user.url|add:"/info/"}} '>Profile</a>
+                    <a class="nav-link" href='{{request.user.url|add:"/info/?host="|add:request.user.host}} '>Profile</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href='{{request.user.url|add:"/friends/"}}'>Friends</a>

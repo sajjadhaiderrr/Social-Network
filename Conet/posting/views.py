@@ -14,7 +14,7 @@ class AuthorPostHandler(APIView):
     def get(self, request):
         current_user = request.user
         if (current_user.id):
-            postsToGet = get_list_or_404(Post.objects.order_by('published'), author=current_user.id)    # pylint: disable=maybe-no-member
+            postsToGet = get_list_or_404(Post.objects.order_by('published'), postauthor=current_user.id)    # pylint: disable=maybe-no-member
             paginator = PageNumberPagination()
             paginator.page_size = 10
             results = paginator.paginate_queryset(postsToGet, request)
@@ -29,6 +29,7 @@ class CreatePostHandler(APIView):
     #     return Response(posts)
     def post(self, request):
         serializer = PostSerializer(data=request.data)
+        print(request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)

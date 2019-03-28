@@ -8,14 +8,23 @@
         <script>
             const csrf_token = "{{ csrf_token }}"
             current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
-            user_be_viewed =  {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
-            //load_user_profile(current_user, user_be_viewed)
-            init_info_page(current_user, user_be_viewed);
+            user_be_viewed = {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' }
+            user_be_viewed_id = '{{user_be_viewed_id}}';
+            var remote = {"username":'{{ remote.username }}', "password":"{{remote.password}}"}
+            // send request to given host about given authorId
+            if ('{{ from_one_host }}' == "True"){
+                init_info_page(current_user, user_be_viewed, remote, true);
+            }else{
+                init_info_page(current_user, user_be_viewed, remote, false);
+            }
+                
+                //load_user_profile(current_user, user_be_viewed)
+            
         </script>
         <div class='content row'>
             <!-- card -->  
             <div id="profile-card" class='col-sm-3 card' style="height:fit-content">
-                <h1 id="displayName" class="h1 text-primary center-text">{{ user_be_viewed.displayName }}</h1>
+                <h1 id="displayName" class="h1 text-primary center-text"></h1>
                 <hr>
                 <div id='profile-card-info'>
                 </div>
@@ -31,6 +40,7 @@
                     </div>
                     
                 </div>
+                {% if from_one_host %}
                 <div class='row'>
                     <div class='col-sm-6'>
                         <p class="text-secondary stats center-text">Following</p>
@@ -41,10 +51,11 @@
                         <h3 id="num-follower" class="text-primary center-text" ></h3>
                     </div>
                 </div>
+                {% endif %}
                 {% if not from_one_author %}
                     {% if user.is_authenticated %}
-                        <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Follow</a>
-                        <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfollow</a>
+                        <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest(current_user, user_be_viewed)">Follow</a>
+                        <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest(current_user, user_be_viewed)">Unfollow</a>
                     {% endif %}
                 {% else %}
                     <button id="btn-edit" class="btn btn-primary" onclick="editProfile()">Edit</button>
@@ -54,16 +65,5 @@
             <div class='col-sm-8' id='home_page_post_cards'>
 
             </div>
-            <!--
-            {% if not from_one_author %}
-                <script>
-                    init_info_page(current_user, user_be_viewed);
-                </script>
-                <button id="btn-befriend" class="btn btn-primary" onclick="sendFriendRequest( current_user, user_be_viewed)">Follow</a>
-                <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest( current_user, user_be_viewed)">Unfollow</a>
-            {% else %}
-                <button id="btn-edit" class="btn btn-primary" onclick="editProfile()">Edit</button>
-            {% endif %}
-            -->
         </div>
 {% endblock %}  
