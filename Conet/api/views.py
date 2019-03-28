@@ -6,9 +6,13 @@ from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.views import View, generic
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 from django.db.models import Q
 from django.http import JsonResponse
 
@@ -20,16 +24,25 @@ from posting.models import Post
 from .serializers import FollowingSerializers, FollowerSerializers, ExtendAuthorSerializers, AuthorSerializer, Helper_AuthorSerializers, PostSerializer
 from . import ApiHelper
 
+import requests
+
 # Create your views here.
 
 # api for /author
 class AuthorAPI(APIView):
     model = Author
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request,*args, **kwargs):
+        authorId = kwargs['pk']
         response = {"query":'author'}
         try:
-            # get current user
-            current_user = Author.objects.get(id=kwargs['pk'])
+            current_user = Author.objects.get(id=authorId)
+            # current requested user is on local
+            #if ApiHelper.local_author(current_user, request.get_host()):
+            
             # get current user's data. Note that friends' data is excluded
             author_data = ExtendAuthorSerializers(current_user).data
             
@@ -43,14 +56,23 @@ class AuthorAPI(APIView):
                 friend_data = Helper_AuthorSerializers(Author.objects.get(id=friend)).data 
                 response['friends'].append(json.dumps(friend_data))
             return Response(response, status=200)
+            #else:
+            #    response, code = ApiHelper.get_from_remote_server(current_user)
+            #    return Response(response, status=code)
         except:
+            # Todo: might need to change this
             response['authors'] = []
-            return Response(response, status=400)
+            return Response(response, status=404)
 
 
 # /unfriendrequest
 # getting POST request from client. Un-friend given initiator and receiver.
 class UnfriendRequestHandler(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
+    # Todo: check if recv_id is from foreign user
     def post(self, request):
         # parse request body
         request_body = request.data
@@ -68,7 +90,6 @@ class UnfriendRequestHandler(APIView):
         # try to delete the relationship with given init_user and recv_user
         reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
         friendship = Friendship.objects.filter(init_id=init_user, recv_id=recv_user) # pylint: disable=maybe-no-member
-        print("reverse: ", reverse_friendship)
         if (friendship.exists() or reverse_friendship.exists()):
             #case: there's reverse relationship between two users and there's a pending friend
             #request from recv_user to init_user
@@ -87,11 +108,14 @@ class UnfriendRequestHandler(APIView):
 
 # /friendrequest
 class FriendRequestHandler(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
         reqUsrId = request.user.id
         try:
             reqAuthor = Author.objects.get(pk=reqUsrId)
-            print("pass here")
             requestList = ApiHelper.get_all_friend_requests(reqAuthor)
             response = {'query': 'friendrequest',
                         'friends': requestList}
@@ -100,6 +124,7 @@ class FriendRequestHandler(APIView):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
     def post(self, request):
+        is_local = ApiHelper.is_local_request(request)
         # parse request body
         request_body = request.data
         # response body
@@ -108,46 +133,147 @@ class FriendRequestHandler(APIView):
         # instanciate initiator and receiver as Author object
         send_id = request_body['author']['id'].replace(request_body['author']['host']+'/author/','')
         rcv_id = request_body['friend']['id'].replace(request_body['friend']['host']+'/author/','')
+        if is_local:
+            #reqeust from local user
+            friend_host = request_body['friend']['host']
+            frd_req_url = friend_host + '/friendrequest'
+            
+            print('send author: ',  request_body['author']['displayName'])
+            print('rcv author: ', request_body['friend']['displayName'])
 
-        print("send_id: ", send_id)
-        print("rcv_id: ", rcv_id)
-        try:
-            init_user = Author.objects.get(id=send_id)
-            recv_user = Author.objects.get(id=rcv_id)
-        except:
-            response['message'] = 'Request author or request friend does not exist.'
-            print("eror here1")
-            return HttpResponse(json.dumps(response), status=400)
+            try:
+                init_user = Author.objects.get(id=send_id)
+            except:
+                response['success'] = False
+                response['message'] = 'Request author does not exist.'
+                return HttpResponse(json.dumps(response), status=404)
 
-        # try to get the current relationship between two authors
-        try:
-            friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)   # pylint: disable=maybe-no-member
-        except:  
-            reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
-            friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
-            print("reverse: ", reverse_friendship)
-            #If there's a reverse relation between init_user and recv_user, they become friend
-            #case1: init_user accepts friend request from recv_user
-            #case2: both init_user and recv_user send friend request to each other
-            #case3: recv_user is following init_user
-            if reverse_friendship.exists():
-                reverse_friendship.update(state=1, starting_date = datetime.datetime.now())
-                friendship.state = 1
-                friendship.save()
-                response['message'] = 'Your friend request is accepted.'
-            #init_user sends a friend request to recv_user and there's no reverse relationship
+            try:
+                recv_user = Author.objects.get(id=rcv_id)
+            except:
+                #request friend user is not on local database
+                if ApiHelper.local_author(friend_host, request.get_host()):
+                    #request friend user is from local server
+                    response['success'] = False
+                    response['message'] = 'Request friends does not exist.'
+                    return HttpResponse(json.dumps(response), status=404)
+                else:
+                    #request friend user is from remote server
+                    response, status_code = ApiHelper.obtain_from_remote_node(url=frd_req_url, 
+                        host=friend_host, method='POST', send_query=json.dumps(request_body))
+
+                    if status_code == 200:
+                        #create remote author object
+                        success, recv_user = ApiHelper.create_remote_author(request_body['friend'])
+                        #add following status if atuhor is created successfully
+                        if success:
+                            friendship = Friendship(init_id=init_user, recv_id=recv_user, 
+                                state=1, starting_date=datetime.datetime.now())
+                            friendship.save()
+                        else:
+                            response['success'] = False
+                            response['message'] = 'Failed to create remote author on server'
+                            return Response(response, status=500)
+                    
+                    return Response(response, status=status_code)
             else:
-                friendship.state = 0
-                friendship.save()
-                response['message'] = 'Your friend request is sent successfully.'
-            response['success'] = True
-            return HttpResponse(json.dumps(response), 200)
-            #friend request is sent already or init_user is already followed to recv_user
-        if friendship.state == 0:
-            response['message'] = 'You are already sent a friend request to this user.'
+                #request friend user is on local database
+                try:
+                    friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)
+                except:  
+                    reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
+                    friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
+                    
+                    if ApiHelper.local_author(friend_host, request.get_host()):
+                        #request friend user is from local server
+                        #If there's a reverse relation between init_user and recv_user, they become friend
+                        #case1: init_user accepts friend request from recv_user
+                        #case2: both init_user and recv_user send friend request to each other
+                        #case3: recv_user is following init_user
+                        if reverse_friendship.exists():
+                            reverse_friendship.update(state=1, starting_date = datetime.datetime.now())
+                            friendship.state = 1
+                            friendship.save()
+                            response['message'] = 'Your friend request is accepted.'
+                        #init_user sends a friend request to recv_user and there's no reverse relationship
+                        else:
+                            friendship.state = 0
+                            friendship.save()
+                            response['message'] = 'Your friend request is sent successfully.'
+                        response['success'] = True
+                        return HttpResponse(json.dumps(response), 200)
+                    else:
+                        #request friend user is from remote server
+                        response, status_code = ApiHelper.obtain_from_remote_node(url=frd_req_url,
+                            host=friend_host, method='POST', send_query=json.dumps(request_body))
+                        
+                        if status_code == 200:
+                            #remote friend request is sent successfully, set init_id following recv_id
+                            if reverse_friendship.exists():
+                                reverse_friendship.update(state=1, starting_date=datetime.datetime.now())
+                            friendship.state = 1
+                            friendship.save()
+                            response['success'] = True
+                            response['message'] = 'Your friend request is sent successfully.'
+                            return Response(response, status=200)
+
+                        return Response(response, status=status_code)
+                else:        
+                    #friend request is sent already or init_user is already followed to recv_user
+                    response['message'] = 'You are already followed this user.'
+                    return HttpResponse(json.dumps(response), status=404)
         else:
-            response['message'] = 'You are already followed this user.'
-        return HttpResponse(json.dumps(response), status=400)
+            # request from foreign host
+            try:
+                recv_user = Author.objects.get(id=rcv_id)
+            except:
+                response['success'] = False
+                response['message'] = "Friend with id: {} does not exist".format(rcv_id)
+                return Response(recv_user, status=status.HTTP_404_NOT_FOUND)
+
+            try:
+                init_user = Author.objects.get(id=send_id)
+            except:
+                #remote user does not exists on local db, create a new author on it
+                success, init_user = ApiHelper.create_remote_author(request_body['author'])
+                #add following status if atuhor is created successfully
+                if success:
+                    friendship = Friendship(init_id=init_user, recv_id=recv_user,
+                        state=0, starting_date=datetime.datetime.now())
+                    friendship.save()
+                    response['success'] = True
+                    response['message'] = 'Friendrequest is sent successfully'
+                    return Response(response, status=200)
+                else:
+                    response['success'] = False
+                    response['message'] = 'Failed to create remote author on server'
+                    return Response(response, status=500)
+            else:
+                #remote user exists on local db
+                try:
+                    friendship = Friendship.objects.get(init_id=init_user, recv_id=recv_user)
+                except:
+                    friendship = Friendship(init_id=init_user, recv_id=recv_user, starting_date=datetime.datetime.now())
+                    reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user)  # pylint: disable=maybe-no-member
+
+                    if reverse_friendship.exists():
+                        reverse_friendship.update(state=1, starting_date=datetime.datetime.now())
+                        friendship.state = 1
+                        friendship.save()
+                        response['message'] = 'Your friend request is accepted.'
+                    #init_user sends a friend request to recv_user and there's no reverse relationship
+                    else:
+                        friendship.state = 0
+                        friendship.save()
+                        response['message'] = 'Your friend request is sent successfully.'
+                        
+                    response['success'] = True
+                    return HttpResponse(json.dumps(response), 200)
+                else:
+                    #friend request is sent already or init_user is already followed to recv_user
+                    response['message'] = 'You are already followed this user.'
+                    return HttpResponse(json.dumps(response), status=404)
+
 
 #/notification
 def notification(request):
@@ -226,29 +352,42 @@ class AuthorFollower(APIView):
 
 # for api/author/{author_id}/friends
 class AuthorFriends(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     # get a list of ids who is friend of given user.
     def get(self, request,*args, **kwargs):
+        is_local = ApiHelper.is_local_request(request)
         response = {"query":'friends'}
-        try:
-            # get current user on URL
-            current_user = Author.objects.get(id=kwargs['pk'])
 
-            friends = ApiHelper.get_friends(current_user)
+    #try:
+        # get current user on URL
+        current_user = Author.objects.get(id=kwargs['pk'])
+        if is_local:
+            # current requested user is on local
+            friends = ApiHelper.update_friends(current_user, request.get_host())
+            print('friends: ', friends)
             response['authors'] = friends
             return Response(response)
-        except:
-            response['authors'] = []
-            return Response(response, status=400)
+        else:
+            # current requested user is from remote server
+            friends = ApiHelper.get_friends(current_user)
+            response['authors'] = friends
+            return Response(response)         
+        # except Exception as e:
+        #     print('author friends exception: ', e)
+        #     response['authors'] = []
+        #     return Response(response, status=400)
     
     # Ask a service if anyone in the list is a friend
     def post(self, request,*args, **kwargs):
+        is_local = ApiHelper.is_local_request(request)
         # parse request body
         request_body = json.loads(request.body.decode())
 
         # get the authors who are checked be a friend of author shows in URL
-        request_friends = request_body['authors']
-        for friend in request_friends:
-            friend = str(friend)
+        request_friends = ApiHelper.urls_to_ids(request_body['authors'])
         response = {"query":'friends'}
         try:
             # get current user on URL
@@ -257,8 +396,8 @@ class AuthorFriends(APIView):
             friends = ApiHelper.get_friends(current_user)
             response['authors'] = []
             for friend in friends:
-                if str(friend) in request_friends:
-                    response['authors'].append(str(friend))
+                if friend in request_friends:
+                    response['authors'].append(friend)
             return Response(response)
         except:
             response['authors'] = []
@@ -267,7 +406,12 @@ class AuthorFriends(APIView):
 #reference: https://docs.djangoproject.com/en/2.1/ref/request-response/
 
 # service/author/<authorid>/friends/<authorid>
+# Todo: handle remote part
 class TwoAuthorsRelation(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request, author_id1, author_id2):
         response = {}
         response['query'] = 'friends'
@@ -281,7 +425,6 @@ class TwoAuthorsRelation(APIView):
             return Response(response, status=200)
         except:
             response['friends'] = False
-            response['authors'] = ["",""]
             return Response(response, status=400)
 
 # service/author/posts
@@ -299,41 +442,47 @@ class AuthorPostsAPI(APIView):
 
         for friend in friends:
             friend = Author.objects.get(pk=friend)       
-            newposts = Post.objects.filter(postauthor = friend, visibility = "FRIENDS") # pylint: disable=maybe-no-member
+            newposts = Post.objects.filter(postauthor = friend, visibility = "FRIENDS", unlisted=False) # pylint: disable=maybe-no-member
             posts |= newposts
 
         #get all public posts
-        public = Post.objects.filter(visibility="PUBLIC")   # pylint: disable=maybe-no-member
+        public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
         posts |= public
-        
 
         #get posts that satisfy FOAF
-        allfoafs = set(friends)
+        allfoafs = set()
         for friend in friends:
             #direct friend with posts "FOAF" should visible to current user
             friend = Author.objects.get(pk=friend)
-            #newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
-            #posts |= newposts
             allfoafs.add(friend)
             foafs = ApiHelper.get_friends(friend)
             for each in foafs:
                 allfoafs.add(each)
         
         for foaf in allfoafs:
-            newposts = Post.objects.filter(visibility="FOAF", postauthor=foaf) # pylint: disable=maybe-no-member
+            newposts = Post.objects.filter(visibility="FOAF", postauthor=foaf, unlisted=False) # pylint: disable=maybe-no-member
             posts |= newposts
-
-        posts = posts.order_by(F("published").desc())
-        for post in posts:
-            allposts.append(post)
         #foaf end
 
         #private
-        '''
+        visible_post = []
         for friend in friends:
-            posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
-            for post in posts:
-                post.visibleTo'''
+            newposts = Post.objects.filter(postauthor=friend, visibility="PRIVATE", unlisted=False) # pylint: disable=maybe-no-member
+            for post in newposts:
+                visibleList = json.loads(post.visibleTo)
+                if str(current_user.id) in visibleList:
+                    visible_post.append(post.postid)
+
+        posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
+        #private end
+
+        #Todo: SERVERONLY
+
+        posts = posts.order_by(F("published").desc())
+        
+        for post in posts:
+            allposts.append(post)
+                
         #there are some repeat operations above, might combine later    
 
         try:
@@ -432,7 +581,7 @@ class ViewAuthorPostAPI(APIView):
             user_not_login = False
         except:
             user_not_login = True
-            posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")
+            posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
 
         if not user_not_login:
             if current_user == author_be_viewed:
@@ -461,19 +610,19 @@ class ViewAuthorPostAPI(APIView):
                 if str(author_be_viewed.id) in allfoafs:
                     newposts = Post.objects.filter(visibility="FOAF", postauthor=author_be_viewed) # pylint: disable=maybe-no-member
                     posts |= newposts
+                #foaf ends
 
-        posts = posts.order_by(F("published").desc())
-        for post in posts:
-            allposts.append(post)
-        #foaf end
+                #private
+                '''
+                for friend in friends:
+                    posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
+                    for post in posts:
+                        post.visibleTo'''
+                #there are some repeat operations above, might combine later  
 
-            #private
-            '''
-            for friend in friends:
-                posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
-                for post in posts:
-                    post.visibleTo'''
-            #there are some repeat operations above, might combine later    
+            posts = posts.order_by(F("published").desc())
+            for post in posts:
+                allposts.append(post)
 
         try:
             page = int(request.GET.get("page", 0))

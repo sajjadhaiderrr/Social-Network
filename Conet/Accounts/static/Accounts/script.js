@@ -61,7 +61,7 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
     xhr.send(JSON.stringify(objects));
 }
 
-function sendJSONHTTPGet(url, objects, callback) {
+function sendJSONHTTPGet(url, objects, callback, remote={}) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
@@ -81,7 +81,11 @@ function sendJSONHTTPGet(url, objects, callback) {
     xhr.open("GET", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
-    xhr.setRequestHeader("x-csrftoken", csrf_token);
+    if (Object.keys(remote).length === 0 && remote.constructor === Object) {
+        xhr.setRequestHeader("x-csrftoken", csrf_token);
+    } else {
+        xhr.setRequestHeader("Authentication", "Basic " + btoa(remote.username + ":" + remote.password));
+    }
     xhr.send(JSON.stringify(objects));
 }
 
@@ -200,7 +204,7 @@ function create_card_showing_friends(friend){
     button_div.classList.add("card-body", "col-sm-2");
     var link = document.createElement("a");
     link.classList.add("btn", "btn-primary", "align-middle")
-    link.href = "http://"+window.location.hostname+":"+window.location.port+"/info/?host="+friend.host;
+    link.href = "http://"+window.location.hostname+":"+window.location.port+"/author/"+friend.id+"/info/?host="+friend.host;
     link.innerText = "View more";
     button_div.appendChild(link);
 
