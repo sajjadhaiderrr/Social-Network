@@ -52,7 +52,7 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
-    
+
     if (Object.keys(remote).length === 0 && remote.constructor === Object){
         xhr.setRequestHeader("x-csrftoken", csrf_token);
     }else{
@@ -382,7 +382,7 @@ function get_visible_post_callback(response){
     if(response.next == "None" && response.posts==[]){
         console.log("The end");
     }else{
-        
+
         for(post of response.posts){
             var card = document.createElement("div");
             card.classList.add("card","home-page-post-card");
@@ -428,13 +428,19 @@ function get_visible_post_callback(response){
                 var html = converter.makeHtml(md);
                 var content = document.createElement("div");
                 content.innerHTML = html;
-            }else {
+            } else if(post.contentType=="image/png;base64" || post.contentType=="image/jpeg;base64" ){
               var content = document.createElement("img");
               content.setAttribute("src", post.content);
               content.setAttribute("width", "100%");
               content.setAttribute("height", "auto");
             }
-            
+          else if(post.contentType=="application/base64"){
+              var content = document.createElement("a");
+              content.setAttribute('href',post.content);
+              content.innerText = "View "+post.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
+              content.click()
+            }
+
             var hr = document.createElement("hr");
 
             var commentbox = document.createElement("div");
@@ -445,7 +451,7 @@ function get_visible_post_callback(response){
             comment_textarea.setAttribute("rows", "1");
             comment_textarea.setAttribute("placeholder", "Comment...");
             comment_textarea.setAttribute("style", "resize:none");
-            
+
             var comment_btn = document.createElement("span");
             comment_btn.classList.add("btn", "btn-primary");
             comment_btn.id = "addcommentbutton"+num_post_counter;
@@ -609,7 +615,7 @@ function init_info_page(init, recv, remote, from_one_host) {
     var posts_url = recv.url+"/posts";
     // for author from one host, display follower and followings
     if(from_one_host){
-        
+
         var follower_url = recv.url +"/follower";
         var following_url = recv.url + "/following";
         sendJSONHTTPGet(profile_url, {}, get_profile_callback);

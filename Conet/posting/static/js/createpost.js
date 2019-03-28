@@ -5,11 +5,24 @@ function uploadFile() {
   var reader  = new FileReader();
   reader.onloadend = function () {
     uploadedImage = reader.result;
-    console.log("test1", reader.result);
-    document.getElementById("content").value = uploadedImage;
     let contentType = document.getElementById("contentType").value
-    if (!uploadedImage.includes(contentType)) {
-      alert("Invalid content type")
+    console.log(contentType);
+    if (contentType.includes("application/base64")) {
+      if (uploadedImage.includes("application") && uploadedImage.includes("base64") ) {
+        var continuVar = "";
+        document.getElementById("content").value = uploadedImage;
+      }
+      else {
+        alert("Invalid content type")
+      }
+    }
+    else if (!contentType.includes("application/base64")) {
+      if (uploadedImage.includes(contentType)) {
+        document.getElementById("content").value = uploadedImage;
+      }
+      else {
+        alert("Invalid content type")
+      }
     }
   }
   if (file) {
@@ -111,12 +124,12 @@ function createPost() {
     form.content = document.getElementById("content").value;
   }
 
-  else if (form.contentType == "image/png;base64" || form.contentType == "image/jpeg;base64") {
+  else if (form.contentType == "image/png;base64" || form.contentType == "image/jpeg;base64" || form.contentType == "application/base64") {
     form.content = uploadedImage;
   }
 
   form.visibility = document.getElementById("visibility").value;
-  form.visibileTo = document.getElementById("selectFriends").value;
+  form.visibleTo = document.getElementById("selectFriends").value;
 
   var radios = document.getElementsByName("unlisted");
   var length = radios.length

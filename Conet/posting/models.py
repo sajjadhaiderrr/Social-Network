@@ -9,7 +9,7 @@ content_type_choice = (
     ('text/markdown', 'text/markdown'),
     ('application/base64', 'application/base64'),
     ('image/png;base64', 'image/png;base64'),
-    ('image/jpeg;base64 ', 'image/jpeg;base64 '),
+    ('image/jpeg;base64', 'image/jpeg;base64'),
 )
 
 class Post(models.Model):
@@ -35,7 +35,7 @@ class Post(models.Model):
     visibility = models.CharField(max_length=10, choices=visible_type_choice, default='PUBLIC')
     visibleTo = models.TextField(blank=True)
     unlisted = models.BooleanField(default=False)
-    
+
 class Comment(models.Model):
 
     commentid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
