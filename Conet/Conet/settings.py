@@ -1,3 +1,5 @@
+import django_heroku
+
 """
 Django settings for Conet project.
 
@@ -131,3 +133,5 @@ LOGOUT_REDIRECT_URL = 'login'
 #    'DEFAULT_PAGINATION_CLASS': 'Conet.posting.pagination',
 #    'PAGE_SIZE': 50
 #}
+
+django_heroku.settings(locals())

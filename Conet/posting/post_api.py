@@ -78,7 +78,7 @@ class ReadAllPublicPosts(APIView):
             "size": None,
             "next": None,
             "previous": None,
-            "comments": None
+            "posts": None
         }
 
         request_url = request.build_absolute_uri("/").strip("/")
@@ -95,7 +95,7 @@ class ReadAllPublicPosts(APIView):
         except:
             size = ""
 
-        posts = Post.objects.filter(visibility="PUBLIC", unlisted = False)  # pylint: disable=maybe-no-member
+        posts = Post.objects.filter(visibility="PUBLIC", unlisted = False).order_by('published')  # pylint: disable=maybe-no-member
         count = posts.count()
     
         if (page and size):           
@@ -114,7 +114,7 @@ class ReadAllPublicPosts(APIView):
             response_object["previous"] = previous_page
 
         serializer = PostSerializer(posts, many=True)
-        response_object["comments"] = serializer.data
+        response_object["posts"] = serializer.data
         response_object["count"] = count
         return Response(response_object, status=status.HTTP_200_OK)
 
@@ -235,7 +235,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         #if the posts visibility is set
         #to PUBLIC, we can return comments
         if (post.visibility == "PUBLIC"):
-            comments = Comment.objects.filter(post=post_id) # pylint: disable=maybe-no-member
+            comments = Comment.objects.filter(post=post_id).order_by('published') # pylint: disable=maybe-no-member
             count = comments.count()
         
             if (page and size):           
@@ -269,8 +269,9 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         #check if its the currently authenticated
         #users post
+
         if (author.id == post.postauthor.id):
-            comments = Comment.objects.filter(post=post_id) # pylint: disable=maybe-no-member
+            comments = Comment.objects.filter(post=post_id).order_by('published') # pylint: disable=maybe-no-member
             count = comments.count()
         
             if (page and size):           
@@ -297,7 +298,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         if (not check_permissions[1]):
             return Response(response_object, status=status.HTTP_200_OK)
         
-        comments = Comment.objects.filter(post=post_id) # pylint: disable=maybe-no-member
+        comments = Comment.objects.filter(post=post_id).order_by('published') # pylint: disable=maybe-no-member
         count = comments.count()
         
         if (page and size):
@@ -350,7 +351,6 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         
         # need to check this part. 'Friend' visibility cannot work?
         if (post.visibility == "PUBLIC"):
-            print(data)
             serializer = CommentSerializer(data=data)
             if serializer.is_valid():
                 serializer.save()
