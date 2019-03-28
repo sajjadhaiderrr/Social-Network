@@ -204,7 +204,7 @@ function create_card_showing_friends(friend){
     button_div.classList.add("card-body", "col-sm-2");
     var link = document.createElement("a");
     link.classList.add("btn", "btn-primary", "align-middle")
-    link.href = "http://"+window.location.hostname+":"+window.location.port+"/info/?host="+friend.host;
+    link.href = "http://"+window.location.hostname+":"+window.location.port+"/author/"+friend.id+"/info/?host="+friend.host;
     link.innerText = "View more";
     button_div.appendChild(link);
 
