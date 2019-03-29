@@ -72,7 +72,6 @@ class UnfriendRequestHandler(APIView):
     authentication_classes = (SessionAuthentication, BasicAuthentication)
     permission_classes = (IsAuthenticated,)
 
-    # Todo: check if recv_id is from foreign user
     def post(self, request):
         # parse request body
         request_body = request.data
@@ -87,6 +86,16 @@ class UnfriendRequestHandler(APIView):
             response['message'] = 'Request author or request friend does not exist.'
             return HttpResponse(json.dumps(response), status=400)
 
+        #case that when unfriend friend object is from foreign server
+        if not ApiHelper.local_author(recv_user.host, request.get_host()):
+            reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
+            friendship = Friendship.objects.filter(init_id=init_user, recv_id=recv_user) # pylint: disable=maybe-no-member
+            friendship.delete()
+            reverse_friendship.delete()
+            response['success'] = True
+            response['message'] = 'Unfriend request proceeded successfully.'
+            return Response(response)
+    
         # try to delete the relationship with given init_user and recv_user
         reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
         friendship = Friendship.objects.filter(init_id=init_user, recv_id=recv_user) # pylint: disable=maybe-no-member
