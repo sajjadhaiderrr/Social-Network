@@ -44,7 +44,8 @@ def obtain_from_remote_node(url, host, method='GET', send_query=None, header={})
             return {'code': 405}
         print("response json: ", res.json())
         return (res.json(), res.status_code)
-    except:
+    except Exception as e:
+        print("Exception on remote request: ", e)
         return (None, 500)
 
 def urls_to_ids(url_list):

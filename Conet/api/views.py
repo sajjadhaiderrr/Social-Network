@@ -436,7 +436,10 @@ class AuthorPostsAPI(APIView):
         page_size = 10
         posts = Post.objects.none() # pylint: disable=maybe-no-member
 
-        #get the posts of all your friends whos visibility is set to FRIENDS
+        #get all public posts
+        public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
+        posts |= public
+
         try:
             foreign_posts = list()
             if is_local:
@@ -453,12 +456,14 @@ class AuthorPostsAPI(APIView):
                 request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
                 current_user = Author.objects.get(pk=request_user_id)
         except Exception as e:
-            print(e)
+            print("Exception on auhtor/posts: ", e)
+            print(list(posts))
             return Response(ApiHelper.format_author_posts(posts))
-        finally:
+        #finally:
             #get all public posts
-            public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
-            posts |= public
+            #print("finally")
+            #public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
+            #posts |= public
 
         friends = ApiHelper.get_friends(current_user)
         #get posts mde by current user
