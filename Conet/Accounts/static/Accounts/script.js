@@ -110,6 +110,7 @@ function sendUnFriendRequestCallback(objects) {
 
 // function to send befriend request
 function sendFriendRequest(init, recv) {
+    console.log(recv.displayName)
     users = { "query": "friendrequest", "author": init, "friend": recv };
     sendJSONHTTPPost(init.host + "/friendrequest", users, sendFriendRequestCallback);
 }
@@ -221,9 +222,11 @@ function create_card_showing_friends(friend){
 function sendFriendsCallback(response) {
     response = JSON.parse(response);
     friends = response.friends;
+    console.log(friends)
     for (var i of friends) {
-        var friend = JSON.parse(i);
-        var friend_card = create_card_showing_friends(friend);
+        console.log(i);
+        //var friend = JSON.parse(i);
+        var friend_card = create_card_showing_friends(i);
         document.getElementById('friend-div').appendChild(friend_card);
     }
 }
@@ -544,6 +547,11 @@ function get_profile_callback(response){
     // add title
     var displayName = document.getElementById("displayName");
     displayName.innerText = response.displayName;
+    user_be_viewed.displayName = response.displayName;
+    document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
+    document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
+    //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
+    //document.getElementById("btn-unfriend").setAttribute("onClick","sendUnFriendRequest(" + current_user+ ","+user_be_viewed+");");
 
     // adding first name
     var fn = document.createElement("p");

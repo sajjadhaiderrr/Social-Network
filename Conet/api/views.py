@@ -162,7 +162,6 @@ class FriendRequestHandler(APIView):
                     #request friend user is from remote server
                     response, status_code = ApiHelper.obtain_from_remote_node(url=frd_req_url, 
                         host=friend_host, method='POST', send_query=json.dumps(request_body))
-
                     if status_code == 200:
                         #create remote author object
                         success, recv_user = ApiHelper.create_remote_author(request_body['friend'])
