@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'posting',
     'bootstrap4',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -54,6 +55,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'Conet.urls'
@@ -130,6 +132,7 @@ AUTH_USER_MODEL = 'Accounts.Author'
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
+CORS_ORIGIN_ALLOW_ALL = True
 #REST_FRAMEWORK = {
 #    'DEFAULT_PAGINATION_CLASS': 'Conet.posting.pagination',
 #    'PAGE_SIZE': 50

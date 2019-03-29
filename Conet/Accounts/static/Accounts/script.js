@@ -84,6 +84,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     if (Object.keys(remote).length === 0 && remote.constructor === Object) {
         xhr.setRequestHeader("x-csrftoken", csrf_token);
     } else {
+        xhr.setRequestHeader("Access-Control-Request-Method", "GET");
         xhr.setRequestHeader("Authentication", "Basic " + btoa(remote.username + ":" + remote.password));
     }
     xhr.send(JSON.stringify(objects));

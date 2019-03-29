@@ -92,6 +92,8 @@ class SearchResultPage(View):
         authors = Author.objects.filter(displayName__contains=search_term).exclude(id=request.user.id)
         return render(request, self.template_name, {'authors':authors})
 
+
+# Django: Add response header when using render or render_to_response
 class InfoPage(APIView):
     template_name = 'Accounts/info.html'
     
@@ -115,7 +117,8 @@ class InfoPage(APIView):
             remote['password'] = node.remotePassword
 
         from_one_author = True if(request.user.id == authorId) else False
-        return render(request, self.template_name, {'from_one_author':from_one_author, 'user_be_viewed':user_be_viewed, 'remote':remote, 'from_one_host':from_one_host})
+        response = render(request, self.template_name, {'from_one_author': from_one_author,'user_be_viewed': user_be_viewed, 'remote': remote, 'from_one_host': from_one_host})
+        return response
 
     def put(self, request, authorId):
         try:
