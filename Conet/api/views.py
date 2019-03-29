@@ -397,10 +397,11 @@ class AuthorFriends(APIView):
 
         # get the authors who are checked be a friend of author shows in URL
         request_friends = ApiHelper.urls_to_ids(request_body['authors'])
-        response = {"query":'friends'}
+        response = {"query":'friends',
+                    "author": request_body['author']}
         try:
             # get current user on URL
-            current_user = Author.objects.get(id=kwargs['pk'])
+            current_user = Author.objects.get(id=request_body['author'])
             
             friends = ApiHelper.get_friends(current_user)
             response['authors'] = []
@@ -410,7 +411,7 @@ class AuthorFriends(APIView):
             return Response(response)
         except:
             response['authors'] = []
-        return Response(response, status=400)
+            return Response(response, status=400)
 
 #reference: https://docs.djangoproject.com/en/2.1/ref/request-response/
 
@@ -456,12 +457,13 @@ class AuthorPostsAPI(APIView):
                 #get all visible posts from remote server(s)
                 for node in Node.objects.all():
                     posts_url = node.foreignHost + '/author/posts'
-                    header = {'X_REQUEST_USER_ID': str(current_user.id)}
+                    header = {'X-Request-User-ID': current_user.host+'/author/'+str(current_user.id)}
                     query_posts, status_code = ApiHelper.obtain_from_remote_node(url=posts_url, host=node.foreignHost, header=header)
                     if status_code == 200:
                         foreign_posts += query_posts['posts']
             else:
                 request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
+                print("request_user_id: ", request_user_id)
                 current_user = Author.objects.get(pk=request_user_id)
         except Exception as e:
             print("Exception on auhtor/posts: ", e)
