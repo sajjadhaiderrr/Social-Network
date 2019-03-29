@@ -54,7 +54,7 @@ class AuthorAPI(APIView):
             response['friends'] = []
             for friend in friends:
                 friend_data = Helper_AuthorSerializers(Author.objects.get(id=friend)).data 
-                response['friends'].append(json.dumps(friend_data))
+                response['friends'].append(friend_data)
             return Response(response, status=200)
             #else:
             #    response, code = ApiHelper.get_from_remote_server(current_user)
