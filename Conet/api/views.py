@@ -133,6 +133,7 @@ class FriendRequestHandler(APIView):
         # instanciate initiator and receiver as Author object
         send_id = request_body['author']['id'].replace(request_body['author']['host']+'/author/','')
         rcv_id = request_body['friend']['id'].replace(request_body['friend']['host']+'/author/','')
+        print(is_local)
         if is_local:
             #reqeust from local user
             friend_host = request_body['friend']['host']
@@ -229,7 +230,7 @@ class FriendRequestHandler(APIView):
             except:
                 response['success'] = False
                 response['message'] = "Friend with id: {} does not exist".format(rcv_id)
-                return Response(recv_user, status=status.HTTP_404_NOT_FOUND)
+                return Response(response, status=status.HTTP_404_NOT_FOUND)
 
             try:
                 init_user = Author.objects.get(id=send_id)

@@ -152,6 +152,7 @@ def local_author(author_host, localhost):
 def is_local_request(request):
     try:
         request.user.node
+        print(request.user.node)
     except:
         return True
     return False
