@@ -5,7 +5,7 @@
 {% load static %}
 {% block content %}
         {% include 'Accounts/nav.html' %}
-        <script>
+        <script type="text/javascript">
             const csrf_token = "{{ csrf_token }}"
             current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
             user_be_viewed = {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' }
@@ -15,6 +15,7 @@
             if ('{{ from_one_host }}' == "True"){
                 init_info_page(current_user, user_be_viewed, remote, true);
             }else{
+                console.log("damn")
                 init_info_page(current_user, user_be_viewed, remote, false);
             }
                 

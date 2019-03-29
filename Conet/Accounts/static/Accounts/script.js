@@ -53,11 +53,11 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
 
-    if (Object.keys(remote).length === 0 && remote.constructor === Object){
-        xhr.setRequestHeader("x-csrftoken", csrf_token);
-    }else{
-        xhr.setRequestHeader("Authentication", "Basic "+ Base64.encode(remote.username + ":" + remote.password));
-    }
+    //if (Object.keys(remote).length === 0 && remote.constructor === Object){
+    xhr.setRequestHeader("x-csrftoken", csrf_token);
+    //}else{
+    //    xhr.setRequestHeader("Authorization", "Basic "+ Base64.encode(remote.username + ":" + remote.password));
+    //}
     xhr.send(JSON.stringify(objects));
 }
 
@@ -84,8 +84,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     if (Object.keys(remote).length === 0 && remote.constructor === Object) {
         xhr.setRequestHeader("x-csrftoken", csrf_token);
     } else {
-        xhr.setRequestHeader("Access-Control-Request-Method", "GET");
-        xhr.setRequestHeader("Authentication", "Basic " + btoa(remote.username + ":" + remote.password));
+        xhr.setRequestHeader("Authorization", "Basic " + btoa(remote.username + ":" + remote.password));
     }
     xhr.send(JSON.stringify(objects));
 }
@@ -112,13 +111,13 @@ function sendUnFriendRequestCallback(objects) {
 // function to send befriend request
 function sendFriendRequest(init, recv) {
     users = { "query": "friendrequest", "author": init, "friend": recv };
-    sendJSONHTTPPost(recv.host + "/friendrequest", users, sendFriendRequestCallback);
+    sendJSONHTTPPost(init.host + "/friendrequest", users, sendFriendRequestCallback);
 }
 
 // function to send unfriend request
 function sendUnFriendRequest(init, recv) {
     users = { "query": "unfriendrequest", "author": init, "friend": recv };
-    sendJSONHTTPPost(recv.host + "/unfriendrequest", users, sendUnFriendRequestCallback);
+    sendJSONHTTPPost(init.host + "/unfriendrequest", users, sendUnFriendRequestCallback);
 }
 
 
@@ -620,7 +619,6 @@ function init_info_page(init, recv, remote, from_one_host) {
     var posts_url = recv.url+"/posts";
     // for author from one host, display follower and followings
     if(from_one_host){
-
         var follower_url = recv.url +"/follower";
         var following_url = recv.url + "/following";
         sendJSONHTTPGet(profile_url, {}, get_profile_callback);
