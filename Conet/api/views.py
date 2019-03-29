@@ -17,7 +17,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 
-from Accounts.models import Author
+from Accounts.models import Author, Node
 from Accounts.models import Friendship
 from posting.models import Post
 
@@ -430,60 +430,95 @@ class TwoAuthorsRelation(APIView):
 # service/author/posts
 class AuthorPostsAPI(APIView):
     def get(self, request):
+        is_local = ApiHelper.is_local_request(request)
         allposts = []
         page_size = 10
         posts = Post.objects.none() # pylint: disable=maybe-no-member
-
-        #get the posts of all your friends whos visibility is set to FRIENDS
-        current_user = Author.objects.get(pk=request.user.id)
-        friends = ApiHelper.get_friends(current_user)
-
-        posts = Post.objects.filter(postauthor=request.user)  # pylint: disable=maybe-no-member
-
-        for friend in friends:
-            friend = Author.objects.get(pk=friend)       
-            newposts = Post.objects.filter(postauthor = friend, visibility = "FRIENDS", unlisted=False) # pylint: disable=maybe-no-member
-            posts |= newposts
 
         #get all public posts
         public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
         posts |= public
 
-        #get posts that satisfy FOAF
+        try:
+            foreign_posts = list()
+            if is_local:
+                # request from local user
+                current_user = Author.objects.get(pk=request.user.id)
+                #get all visible posts from remote server(s)
+                for node in Node.objects.all():
+                    posts_url = node.foreignHost + '/author/posts'
+                    header = {'X_REQUEST_USER_ID': str(current_user.id)}
+                    query_posts, status_code = ApiHelper.obtain_from_remote_node(url=posts_url, host=node.foreignHost, header=header)
+                    if status_code == 200:
+                        foreign_posts += query_posts['posts']
+            else:
+                request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
+                current_user = Author.objects.get(pk=request_user_id)
+        except Exception as e:
+            print("Exception on auhtor/posts: ", e)
+            print(list(posts))
+            return Response(ApiHelper.format_author_posts(posts))
+        #finally:
+            #get all public posts
+            #print("finally")
+            #public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
+            #posts |= public
+
+        friends = ApiHelper.get_friends(current_user)
+        #get posts mde by current user
+        posts |= Post.objects.filter(postauthor=current_user, unlisted=False)  # pylint: disable=maybe-no-member
+
         allfoafs = set()
+        visible_post = list()
         for friend in friends:
-            #direct friend with posts "FOAF" should visible to current user
             friend = Author.objects.get(pk=friend)
+            if not ApiHelper.local_author(friend.host, request.get_host()):
+                continue
+
+            # get friend's posts
+            newposts = Post.objects.filter(postauthor = friend, visibility = "FRIENDS", unlisted=False) # pylint: disable=maybe-no-member
+            posts |= newposts
+
+            # get relations that satisfy FOAF
+            # direct friend with posts "FOAF" should visible to current user
             allfoafs.add(friend)
             foafs = ApiHelper.get_friends(friend)
             for each in foafs:
-                allfoafs.add(each)
-        
-        for foaf in allfoafs:
-            newposts = Post.objects.filter(visibility="FOAF", postauthor=foaf, unlisted=False) # pylint: disable=maybe-no-member
-            posts |= newposts
-        #foaf end
+                try:
+                    author = Author.objects.get(id=each)
+                    if ApiHelper.local_author(author.host, request.get_host()):
+                        allfoafs.add(each)
+                except:
+                    pass
 
-        #private
-        visible_post = []
-        for friend in friends:
-            newposts = Post.objects.filter(postauthor=friend, visibility="PRIVATE", unlisted=False) # pylint: disable=maybe-no-member
+            #private
+            newposts = Post.objects.filter(postauthor=friend, visibility="PRIVATE", unlisted=False)  # pylint: disable=maybe-no-member
             for post in newposts:
-                visibleList = json.loads(post.visibleTo)
-                if str(current_user.id) in visibleList:
+                if str(current_user.id) in post.visibleTo:
                     visible_post.append(post.postid)
 
+        # get posts that satisfy FOAF
+        for foaf in allfoafs:
+            newposts = Post.objects.filter(visibility="FOAF", postauthor=foaf, unlisted=False) # pylint: disable=maybe-no-member
+            posts |= newposts      
+        #get all private which can fullfill condition
         posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
-        #private end
 
-        #Todo: SERVERONLY
+        #get SERVERONLY
+        if is_local:
+            posts |= Post.objects.filter(visibility="SERVERONLY", unlisted=False)
 
-        posts = posts.order_by(F("published").desc())
+        #sort post queryset by published date
+        #posts = posts.order_by(F("published").desc())
         
+        allposts = foreign_posts
         for post in posts:
-            allposts.append(post)
-                
-        #there are some repeat operations above, might combine later    
+            serializer = PostSerializer(post).data
+            serializer['postid'] = str(serializer['postid'])
+            allposts.append(serializer)
+
+        #order post py bublished date
+        allposts = sorted(allposts, key=lambda x: x['published'], reverse=True)
 
         try:
             page = int(request.GET.get("page", 0))
@@ -511,11 +546,11 @@ class AuthorPostsAPI(APIView):
         else:
             response['next'] = "None"
 
-        response['posts'] = []
-        for post in response_posts:
-            serializer = PostSerializer(post).data
-            serializer['postid'] = str(serializer['postid'])
-            response['posts'].append(serializer)
+        response['posts'] = response_posts
+        # for post in response_posts:
+        #     serializer = PostSerializer(post).data
+        #     serializer['postid'] = str(serializer['postid'])
+        #     response['posts'].append(serializer)
         
         return Response(response)
 
