@@ -552,7 +552,7 @@ function get_profile_callback(response){
     document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
     //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
     //document.getElementById("btn-unfriend").setAttribute("onClick","sendUnFriendRequest(" + current_user+ ","+user_be_viewed+");");
-
+    console.log(response.first_name)
     // adding first name
     var fn = document.createElement("p");
     fn.classList.add("text-secondary", "profile-card-content");
