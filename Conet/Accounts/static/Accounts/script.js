@@ -543,12 +543,10 @@ function sendInitInfoRequestCallback(response) {
 
 function get_profile_callback(response){
     var response = JSON.parse(response);
-    console.log(response);
     // add title
     var displayName = document.getElementById("displayName");
     displayName.innerText = response.displayName;
     user_be_viewed.displayName = response.displayName;
-    console.log(response.first_name);
     try{
         document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
         document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
