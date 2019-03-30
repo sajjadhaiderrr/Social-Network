@@ -370,24 +370,25 @@ class AuthorFriends(APIView):
         is_local = ApiHelper.is_local_request(request)
         response = {"query":'friends'}
 
-    #try:
-        # get current user on URL
-        current_user = Author.objects.get(id=kwargs['pk'])
-        if is_local:
-            # current requested user is on local
-            friends = ApiHelper.update_friends(current_user, request.get_host())
-            print('friends: ', friends)
-            response['authors'] = friends
-            return Response(response)
-        else:
-            # current requested user is from remote server
-            friends = ApiHelper.get_friends(current_user)
-            response['authors'] = friends
-            return Response(response)         
-        # except Exception as e:
-        #     print('author friends exception: ', e)
-        #     response['authors'] = []
-        #     return Response(response, status=400)
+        try:
+            # get current user on URL
+            current_user = Author.objects.get(id=kwargs['pk'])
+            if is_local:
+                # current requested user is on local
+                friends = ApiHelper.update_friends(current_user, request.get_host())
+                print('friends: ', friends)
+                response['authors'] = friends
+                return Response(response)
+            else:
+                # current requested user is from remote server
+                print("get_friends")
+                friends = ApiHelper.get_friends(current_user)
+                response['authors'] = friends
+                return Response(response)         
+        except Exception as e:
+            print('author friends exception: ', e)
+            response['authors'] = []
+            return Response(response, status=400)
     
     # Ask a service if anyone in the list is a friend
     def post(self, request,*args, **kwargs):
@@ -401,7 +402,7 @@ class AuthorFriends(APIView):
                     "author": request_body['author']}
         try:
             # get current user on URL
-            current_user = Author.objects.get(id=request_body['author'])
+            current_user = Author.objects.get(id=kwargs['pk'])
             
             friends = ApiHelper.get_friends(current_user)
             response['authors'] = []
@@ -439,6 +440,10 @@ class TwoAuthorsRelation(APIView):
 
 # service/author/posts
 class AuthorPostsAPI(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
         is_local = ApiHelper.is_local_request(request)
         allposts = []
@@ -466,14 +471,8 @@ class AuthorPostsAPI(APIView):
                 print("request_user_id: ", request_user_id)
                 current_user = Author.objects.get(pk=request_user_id)
         except Exception as e:
-            print("Exception on auhtor/posts: ", e)
-            print(list(posts))
+            print("Exception on author/posts: ", e)
             return Response(ApiHelper.format_author_posts(posts))
-        #finally:
-            #get all public posts
-            #print("finally")
-            #public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
-            #posts |= public
 
         friends = ApiHelper.get_friends(current_user)
         #get posts mde by current user
@@ -615,39 +614,60 @@ class AuthorMadePostAPI(APIView):
 
 # author/{author_id}/posts
 class ViewAuthorPostAPI(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request, pk):
+        is_local = ApiHelper.is_local_request(request)
         allposts = []
         page_size = 10
+        valid_req_user_id = True
         posts = Post.objects.none() # pylint: disable=maybe-no-member
-
-        #get the posts of all your friends whos visibility is set to FRIENDS
+        
         try:
             author_be_viewed = Author.objects.get(pk=pk)
-            current_user = Author.objects.get(pk=request.user.id)
-            user_not_login = False
-        except:
-            user_not_login = True
-            posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
+            #get all public posts of author be viewed
+            posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
+            
+            if is_local:
+                # request from local user
+                current_user = Author.objects.get(pk=request.user.id)
+            else:
+                request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
+                print("request_user_id: ", request_user_id)
+                current_user = Author.objects.get(pk=request_user_id) 
+        except Exception as e:
+            print("Exception on author/posts: ", e)
+            valid_req_user_id = False
 
-        if not user_not_login:
+        if valid_req_user_id:
             if current_user == author_be_viewed:
                 posts = Post.objects.filter(postauthor=current_user)    # pylint: disable=maybe-no-member
             else:
-                friends = ApiHelper.get_friends(current_user)
-                posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
-                print(friends)
+                friends = ApiHelper.update_friends(current_user, request.get_host())
+                visible_post = list()
                 if str(author_be_viewed.id) in friends:
-                    print("friends")
-                    newposts = Post.objects.filter(postauthor=author_be_viewed, visibility = "FRIENDS") # pylint: disable=maybe-no-member
-                    posts |= newposts
+                    # get posts which set to FRIEND
+                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility = "FRIENDS") # pylint: disable=maybe-no-member
+                    #private
+                    private_posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PRIVATE")
+                    for post in private_posts:
+                        if str(current_user.id) in post.visibleTo:
+                            visible_post.append(post.postid)
 
+                #get all private which can fullfill condition
+                posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
+
+                #get SERVERONLY
+                if is_local:
+                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="SERVERONLY")
+                
                 #get posts that satisfy FOAF
-                allfoafs = set(friends)
+                allfoafs = set()
                 for friend in friends:
                     #direct friend with posts "FOAF" should visible to current user
                     friend = Author.objects.get(pk=friend)
-                    #newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
-                    #posts |= newposts
                     allfoafs.add(friend)
                     foafs = ApiHelper.get_friends(friend)
                     for each in foafs:
@@ -658,17 +678,10 @@ class ViewAuthorPostAPI(APIView):
                     posts |= newposts
                 #foaf ends
 
-                #private
-                '''
-                for friend in friends:
-                    posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
-                    for post in posts:
-                        post.visibleTo'''
-                #there are some repeat operations above, might combine later  
 
-            posts = posts.order_by(F("published").desc())
-            for post in posts:
-                allposts.append(post)
+        posts = posts.order_by(F("published").desc())
+        for post in posts:
+            allposts.append(post)
 
         try:
             page = int(request.GET.get("page", 0))
