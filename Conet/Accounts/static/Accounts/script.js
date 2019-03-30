@@ -542,8 +542,8 @@ function sendInitInfoRequestCallback(response) {
 }
 
 function get_profile_callback(response){
-    var response = JSON.parse(response);
-
+    //var response = JSON.parse(response);
+    console.log(response);
     // add title
     var displayName = document.getElementById("displayName");
     displayName.innerText = response.displayName;
