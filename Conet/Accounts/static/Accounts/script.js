@@ -543,16 +543,20 @@ function sendInitInfoRequestCallback(response) {
 
 function get_profile_callback(response){
     var response = JSON.parse(response);
-
     // add title
     var displayName = document.getElementById("displayName");
     displayName.innerText = response.displayName;
     user_be_viewed.displayName = response.displayName;
-    document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
-    document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
+    try{
+        document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
+        document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
+    }catch{
+
+    }
+    
     //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
     //document.getElementById("btn-unfriend").setAttribute("onClick","sendUnFriendRequest(" + current_user+ ","+user_be_viewed+");");
-
+    console.log(response.first_name);
     // adding first name
     var fn = document.createElement("p");
     fn.classList.add("text-secondary", "profile-card-content");
