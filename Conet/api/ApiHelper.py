@@ -77,7 +77,7 @@ def get_friends(user):
 
 # get a friend by updating local friendship database if needed
 def update_friends(user, host):
-    host = 'http://' + host
+    localhost = 'http://' + host
     local_friends = list()
     remote_friends = dict()
 
@@ -88,7 +88,7 @@ def update_friends(user, host):
     for follower in follower_frdships:
         for following in following_frdships:
             if follower.init_id == following.recv_id:
-                if follower.init_id.host == host:
+                if follower.init_id.host == localhost:
                     local_friends.append(str(follower.init_id.id))
                 else:
                     remote_host = follower.init_id.host
@@ -100,7 +100,8 @@ def update_friends(user, host):
     for host, friends in remote_friends.items():
         friends_api = host + '/author/' + str(user.id) + '/friends'
         send_query = {'query': 'friends',
-                 'authors': friends}
+                    'author': localhost + '/author/' + str(user.id),
+                    'authors': friends}
 
         friend_query, _ = obtain_from_remote_node(url=friends_api, host=host, 
             method='POST', send_query=json.dumps(send_query))
