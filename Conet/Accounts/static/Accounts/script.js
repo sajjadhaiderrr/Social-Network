@@ -549,8 +549,13 @@ function get_profile_callback(response){
     displayName.innerText = response.displayName;
     user_be_viewed.displayName = response.displayName;
     console.log(response.first_name);
-    document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
-    document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
+    try{
+        document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
+        document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
+    }catch{
+
+    }
+    
     //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
     //document.getElementById("btn-unfriend").setAttribute("onClick","sendUnFriendRequest(" + current_user+ ","+user_be_viewed+");");
     console.log(response.first_name);
