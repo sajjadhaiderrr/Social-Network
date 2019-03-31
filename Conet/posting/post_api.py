@@ -1,6 +1,9 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 from posting.models import Post, Comment
 from api.serializers import PostSerializer, CommentSerializer
 from django.shortcuts import render
@@ -70,6 +73,10 @@ def CheckPermissions(author, post):
 
 # path: /posts
 class ReadAllPublicPosts(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     # get: All posts marked as public on the server
     def get(self, request):
         response_object = {
@@ -403,7 +410,7 @@ class PostReqHandler(APIView):
     # GET: get all posts
     def get(self, request):
         #Todo: get all public posts
-        posts = Post.objects.all()# pylint: disable=maybe-no-member
+        posts = Post.objects.filter(visibility="PUBLIC")# pylint: disable=maybe-no-member
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
 

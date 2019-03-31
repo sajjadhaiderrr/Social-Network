@@ -32,13 +32,13 @@ def get_two_authors_relation(authorObj1, authorObj2):
     return None
 
 def obtain_from_remote_node(url, host, method='GET', send_query=None, header={}):
-    header['Content-Type'] = 'application/json'
     node = Node.objects.get(foreignHost=host)  # pylint: disable=maybe-no-member
     authentication = HTTPBasicAuth(node.remoteUsername, node.remotePassword)
     try:
         if method == 'GET':
-            res = requests.get(url, auth=authentication)
+            res = requests.get(url, auth=authentication, headers=header)
         elif method == 'POST':
+            header['Content-Type'] = 'application/json'
             res = requests.post(url, headers=header, data=send_query, auth=authentication)
         else:
             return {'code': 405}
