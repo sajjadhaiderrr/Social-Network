@@ -468,7 +468,7 @@ class AuthorPostsAPI(APIView):
                         foreign_posts += query_posts['posts']
             else:
                 request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
-                print("request_user_id: ", request_user_id)
+                request_user_id = ApiHelper.urls_to_ids([request_user_id])[0]
                 current_user = Author.objects.get(pk=request_user_id)
         except Exception as e:
             print("Exception on author/posts: ", e)
@@ -628,14 +628,14 @@ class ViewAuthorPostAPI(APIView):
         try:
             author_be_viewed = Author.objects.get(pk=pk)
             #get all public posts of author be viewed
-            posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
+            posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC", unlisted=False)  # pylint: disable=maybe-no-member
             
             if is_local:
                 # request from local user
                 current_user = Author.objects.get(pk=request.user.id)
             else:
                 request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
-                print("request_user_id: ", request_user_id)
+                request_user_id = ApiHelper.urls_to_ids([request_user_id])[0]
                 current_user = Author.objects.get(pk=request_user_id) 
         except Exception as e:
             print("Exception on author/posts: ", e)
@@ -649,9 +649,9 @@ class ViewAuthorPostAPI(APIView):
                 visible_post = list()
                 if str(author_be_viewed.id) in friends:
                     # get posts which set to FRIEND
-                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility = "FRIENDS") # pylint: disable=maybe-no-member
+                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="FRIENDS", unlisted=False)  # pylint: disable=maybe-no-member
                     #private
-                    private_posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PRIVATE")
+                    private_posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PRIVATE", unlisted=False)
                     for post in private_posts:
                         if str(current_user.id) in post.visibleTo:
                             visible_post.append(post.postid)
@@ -661,23 +661,21 @@ class ViewAuthorPostAPI(APIView):
 
                 #get SERVERONLY
                 if is_local:
-                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="SERVERONLY")
+                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="SERVERONLY", unlisted=False)
                 
                 #get posts that satisfy FOAF
-                allfoafs = set()
-                for friend in friends:
-                    #direct friend with posts "FOAF" should visible to current user
-                    friend = Author.objects.get(pk=friend)
-                    allfoafs.add(friend)
-                    foafs = ApiHelper.get_friends(friend)
-                    for each in foafs:
-                        allfoafs.add(each)
+                # allfoafs = set()
+                # for friend in friends:
+                #     #direct friend with posts "FOAF" should visible to current user
+                #     friend = Author.objects.get(pk=friend)
+                #     allfoafs.add(friend)
+                #     foafs = ApiHelper.get_friends(friend)
+                #     for each in foafs:
+                #         allfoafs.add(each)
                 
-                if str(author_be_viewed.id) in allfoafs:
-                    newposts = Post.objects.filter(visibility="FOAF", postauthor=author_be_viewed) # pylint: disable=maybe-no-member
-                    posts |= newposts
+                # if str(author_be_viewed.id) in allfoafs:
+                #     posts |= Post.objects.filter(visibility="FOAF", postauthor=author_be_viewed, unlisted=False)  # pylint: disable=maybe-no-member
                 #foaf ends
-
 
         posts = posts.order_by(F("published").desc())
         for post in posts:
