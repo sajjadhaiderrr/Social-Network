@@ -643,7 +643,7 @@ class ViewAuthorPostAPI(APIView):
 
         if valid_req_user_id:
             if current_user == author_be_viewed:
-                posts = Post.objects.filter(postauthor=current_user)    # pylint: disable=maybe-no-member
+                posts = Post.objects.filter(postauthor=current_user, unlisted=False)    # pylint: disable=maybe-no-member
             else:
                 friends = ApiHelper.update_friends(current_user, request.get_host())
                 visible_post = list()

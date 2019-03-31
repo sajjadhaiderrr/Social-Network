@@ -77,7 +77,7 @@ def get_friends(user):
 
 # get a friend by updating local friendship database if needed
 def update_friends(user, host):
-    localhost = 'http://' + host
+    localhost = host if re.match('http://', host) else 'http://' + host
     local_friends = list()
     remote_friends = dict()
 
@@ -158,3 +158,11 @@ def is_local_request(request):
     except:
         return True
     return False
+
+def get_request_author(is_local, request):
+    if is_local:
+        return Author.objects.get(id=request.user.id)
+    else:
+        request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
+        request_user_id = urls_to_ids([request_user_id])[0]
+        return Author.objects.get(id=request_user_id)  
