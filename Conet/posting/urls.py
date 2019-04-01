@@ -20,5 +20,5 @@ urlpatterns = [
 
     ### API END
 
-    path('<author_id>/github', post_api.ReadGithubStream.as_view(), name='view_posts'),
+    path('view/github', post_api.ReadGithubStream.as_view(), name='view_github'),
 ]

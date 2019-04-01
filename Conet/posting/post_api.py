@@ -14,10 +14,10 @@ import json
 import datetime
 
 # get github stream
-# path: /posts/author_id/github
+# path: /posts/github
 class ReadGithubStream(APIView):
-    def get(self, request, author_id):
-        print("HERE")
+    def get(self, request):
+        author_id = request.user.id
         try:
             author = Author.objects.get(id=author_id)
         except:
