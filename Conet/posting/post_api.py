@@ -60,6 +60,18 @@ def getGithubStream(author_id):
                 event_string = display_name + " created " + payload["ref_type"] + " " + repo["name"]
             print(event_string)
 
+        elif (data["type"] == "IssuesEvent"):
+            event = {"event_message": None, "avatar_url": None}
+            actor = data["actor"]
+            display_name = actor["display_login"]
+            avatar_url = actor["avatar_url"]
+
+            payload = data["payload"]
+            issue = payload["issue"]
+            event_string = "{} {} {}".format(display_name, payload["action"], issue["title"])
+        
+            print(event_string)
+
 
     #print(events)
     return
