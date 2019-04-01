@@ -28,7 +28,7 @@ def CheckPermissions(author, post):
     '''
     author_of_post = post.postauthor
     from_one_host = author.host == author_of_post.host
-
+    print("from_one_host: ", from_one_host)
     if (post.visibility == "FRIENDS"):
         if from_one_host:
             friends = get_friends(author_of_post) 

@@ -375,18 +375,17 @@ class AuthorFriends(APIView):
             current_user = Author.objects.get(id=kwargs['pk'])
             if is_local:
                 # current requested user is on local
-                friends = ApiHelper.update_friends(current_user, request.get_host())
-                print('friends: ', friends)
+                local_frds, foreign_frds = ApiHelper.update_friends(current_user, request.get_host())
+                friends = local_frds + foreign_frds
                 response['authors'] = friends
                 return Response(response)
             else:
                 # current requested user is from remote server
-                print("get_friends")
                 friends = ApiHelper.get_friends(current_user)
                 response['authors'] = friends
                 return Response(response)         
         except Exception as e:
-            print('author friends exception: ', e)
+            print('author/id/friends exception: ', e)
             response['authors'] = []
             return Response(response, status=400)
     
@@ -620,6 +619,7 @@ class ViewAuthorPostAPI(APIView):
         allposts = []
         page_size = 10
         valid_req_user_id = True
+        FOAF = False
         posts = Post.objects.none() # pylint: disable=maybe-no-member
         
         try:
@@ -642,7 +642,8 @@ class ViewAuthorPostAPI(APIView):
             if current_user == author_be_viewed:
                 posts = Post.objects.filter(postauthor=current_user, unlisted=False)    # pylint: disable=maybe-no-member
             else:
-                friends = ApiHelper.update_friends(current_user, request.get_host())
+                local_frds, foreign_frds = ApiHelper.update_friends(current_user, request.get_host())
+                friends = local_frds + foreign_frds
                 visible_post = list()
                 if str(author_be_viewed.id) in friends:
                     # get posts which set to FRIEND
@@ -655,23 +656,16 @@ class ViewAuthorPostAPI(APIView):
                     #get SERVERONLY
                     if is_local:
                         posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="SERVERONLY", unlisted=False)
-
-                #get all private which can fullfill condition
-                posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
-                
-                #get posts that satisfy FOAF
-                # allfoafs = set()
-                # for friend in friends:
-                #     #direct friend with posts "FOAF" should visible to current user
-                #     friend = Author.objects.get(pk=friend)
-                #     allfoafs.add(friend)
-                #     foafs = ApiHelper.get_friends(friend)
-                #     for each in foafs:
-                #         allfoafs.add(each)
-                
-                # if str(author_be_viewed.id) in allfoafs:
-                #     posts |= Post.objects.filter(visibility="FOAF", postauthor=author_be_viewed, unlisted=False)  # pylint: disable=maybe-no-member
-                #foaf ends
+                    #case: direct friend, get foaf
+                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="FOAF", unlisted=False)
+                    FOAF = True
+                #get posts in visible_post list
+                posts |= Post.objects.filter(postid__in=visible_post)
+                #check visibility of FOAF if author be viewed is not a friend with current user
+                if not FOAF:
+                    foaf_posts = Post.objects.filter(postauthor=author_be_viewed, visibility="FOAF", unlisted=False)
+                    if foaf_posts.exists() and ApiHelper.permission_on_foaf(current_user, author_be_viewed, is_local):
+                        posts |= foaf_posts
 
         posts = posts.order_by(F("published").desc())
         for post in posts:
@@ -694,19 +688,14 @@ class ViewAuthorPostAPI(APIView):
         response['count'] = len(allposts)
         response['size'] = len(response_posts)
         if(page>0):
-            response['previous'] = current_user.host + "/author/posts?page="+str(page-1)
-        else:
-            response['previous'] = "None"
+            response['previous'] = author_be_viewed.host + "/author/posts?page="+str(page-1)
 
         if(not last_page):
-            response['next'] = current_user.host + "/author/posts?page="+str(page+1)
-        else:
-            response['next'] = "None"
+            response['next'] = author_be_viewed.host + "/author/posts?page="+str(page+1)
 
         response['posts'] = []
         for post in response_posts:
             serializer = PostSerializer(post).data
             serializer['postid'] = str(serializer['postid'])
             response['posts'].append(serializer)
-        
         return Response(response)
