@@ -166,3 +166,7 @@ def get_request_author(is_local, request):
         request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
         request_user_id = urls_to_ids([request_user_id])[0]
         return Author.objects.get(id=request_user_id)  
+
+def permission_on_foaf():
+    
+    return False

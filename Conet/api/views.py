@@ -507,19 +507,16 @@ class AuthorPostsAPI(APIView):
                 if str(current_user.id) in post.visibleTo:
                     visible_post.append(post.postid)
 
+            #get SERVERONLY
+            if is_local:
+                posts |= Post.objects.filter(postauthor=friend, visibility="SERVERONLY", unlisted=False)
+
         # get posts that satisfy FOAF
         for foaf in allfoafs:
             newposts = Post.objects.filter(visibility="FOAF", postauthor=foaf, unlisted=False) # pylint: disable=maybe-no-member
             posts |= newposts      
         #get all private which can fullfill condition
         posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
-
-        #get SERVERONLY
-        if is_local:
-            posts |= Post.objects.filter(visibility="SERVERONLY", unlisted=False)
-
-        #sort post queryset by published date
-        #posts = posts.order_by(F("published").desc())
         
         allposts = foreign_posts
         for post in posts:
@@ -655,13 +652,12 @@ class ViewAuthorPostAPI(APIView):
                     for post in private_posts:
                         if str(current_user.id) in post.visibleTo:
                             visible_post.append(post.postid)
+                    #get SERVERONLY
+                    if is_local:
+                        posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="SERVERONLY", unlisted=False)
 
                 #get all private which can fullfill condition
                 posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
-
-                #get SERVERONLY
-                if is_local:
-                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="SERVERONLY", unlisted=False)
                 
                 #get posts that satisfy FOAF
                 # allfoafs = set()

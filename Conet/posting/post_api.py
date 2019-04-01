@@ -145,7 +145,6 @@ class ReadSinglePost(APIView):
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
         is_local = is_local_request(request)
-
         response_object = {
             "query":"getPost",
             "post": None
@@ -200,7 +199,7 @@ class ReadSinglePost(APIView):
             #request is from foreign user, no permission to edit post
             response = {'success': False,
                         'message': 'No permission'}
-            return Response(response, status=400)
+            return Response(response, status=403)
 
         if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
             return Response("Invalid Post", status=400)
@@ -223,7 +222,7 @@ class ReadSinglePost(APIView):
             #request is from foreign user, no permission to edit post
             response = {'success': False,
                         'message': 'No permission'}
-            return Response(response, status=400)
+            return Response(response, status=403)
 
         if (not Post.objects.filter(pk=post_id).exists()):  # pylint: disable=maybe-no-member
             return Response("Invalid Post", status=404)
