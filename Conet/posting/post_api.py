@@ -97,6 +97,49 @@ def getGithubStream(author_id):
         
             print(event_string)
 
+        elif (data["type"] == "PushEvent"):
+            event = {"event_message": None, "avatar_url": None}
+            actor = data["actor"]
+            display_name = actor["display_login"]
+            avatar_url = actor["avatar_url"]
+
+            payload = data["payload"]
+            commits = payload["commits"]
+            commit_messages = ""
+            for commit in commits:
+                commit_messages += "{} commited \"{}\"\n".format(display_name, commit["message"])
+            formatted = commit_messages.strip()
+            print(formatted)
+
+        elif (data["type"] == "DeleteEvent"):
+            event = {"event_message": None, "avatar_url": None}
+            actor = data["actor"]
+            display_name = actor["display_login"]
+            avatar_url = actor["avatar_url"]
+
+            payload = data["payload"]
+            event_string = "{} deleted {} \"{}\"".format(display_name, payload["ref_type"], payload["ref"])
+
+
+            #event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
+        
+            print(event_string)
+
+        elif (data["type"] == "ForkEvent"):
+            event = {"event_message": None, "avatar_url": None}
+            actor = data["actor"]
+            display_name = actor["display_login"]
+            avatar_url = actor["avatar_url"]
+
+            payload = data["payload"]
+            repo = data["repo"]
+            event_string = "{} forked \"{}\"".format(display_name, repo["name"])
+
+
+            #event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
+        
+            print(event_string)
+
 
     #print(events)
     return
