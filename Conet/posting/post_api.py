@@ -41,9 +41,9 @@ def getGithubStream(author_id):
             payload = data["payload"]
             pages = payload["pages"][0]
             event_string = display_name + " " + pages["action"] + " " + pages["page_name"]
+
             event["event_message"] = event_string
             event["avatar_url"] = avatar_url
-            print(event_string)
             events.append(event)
 
         elif (data["type"] == "CreateEvent"):
@@ -58,7 +58,10 @@ def getGithubStream(author_id):
                 event_string = display_name + " created " + payload["ref_type"] + " " + payload["ref"] + " on " + repo["name"]
             else:
                 event_string = display_name + " created " + payload["ref_type"] + " " + repo["name"]
-            print(event_string)
+
+            event["event_message"] = event_string
+            event["avatar_url"] = avatar_url
+            events.append(event)
 
         elif (data["type"] == "IssuesEvent"):
             event = {"event_message": None, "avatar_url": None}
@@ -69,8 +72,10 @@ def getGithubStream(author_id):
             payload = data["payload"]
             issue = payload["issue"]
             event_string = "{} {} {}".format(display_name, payload["action"], issue["title"])
-        
-            print(event_string)
+
+            event["event_message"] = event_string
+            event["avatar_url"] = avatar_url
+            events.append(event)
 
         elif (data["type"] == "IssueCommentEvent"):
             event = {"event_message": None, "avatar_url": None}
@@ -82,8 +87,10 @@ def getGithubStream(author_id):
             issue = payload["issue"]
             comment = payload["comment"]
             event_string = "{} {} comment \"{}\" on issue {}".format(display_name, payload["action"], comment["body"], issue["title"])
-        
-            print(event_string)
+
+            event["event_message"] = event_string
+            event["avatar_url"] = avatar_url
+            events.append(event)
         
         elif (data["type"] == "PullRequestEvent"):
             event = {"event_message": None, "avatar_url": None}
@@ -94,8 +101,10 @@ def getGithubStream(author_id):
             payload = data["payload"]
             pull_request = payload["pull_request"]
             event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
-        
-            print(event_string)
+
+            event["event_message"] = event_string
+            event["avatar_url"] = avatar_url
+            events.append(event)
 
         elif (data["type"] == "PushEvent"):
             event = {"event_message": None, "avatar_url": None}
@@ -109,7 +118,10 @@ def getGithubStream(author_id):
             for commit in commits:
                 commit_messages += "{} commited \"{}\"\n".format(display_name, commit["message"])
             formatted = commit_messages.strip()
-            print(formatted)
+
+            event["event_message"] = commit_messages
+            event["avatar_url"] = avatar_url
+            events.append(event)
 
         elif (data["type"] == "DeleteEvent"):
             event = {"event_message": None, "avatar_url": None}
@@ -119,11 +131,10 @@ def getGithubStream(author_id):
 
             payload = data["payload"]
             event_string = "{} deleted {} \"{}\"".format(display_name, payload["ref_type"], payload["ref"])
-
-
-            #event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
         
-            print(event_string)
+            event["event_message"] = event_string
+            event["avatar_url"] = avatar_url
+            events.append(event)
 
         elif (data["type"] == "ForkEvent"):
             event = {"event_message": None, "avatar_url": None}
@@ -134,15 +145,12 @@ def getGithubStream(author_id):
             payload = data["payload"]
             repo = data["repo"]
             event_string = "{} forked \"{}\"".format(display_name, repo["name"])
-
-
-            #event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
         
-            print(event_string)
+            event["event_message"] = event_string
+            event["avatar_url"] = avatar_url
+            events.append(event)
 
-
-    #print(events)
-    return
+    return Response(events, status=status.HTTP_200_OK)
 
 def CheckPermissions(author, post):
     #if the visibility is set to FRIENDS,
