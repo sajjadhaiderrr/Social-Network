@@ -7,10 +7,62 @@ from django.shortcuts import render
 from Accounts.models import Author
 from api.ApiHelper import get_friends
 from django.core.paginator import Paginator
+import requests
 
 import uuid
 import json
 import datetime
+
+# get github stream
+def getGithubStream(author_id):
+    try:
+        author = Author.objects.get(id=author_id)
+    except:
+        print("Author not found.")
+        return None
+    github_url = author.github
+    try:
+        github_username = github_url.split("/")[3]
+    except:
+        print("Github url is wrong format.")
+        return
+    request_url = "https://api.github.com/users/" + github_username + "/events/public"
+    response = requests.get(request_url)
+    json_data = json.loads(response.text)
+    
+    events = []
+    for data in json_data:
+        if (data["type"] == "GollumEvent"):
+            event = {"event_message": None, "avatar_url": None}
+            actor = data["actor"]
+            display_name = actor["display_login"]
+            avatar_url = actor["avatar_url"]
+
+            payload = data["payload"]
+            pages = payload["pages"][0]
+            event_string = display_name + " " + pages["action"] + " " + pages["page_name"]
+            event["event_message"] = event_string
+            event["avatar_url"] = avatar_url
+            print(event_string)
+            events.append(event)
+
+        elif (data["type"] == "CreateEvent"):
+            event = {"event_message": None, "avatar_url": None}
+            actor = data["actor"]
+            display_name = actor["display_login"]
+            avatar_url = actor["avatar_url"]
+
+            payload = data["payload"]
+            repo = data["repo"]
+            if (payload["ref"] != None):
+                event_string = display_name + " created " + payload["ref_type"] + " " + payload["ref"] + " on " + repo["name"]
+            else:
+                event_string = display_name + " created " + payload["ref_type"] + " " + repo["name"]
+            print(event_string)
+
+
+    #print(events)
+    return
 
 def CheckPermissions(author, post):
     #if the visibility is set to FRIENDS,
@@ -72,6 +124,7 @@ def CheckPermissions(author, post):
 class ReadAllPublicPosts(APIView):
     # get: All posts marked as public on the server
     def get(self, request):
+        getGithubStream(request.user.id)
         response_object = {
             "query":"getPosts",
             "count": None,
@@ -440,3 +493,4 @@ class CommentReqHandler(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 ### HELPER END
+        
