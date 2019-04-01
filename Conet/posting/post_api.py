@@ -72,6 +72,31 @@ def getGithubStream(author_id):
         
             print(event_string)
 
+        elif (data["type"] == "IssueCommentEvent"):
+            event = {"event_message": None, "avatar_url": None}
+            actor = data["actor"]
+            display_name = actor["display_login"]
+            avatar_url = actor["avatar_url"]
+
+            payload = data["payload"]
+            issue = payload["issue"]
+            comment = payload["comment"]
+            event_string = "{} {} comment \"{}\" on issue {}".format(display_name, payload["action"], comment["body"], issue["title"])
+        
+            print(event_string)
+        
+        elif (data["type"] == "PullRequestEvent"):
+            event = {"event_message": None, "avatar_url": None}
+            actor = data["actor"]
+            display_name = actor["display_login"]
+            avatar_url = actor["avatar_url"]
+
+            payload = data["payload"]
+            pull_request = payload["pull_request"]
+            event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
+        
+            print(event_string)
+
 
     #print(events)
     return
