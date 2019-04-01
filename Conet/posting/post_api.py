@@ -8,7 +8,7 @@ from posting.models import Post, Comment
 from api.serializers import PostSerializer, CommentSerializer
 from django.shortcuts import render
 from Accounts.models import Author
-from api.ApiHelper import get_friends
+from api.ApiHelper import *
 from django.core.paginator import Paginator
 
 import uuid
@@ -27,8 +27,14 @@ def CheckPermissions(author, post):
         return ("This is your post", True)
     '''
     author_of_post = post.postauthor
+    from_one_host = author.host == author_of_post.host
+    print("from_one_host: ", from_one_host)
     if (post.visibility == "FRIENDS"):
-        friends = get_friends(author_of_post)
+        if from_one_host:
+            friends = get_friends(author_of_post) 
+        else:
+            friends = update_friends(author_of_post, author_of_post.host)
+
         if (str(author.id) not in friends):
             return ("You are NOT a friend of the author.", False)
         return ("You are a friend of the author.", True)
@@ -37,7 +43,12 @@ def CheckPermissions(author, post):
     #lets check if the current author is in
     #the posting authors friends of friends list
     if (post.visibility == "FOAF"):
-        friends = get_friends(author_of_post)
+        #friends = get_friends(author_of_post)
+        if from_one_host:
+            friends = get_friends(author_of_post)
+        else:
+            friends = update_friends(author_of_post, author_of_post.host)
+
         friends_of_friends = []
         for friend in friends:
             friends_of_friends += get_friends(Author.objects.get(pk=friend))
@@ -52,12 +63,12 @@ def CheckPermissions(author, post):
     #and we check the posting authors
     #host and compare it with the current authors
     if (post.visibility == "SERVERONLY"):
-        local_server = author_of_post.host
+        if (not from_one_host):
+            return ("You are NOT on the same server as the author.", False)
+
         friends = get_friends(author_of_post)
         if (author.id not in friends):
             return ("You are NOT a friend of the author.", False)
-        if (author.host != local_server):
-            return ("You are NOT on the same server as the author.", False)
         return ("You are a friend of and on the same server as the author.", True)
 
     #if the visibility is set to PRIVATE,
@@ -127,18 +138,22 @@ class ReadAllPublicPosts(APIView):
 
 # path: /posts/{post_id}
 class ReadSinglePost(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
+        is_local = is_local_request(request)
         response_object = {
             "query":"getPost",
             "post": None
         }
         #first we check to see if the post with the id exists
         try:
-            post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
-            
+            post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member  
         except:
-            return Response(response_object, status=status.HTTP_200_OK)
+            return Response(response_object, status=status.HTTP_404_NOT_FOUND)
         
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
@@ -153,7 +168,7 @@ class ReadSinglePost(APIView):
         # lets check if an author is logged in first    
         # here, author has to login in order to view the posts,
         try:
-            author = Author.objects.get(id=request.user.id)
+            author = get_request_author(is_local, request)
         except:
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         
@@ -178,6 +193,14 @@ class ReadSinglePost(APIView):
 
     # put: update single post with id = post_id
     def put(self, request, post_id):
+        is_local = is_local_request(request)
+
+        if not is_local:
+            #request is from foreign user, no permission to edit post
+            response = {'success': False,
+                        'message': 'No permission'}
+            return Response(response, status=403)
+
         if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
             return Response("Invalid Post", status=400)
         else:
@@ -193,6 +216,14 @@ class ReadSinglePost(APIView):
                 return Response("Invalid data", status=400)
 
     def delete(self, request, post_id):
+        is_local = is_local_request(request)
+
+        if not is_local:
+            #request is from foreign user, no permission to edit post
+            response = {'success': False,
+                        'message': 'No permission'}
+            return Response(response, status=403)
+
         if (not Post.objects.filter(pk=post_id).exists()):  # pylint: disable=maybe-no-member
             return Response("Invalid Post", status=404)
         else:
@@ -207,9 +238,11 @@ class ReadSinglePost(APIView):
 
 # path: /posts/{post_id}/comments
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
+
+    
     # get: Get comments of a post
     def get(self, request, post_id):
-
+        is_local = is_local_request(request)
         response_object = {
             "query":"getComments",
             "count": None,
@@ -270,7 +303,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         #lets check if an author is logged in first
         try:
-            author = Author.objects.get(id=request.user.id)
+            author = get_request_author(is_local, request)
         except:
             return Response(response_object, status=status.HTTP_200_OK)
 
@@ -330,6 +363,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
     # post: Add a comment to a post
     def post(self, request, post_id):
+        is_local = is_local_request(request)
         response_object = {
             "query":"addComment",
             "type": None,
@@ -426,6 +460,10 @@ class PostReqHandler(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CommentReqHandler(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
         comments = Comment.objects.all()# pylint: disable=maybe-no-member
         serializer = CommentSerializer(comments, many=True)
