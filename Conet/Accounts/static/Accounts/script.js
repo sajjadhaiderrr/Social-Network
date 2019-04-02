@@ -441,7 +441,7 @@ function deletePost(post) {
 .then(response => {
   if (response.status === 204)  {
     alert("Post has been deleted!");
-    document.reload();
+    window.location.reload(true);
   }
   else
   {
@@ -609,7 +609,7 @@ function fetch_github_stream_callback(response){
         card_title.classList.add("card-title");
         card_title.href = '/posts/' + post.postid + "/";
         var link_to_post_page = document.createElement("h3");
-        link_to_post_page.innerText = "Github Post";  
+        link_to_post_page.innerText = "Github Post";
         card_title.appendChild(link_to_post_page);
 
         var publish_time = document.createElement("a");
@@ -690,13 +690,14 @@ function get_profile_callback(response){
     var displayName = document.getElementById("displayName");
     displayName.innerText = response.displayName;
     user_be_viewed.displayName = response.displayName;
-    try{
-        document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
-        document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
-    }catch{
+    //
+    // try{
+    //     document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
+    //     document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
+    // }catch{
+    //
+    // }
 
-    }
-    
     //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
     //document.getElementById("btn-unfriend").setAttribute("onClick","sendUnFriendRequest(" + current_user+ ","+user_be_viewed+");");
     console.log(response.first_name);
