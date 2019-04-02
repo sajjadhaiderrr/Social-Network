@@ -539,10 +539,8 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         # need to check this part. 'Friend' visibility cannot work?
         if (post.visibility == "PUBLIC"):
-            print(data)
             serializer = CommentSerializer(data=data, context={'author':author})
             if serializer.is_valid():
-                print(serializer.is_valid())
                 serializer.save()
                 response_object["type"] = True
                 response_object["message"] = "Successfully added comment."
@@ -554,7 +552,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         #check if its the currently authenticated
         #users post
         if (author.id == post.postauthor.id):
-            serializer = CommentSerializer(data=data)
+            serializer = CommentSerializer(data=data, context={'author':author})
             if serializer.is_valid():
                 serializer.save()
                 response_object["type"] = True
@@ -570,7 +568,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["message"] = "You do not have permissions to add a comment to this post."
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = CommentSerializer(data=data)
+        serializer = CommentSerializer(data=data, context={'author':author})
         if serializer.is_valid():
             serializer.save()
 
