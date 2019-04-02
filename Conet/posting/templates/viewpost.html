@@ -29,21 +29,6 @@
         </div>
 
       </div>
-          <h4> Comments </h4>
-      </div>
-      <div class="form-group shadow-textarea">
-        {% if comments|length == 0 %}
-            <p> No Comments </p>
-        {% endif %}
-        {% if comments|length != 0 %}
-          {% for comment in comments %}
-            <p>{{comment.author}} wrote: {{ comment.comment|linebreaks }}</p>
-          {% endfor %}
-        {% endif %}
-      </div>
-          <textarea class="form-control z-depth-1" id="addcommenttextpostview" rows="3" placeholder="Write something here..."></textarea>
-          <button id="addcommentbutton" onclick="addCommentPostView('{{post.postid}}')" > Add Comment </button>
-      </div>
     </div>
 
 
