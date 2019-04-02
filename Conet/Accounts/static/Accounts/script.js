@@ -32,9 +32,9 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
-                if (xhr.status == 200) {
-                    callback(xhr.response);
-                }
+            if (xhr.status == 200) {
+                callback(xhr.response);
+            }
             
         }
     };
@@ -784,17 +784,19 @@ function init_info_page(init, recv, remote, from_one_host) {
         sendJSONHTTPGet(posts_url, request_body, get_num_posts_made_callback);
         sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
         sendJSONHTTPGet(following_url, request_body, get_num_following_callback);
+        sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback);
     }else{
         // for author from another host, only shows friends and posts.
         sendJSONHTTPGet(profile_url, {}, get_profile_callback, remote);
         sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback, remote);
         sendJSONHTTPGet(posts_url, request_body, get_num_posts_made_callback, remote);
+        sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback, remote);
     }
 
     // loading follow and unfollow btn
     if(init.id != recv.id && init.id!="None"){
         sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
     }
-    sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback);
+    //sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback, remote);
     // sendJSONHTTPGet(github_url, request_body, fetch_github_stream_callback);
 }
