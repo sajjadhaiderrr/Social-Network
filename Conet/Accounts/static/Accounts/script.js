@@ -8,7 +8,7 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
                 callback(xhr.response);
             }
             catch (e) {
-                alert('Error: ' + e.name);
+                alert('XHR Error: ' + e.name);
             }
         }
     };
@@ -37,7 +37,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
                 }
             }
             catch (e) {
-                alert('Error: ' + e.name);
+                alert('get xhr Error: ' + e.name);
             }
         }
     };
