@@ -98,7 +98,6 @@ function addComment(post_url, id){
         }
         else
         {
-            alert(response.status);
         }
     });
 }
@@ -114,7 +113,7 @@ function sendUnFriendRequestCallback(objects) {
 
 // function to send befriend request
 function sendFriendRequest(init, recv) {
-    console.log(recv.displayName)
+
     users = { "query": "friendrequest", "author": init, "friend": recv };
     sendJSONHTTPPost(init.host + "/friendrequest", users, sendFriendRequestCallback);
 }
@@ -226,9 +225,9 @@ function create_card_showing_friends(friend){
 function sendFriendsCallback(response) {
     response = JSON.parse(response);
     friends = response.friends;
-    console.log(friends)
+
     for (var i of friends) {
-        console.log(i);
+
         //var friend = JSON.parse(i);
         var friend_card = create_card_showing_friends(i);
         document.getElementById('friend-div').appendChild(friend_card);
@@ -401,7 +400,6 @@ function deletePost(post) {
 })
 .then(response => {
   if (response.status === 204)  {
-    alert("Post has been deleted!");
     window.location.reload(true);
   }
   else
@@ -427,7 +425,7 @@ var editPostHandler = function(arg, arg1) {
 // loading and creating cards of post cards
 function get_visible_post_callback(response){
     var response = JSON.parse(response);
-    console.log(response);
+
     if(response.next == "None" && response.posts==[]){
         console.log("The end");
     }else{
@@ -439,7 +437,8 @@ function get_visible_post_callback(response){
             card.classList.add("card","home-page-post-card");
 
             // Card menu for delete
-            var card_menu = document.createElement("h5");
+            var card_menu = document.createElement("a");
+            card_menu.href="#";
             card_menu.innerHTML = '<i class="material-icons">delete</i>';
             card_menu.style.color = '#007bff';
             card_menu.style.position = "absolute";
@@ -447,7 +446,8 @@ function get_visible_post_callback(response){
             //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
             card_menu.onclick = deletePostHandler(post);
 
-            var card_edit = document.createElement("h5");
+            var card_edit = document.createElement("a");
+            card_edit.href="#";
             card_edit.innerHTML = '<i class="material-icons">edit</i>';
             card_edit.style.color = '#007bff';
             card_edit.style.position = "absolute";
@@ -534,11 +534,49 @@ function get_visible_post_callback(response){
             comment_btn.innerText = "Send";
             commentbox.appendChild(comment_textarea);
             commentbox.appendChild(comment_btn);
-            // for displaying comments
             
+            // for displaying comments
+            var comments_div = document.createElement("div");
 
+            for(comment of post.comments){
+                var comment_title = document.createElement("div");
+                console.log(comment);
+                var comment_author_name = document.createElement("a");
+                comment_author_name.href = "http://"+ window.location.hostname+":"+window.location.port+"/author/"+comment.author.id+"/info/?host=" + comment.author.host;
+                comment_author_name.innerText = comment.author.displayName;
+                comment_author_name.classList.add("float-sm-left", "font-weight-bold",'text-secondary');
+                comment_author_name.setAttribute("style","font-size:10pt; margin-top:-10pt;");
 
+                var comment_published = document.createElement("a");
+                comment_published.classList.add("font-weight-light", "text-muted");
+                comment_published.classList.add("float-sm-left",'text-secondary');
+                comment_published.setAttribute("style","font-size:10pt; margin-top:-10pt; margin-left:5pt;");
+                var publish_date_time = Date.parse(comment.published);
+                var now = new Date();
+                var sec_ago = (now - publish_date_time)/1000;
+                var min_ago = sec_ago / 60;
+                var hr_ago = min_ago / 60;
+                var days_ago = hr_ago / 24;
+                if (min_ago < 60){
+                    comment_published.innerText = Math.round(min_ago) + " mins. ago";
+                }else if (hr_ago < 60){
+                    comment_published.innerText = Math.round(hr_ago) + " hrs. ago";
+                }else{
+                    comment_published.innerText = Math.round(days_ago) + " days ago";
+                }
 
+                var comment_content = document.createElement("p");
+                comment_content.innerText = comment.comment;
+                comment_content.setAttribute("style","font-size:10pt; margin-top:-10pt;");
+                
+                comment_title.appendChild(comment_author_name);
+                comment_title.append(comment_published);
+                comments_div.appendChild(comment_title);
+                comments_div.appendChild(document.createElement("br"));
+                comments_div.append(comment_content);
+                
+                comments_div.appendChild(document.createElement("hr"));
+            }
 
             card_body.appendChild(card_title);
             // Add edit/delete menu if author
@@ -551,8 +589,10 @@ function get_visible_post_callback(response){
             card_body.appendChild(publish_time);
             card_body.appendChild(document.createElement("hr"));
             card_body.appendChild(content);
-            card_body.appendChild(hr);
+            
             card_body.appendChild(commentbox);
+            card_body.appendChild(document.createElement("hr"));
+            card_body.appendChild(comments_div);
             card.appendChild(card_body);
             document.getElementById("home_page_post_cards").appendChild(card);
             num_post_counter += 1;
@@ -564,7 +604,7 @@ function get_visible_post_callback(response){
 function fetch_github_stream_callback(response){
     var response = JSON.parse(response);
     for(post of response){
-        console.log(post);
+        //console.log(post);
         var card = document.createElement("div");
         card.classList.add("card","home-page-post-card");
 
@@ -666,7 +706,6 @@ function get_profile_callback(response){
 
     //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
     //document.getElementById("btn-unfriend").setAttribute("onClick","sendUnFriendRequest(" + current_user+ ","+user_be_viewed+");");
-    console.log(response.first_name);
     // adding first name
     var fn = document.createElement("p");
     fn.classList.add("text-secondary", "profile-card-content");
