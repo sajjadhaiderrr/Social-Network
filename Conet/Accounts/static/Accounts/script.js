@@ -426,7 +426,6 @@ function get_visible_post_callback(response){
     if(false&&(response.next == "None" && response.posts==[])){
         console.log("The end");
     }else{
-        console.log(response);
         var i=0;
         for(post of response.posts){
 
