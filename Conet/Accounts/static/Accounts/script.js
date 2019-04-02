@@ -32,13 +32,10 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
-            try {
                 if (xhr.status == 200) {
                     callback(xhr.response);
                 }
-            }catch (e) {
-                console.log(url);
-            }
+            
         }
     };
     if (xhr.overrideMimeType) {
