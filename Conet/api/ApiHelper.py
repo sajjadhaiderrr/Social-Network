@@ -1,6 +1,5 @@
 from Accounts.models import Author, Friendship, Node 
-from .serializers import FollowerSerializers, FollowingSerializers
-
+from .serializers import FollowerSerializers, FollowingSerializers, PostSerializer
 import requests
 from requests.auth import HTTPBasicAuth
 import json
@@ -32,19 +31,22 @@ def get_two_authors_relation(authorObj1, authorObj2):
     #reverse_friendship = Friendship.objects.filter(init_id=authorObj2, recv_id=authorObj1)
     return None
 
-def obtain_from_remote_node(url, host, method='GET', send_query=None):
-    header = {'Content-Type': 'application/json'}
+def obtain_from_remote_node(url, host, method='GET', send_query=None, header={}):
     node = Node.objects.get(foreignHost=host)  # pylint: disable=maybe-no-member
     authentication = HTTPBasicAuth(node.remoteUsername, node.remotePassword)
-    
-    if method == 'GET':
-        res = requests.get(url, auth=authentication)
-    elif method == 'POST':
-        res = requests.post(url, headers=header, data=send_query, auth=authentication)
-    else:
-        return {'code': 405}
-    print("response json: ", res.json())
-    return (res.json(), res.status_code)
+    try:
+        if method == 'GET':
+            res = requests.get(url, auth=authentication, headers=header)
+        elif method == 'POST':
+            header['Content-Type'] = 'application/json'
+            res = requests.post(url, headers=header, data=send_query, auth=authentication)
+        else:
+            return {'code': 405}
+        print("response json: ", res.json())
+        return (res.json(), res.status_code)
+    except Exception as e:
+        print("Exception on remote request: ", e)
+        return (None, 500)
 
 def urls_to_ids(url_list):
     pattern = re.compile('http://.+/author/')
@@ -75,7 +77,7 @@ def get_friends(user):
 
 # get a friend by updating local friendship database if needed
 def update_friends(user, host):
-    host = 'http://' + host
+    localhost = host if re.match('http://', host) else 'http://' + host
     local_friends = list()
     remote_friends = dict()
 
@@ -86,7 +88,7 @@ def update_friends(user, host):
     for follower in follower_frdships:
         for following in following_frdships:
             if follower.init_id == following.recv_id:
-                if follower.init_id.host == host:
+                if follower.init_id.host == localhost:
                     local_friends.append(str(follower.init_id.id))
                 else:
                     remote_host = follower.init_id.host
@@ -98,9 +100,9 @@ def update_friends(user, host):
     for host, friends in remote_friends.items():
         friends_api = host + '/author/' + str(user.id) + '/friends'
         send_query = {'query': 'friends',
-                 'authors': friends}
+                    'author': localhost + '/author/' + str(user.id),
+                    'authors': friends}
 
-        print('friends_api: ', friends_api)
         friend_query, _ = obtain_from_remote_node(url=friends_api, host=host, 
             method='POST', send_query=json.dumps(send_query))
         #add = list(set(friend_query['authors']) - set(friends))
@@ -110,12 +112,10 @@ def update_friends(user, host):
         new_remote_friends += list(friends & friend_query['authors'])
         remove_remote_friends(user, remove_list)
     
-    return local_friends + new_remote_friends
+    return (local_friends, new_remote_friends)
 
 def remove_remote_friends(local_author, remove_list):
     remote_authors = Author.objects.filter(id__in=remove_list)
-    print("remove_list: ", remove_list)
-    print("remove_remote_authors: ", remote_authors)
     friendship = Friendship.objects.filter(init_id=local_author, recv_id__in=list(remote_authors))  # pylint: disable=maybe-no-member
     reverse_friendship = Friendship.objects.filter(init_id__in=list(remote_authors), recv_id=local_author)  # pylint: disable=maybe-no-member
     friendship.delete()
@@ -129,15 +129,24 @@ def create_remote_author(authorObj):
     try:
         Author.objects.create_user(username=username, password=password)
         author = Author.objects.filter(username=username)
-        print('author: ', author)
         author.update(id=authorObj['id'], displayName=authorObj['displayName'],
             host=authorObj['host'], url=authorObj['url'])
-        #author.save()
     except:
-        print('exception occured')
         return (False, None)
-    print("create_remote_author: ", author)
     return (True, author[0])
+
+def format_author_posts(post_list):
+    res_query = {"query": "posts",
+                 "count": len(post_list),
+                 "size": len(post_list),
+                 "posts": []}
+    
+    for post in post_list: 
+        post = PostSerializer(post).data
+        post['postid'] = str(post['postid'])
+        res_query['posts'].append(post)
+    
+    return res_query
 
 def local_author(author_host, localhost):
     return True if author_host == ('http://' + localhost) else False
@@ -150,13 +159,14 @@ def is_local_request(request):
         return True
     return False
 
-
-'''def get_from_remote_server(authorObj, mode=None):
-    if mode == 'friends':
-        url = '{}/author/{}/friends'.format(authorObj.host, authorObj.id)
+def get_request_author(is_local, request):
+    if is_local:
+        return Author.objects.get(id=request.user.id)
     else:
-        url = '{}/author/{}'.format(authorObj.host, authorObj.id)
+        request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
+        request_user_id = urls_to_ids([request_user_id])[0]
+        return Author.objects.get(id=request_user_id)  
 
-    node = Node.objects.get(foreignHost=authorObj.host) # pylint: disable=maybe-no-member
-    res = requests.get(url, auth=HTTPBasicAuth(node.remoteUsername, node.remotePassword))
-    return (json.loads(res.text), res.status_code)'''
+def permission_on_foaf(req_author, rcv_author, is_local):
+    #rcv_localfrds, rcv_remotefrds = update_friends(rcv_author, rcv_author.host)
+    return False

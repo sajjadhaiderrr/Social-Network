@@ -17,7 +17,7 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 
-from Accounts.models import Author
+from Accounts.models import Author, Node
 from Accounts.models import Friendship
 from posting.models import Post
 
@@ -72,7 +72,6 @@ class UnfriendRequestHandler(APIView):
     authentication_classes = (SessionAuthentication, BasicAuthentication)
     permission_classes = (IsAuthenticated,)
 
-    # Todo: check if recv_id is from foreign user
     def post(self, request):
         # parse request body
         request_body = request.data
@@ -87,6 +86,16 @@ class UnfriendRequestHandler(APIView):
             response['message'] = 'Request author or request friend does not exist.'
             return HttpResponse(json.dumps(response), status=400)
 
+        #case that when unfriend friend object is from foreign server
+        if not ApiHelper.local_author(recv_user.host, request.get_host()):
+            reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
+            friendship = Friendship.objects.filter(init_id=init_user, recv_id=recv_user) # pylint: disable=maybe-no-member
+            friendship.delete()
+            reverse_friendship.delete()
+            response['success'] = True
+            response['message'] = 'Unfriend request proceeded successfully.'
+            return Response(response)
+    
         # try to delete the relationship with given init_user and recv_user
         reverse_friendship = Friendship.objects.filter(init_id=recv_user, recv_id=init_user) # pylint: disable=maybe-no-member
         friendship = Friendship.objects.filter(init_id=init_user, recv_id=recv_user) # pylint: disable=maybe-no-member
@@ -162,7 +171,6 @@ class FriendRequestHandler(APIView):
                     #request friend user is from remote server
                     response, status_code = ApiHelper.obtain_from_remote_node(url=frd_req_url, 
                         host=friend_host, method='POST', send_query=json.dumps(request_body))
-
                     if status_code == 200:
                         #create remote author object
                         success, recv_user = ApiHelper.create_remote_author(request_body['friend'])
@@ -362,24 +370,24 @@ class AuthorFriends(APIView):
         is_local = ApiHelper.is_local_request(request)
         response = {"query":'friends'}
 
-    #try:
-        # get current user on URL
-        current_user = Author.objects.get(id=kwargs['pk'])
-        if is_local:
-            # current requested user is on local
-            friends = ApiHelper.update_friends(current_user, request.get_host())
-            print('friends: ', friends)
-            response['authors'] = friends
-            return Response(response)
-        else:
-            # current requested user is from remote server
-            friends = ApiHelper.get_friends(current_user)
-            response['authors'] = friends
-            return Response(response)         
-        # except Exception as e:
-        #     print('author friends exception: ', e)
-        #     response['authors'] = []
-        #     return Response(response, status=400)
+        try:
+            # get current user on URL
+            current_user = Author.objects.get(id=kwargs['pk'])
+            if is_local:
+                # current requested user is on local
+                local_frds, foreign_frds = ApiHelper.update_friends(current_user, request.get_host())
+                friends = local_frds + foreign_frds
+                response['authors'] = friends
+                return Response(response)
+            else:
+                # current requested user is from remote server
+                friends = ApiHelper.get_friends(current_user)
+                response['authors'] = friends
+                return Response(response)         
+        except Exception as e:
+            print('author/id/friends exception: ', e)
+            response['authors'] = []
+            return Response(response, status=400)
     
     # Ask a service if anyone in the list is a friend
     def post(self, request,*args, **kwargs):
@@ -389,7 +397,8 @@ class AuthorFriends(APIView):
 
         # get the authors who are checked be a friend of author shows in URL
         request_friends = ApiHelper.urls_to_ids(request_body['authors'])
-        response = {"query":'friends'}
+        response = {"query":'friends',
+                    "author": request_body['author']}
         try:
             # get current user on URL
             current_user = Author.objects.get(id=kwargs['pk'])
@@ -402,7 +411,7 @@ class AuthorFriends(APIView):
             return Response(response)
         except:
             response['authors'] = []
-        return Response(response, status=400)
+            return Response(response, status=400)
 
 #reference: https://docs.djangoproject.com/en/2.1/ref/request-response/
 
@@ -430,61 +439,92 @@ class TwoAuthorsRelation(APIView):
 
 # service/author/posts
 class AuthorPostsAPI(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
+        is_local = ApiHelper.is_local_request(request)
         allposts = []
         page_size = 10
         posts = Post.objects.none() # pylint: disable=maybe-no-member
-
-        #get the posts of all your friends whos visibility is set to FRIENDS
-        current_user = Author.objects.get(pk=request.user.id)
-        friends = ApiHelper.get_friends(current_user)
-
-        posts = Post.objects.filter(postauthor=request.user)  # pylint: disable=maybe-no-member
-
-        for friend in friends:
-            friend = Author.objects.get(pk=friend)       
-            newposts = Post.objects.filter(postauthor = friend, visibility = "FRIENDS", unlisted=False) # pylint: disable=maybe-no-member
-            posts |= newposts
 
         #get all public posts
         public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
         posts |= public
 
-        #get posts that satisfy FOAF
+        try:
+            foreign_posts = list()
+            if is_local:
+                # request from local user
+                current_user = Author.objects.get(pk=request.user.id)
+                #get all visible posts from remote server(s)
+                for node in Node.objects.all():
+                    posts_url = node.foreignHost + '/author/posts'
+                    header = {'X-Request-User-ID': current_user.host+'/author/'+str(current_user.id)}
+                    query_posts, status_code = ApiHelper.obtain_from_remote_node(url=posts_url, host=node.foreignHost, header=header)
+                    if status_code == 200:
+                        foreign_posts += query_posts['posts']
+            else:
+                request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
+                request_user_id = ApiHelper.urls_to_ids([request_user_id])[0]
+                current_user = Author.objects.get(pk=request_user_id)
+        except Exception as e:
+            print("Exception on author/posts: ", e)
+            return Response(ApiHelper.format_author_posts(posts))
+
+        friends = ApiHelper.get_friends(current_user)
+        #get posts mde by current user
+        posts |= Post.objects.filter(postauthor=current_user, unlisted=False)  # pylint: disable=maybe-no-member
+
         allfoafs = set()
+        visible_post = list()
         for friend in friends:
-            #direct friend with posts "FOAF" should visible to current user
             friend = Author.objects.get(pk=friend)
+            if not ApiHelper.local_author(friend.host, request.get_host()):
+                continue
+
+            # get friend's posts
+            newposts = Post.objects.filter(postauthor = friend, visibility = "FRIENDS", unlisted=False) # pylint: disable=maybe-no-member
+            posts |= newposts
+
+            # get relations that satisfy FOAF
+            # direct friend with posts "FOAF" should visible to current user
             allfoafs.add(friend)
             foafs = ApiHelper.get_friends(friend)
             for each in foafs:
-                allfoafs.add(each)
-        
-        for foaf in allfoafs:
-            newposts = Post.objects.filter(visibility="FOAF", postauthor=foaf, unlisted=False) # pylint: disable=maybe-no-member
-            posts |= newposts
-        #foaf end
+                try:
+                    author = Author.objects.get(id=each)
+                    if ApiHelper.local_author(author.host, request.get_host()):
+                        allfoafs.add(each)
+                except:
+                    pass
 
-        #private
-        visible_post = []
-        for friend in friends:
-            newposts = Post.objects.filter(postauthor=friend, visibility="PRIVATE", unlisted=False) # pylint: disable=maybe-no-member
+            #private
+            newposts = Post.objects.filter(postauthor=friend, visibility="PRIVATE", unlisted=False)  # pylint: disable=maybe-no-member
             for post in newposts:
-                visibleList = json.loads(post.visibleTo)
-                if str(current_user.id) in visibleList:
+                if str(current_user.id) in post.visibleTo:
                     visible_post.append(post.postid)
 
+            #get SERVERONLY
+            if is_local:
+                posts |= Post.objects.filter(postauthor=friend, visibility="SERVERONLY", unlisted=False)
+
+        # get posts that satisfy FOAF
+        for foaf in allfoafs:
+            newposts = Post.objects.filter(visibility="FOAF", postauthor=foaf, unlisted=False) # pylint: disable=maybe-no-member
+            posts |= newposts      
+        #get all private which can fullfill condition
         posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
-        #private end
-
-        #Todo: SERVERONLY
-
-        posts = posts.order_by(F("published").desc())
         
+        allposts = foreign_posts
         for post in posts:
-            allposts.append(post)
-                
-        #there are some repeat operations above, might combine later    
+            serializer = PostSerializer(post).data
+            serializer['postid'] = str(serializer['postid'])
+            allposts.append(serializer)
+
+        #order post py bublished date
+        allposts = sorted(allposts, key=lambda x: x['published'], reverse=True)
 
         try:
             page = int(request.GET.get("page", 0))
@@ -512,11 +552,11 @@ class AuthorPostsAPI(APIView):
         else:
             response['next'] = "None"
 
-        response['posts'] = []
-        for post in response_posts:
-            serializer = PostSerializer(post).data
-            serializer['postid'] = str(serializer['postid'])
-            response['posts'].append(serializer)
+        response['posts'] = response_posts
+        # for post in response_posts:
+        #     serializer = PostSerializer(post).data
+        #     serializer['postid'] = str(serializer['postid'])
+        #     response['posts'].append(serializer)
         
         return Response(response)
 
@@ -570,60 +610,66 @@ class AuthorMadePostAPI(APIView):
 
 # author/{author_id}/posts
 class ViewAuthorPostAPI(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+    
     def get(self, request, pk):
+        is_local = ApiHelper.is_local_request(request)
         allposts = []
         page_size = 10
+        valid_req_user_id = True
+        FOAF = False
         posts = Post.objects.none() # pylint: disable=maybe-no-member
-
-        #get the posts of all your friends whos visibility is set to FRIENDS
+        
         try:
             author_be_viewed = Author.objects.get(pk=pk)
-            current_user = Author.objects.get(pk=request.user.id)
-            user_not_login = False
-        except:
-            user_not_login = True
-            posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
-
-        if not user_not_login:
-            if current_user == author_be_viewed:
-                posts = Post.objects.filter(postauthor=current_user)    # pylint: disable=maybe-no-member
+            #get all public posts of author be viewed
+            posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC", unlisted=False)  # pylint: disable=maybe-no-member
+            
+            if is_local:
+                # request from local user
+                current_user = Author.objects.get(pk=request.user.id)
             else:
-                friends = ApiHelper.get_friends(current_user)
-                posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC")  # pylint: disable=maybe-no-member
-                print(friends)
+                request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
+                request_user_id = ApiHelper.urls_to_ids([request_user_id])[0]
+                current_user = Author.objects.get(pk=request_user_id) 
+        except Exception as e:
+            print("Exception on author/posts: ", e)
+            valid_req_user_id = False
+
+        if valid_req_user_id:
+            if current_user == author_be_viewed:
+                posts = Post.objects.filter(postauthor=current_user, unlisted=False)    # pylint: disable=maybe-no-member
+            else:
+                local_frds, foreign_frds = ApiHelper.update_friends(current_user, request.get_host())
+                friends = local_frds + foreign_frds
+                visible_post = list()
                 if str(author_be_viewed.id) in friends:
-                    print("friends")
-                    newposts = Post.objects.filter(postauthor=author_be_viewed, visibility = "FRIENDS") # pylint: disable=maybe-no-member
-                    posts |= newposts
+                    # get posts which set to FRIEND
+                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="FRIENDS", unlisted=False)  # pylint: disable=maybe-no-member
+                    #private
+                    private_posts = Post.objects.filter(postauthor=author_be_viewed, visibility="PRIVATE", unlisted=False)
+                    for post in private_posts:
+                        if str(current_user.id) in post.visibleTo:
+                            visible_post.append(post.postid)
+                    #get SERVERONLY
+                    if is_local:
+                        posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="SERVERONLY", unlisted=False)
+                    #case: direct friend, get foaf
+                    posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="FOAF", unlisted=False)
+                    FOAF = True
+                #get posts in visible_post list
+                posts |= Post.objects.filter(postid__in=visible_post)
+                #check visibility of FOAF if author be viewed is not a friend with current user
+                if not FOAF:
+                    foaf_posts = Post.objects.filter(postauthor=author_be_viewed, visibility="FOAF", unlisted=False)
+                    if foaf_posts.exists() and ApiHelper.permission_on_foaf(current_user, author_be_viewed, is_local):
+                        posts |= foaf_posts
 
-                #get posts that satisfy FOAF
-                allfoafs = set(friends)
-                for friend in friends:
-                    #direct friend with posts "FOAF" should visible to current user
-                    friend = Author.objects.get(pk=friend)
-                    #newposts = Post.objects.filter(visibility="FOAF", author=friend) # pylint: disable=maybe-no-member
-                    #posts |= newposts
-                    allfoafs.add(friend)
-                    foafs = ApiHelper.get_friends(friend)
-                    for each in foafs:
-                        allfoafs.add(each)
-                
-                if str(author_be_viewed.id) in allfoafs:
-                    newposts = Post.objects.filter(visibility="FOAF", postauthor=author_be_viewed) # pylint: disable=maybe-no-member
-                    posts |= newposts
-                #foaf ends
-
-                #private
-                '''
-                for friend in friends:
-                    posts = Post.objcets.filter(author=friend, visibility="PRIVATE") # pylint: disable=maybe-no-member
-                    for post in posts:
-                        post.visibleTo'''
-                #there are some repeat operations above, might combine later  
-
-            posts = posts.order_by(F("published").desc())
-            for post in posts:
-                allposts.append(post)
+        posts = posts.order_by(F("published").desc())
+        for post in posts:
+            allposts.append(post)
 
         try:
             page = int(request.GET.get("page", 0))
@@ -642,19 +688,14 @@ class ViewAuthorPostAPI(APIView):
         response['count'] = len(allposts)
         response['size'] = len(response_posts)
         if(page>0):
-            response['previous'] = current_user.host + "/author/posts?page="+str(page-1)
-        else:
-            response['previous'] = "None"
+            response['previous'] = author_be_viewed.host + "/author/posts?page="+str(page-1)
 
         if(not last_page):
-            response['next'] = current_user.host + "/author/posts?page="+str(page+1)
-        else:
-            response['next'] = "None"
+            response['next'] = author_be_viewed.host + "/author/posts?page="+str(page+1)
 
         response['posts'] = []
         for post in response_posts:
             serializer = PostSerializer(post).data
             serializer['postid'] = str(serializer['postid'])
             response['posts'].append(serializer)
-        
         return Response(response)

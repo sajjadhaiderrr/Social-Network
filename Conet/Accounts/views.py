@@ -100,7 +100,7 @@ class InfoPage(APIView):
     def get(self, request, authorId):
         url = request.GET['host']+"/author/"+ str(authorId)
         
-        user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"I don't know"}
+        user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
         host = request.GET['host'][7:]
         remote = {}
         print(host)

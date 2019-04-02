@@ -153,6 +153,7 @@ function sendUnFriendRequestCallback(objects) {
 
 // function to send befriend request
 function sendFriendRequest(init, recv) {
+    console.log(recv.displayName)
     users = { "query": "friendrequest", "author": init, "friend": recv };
     sendJSONHTTPPost(init.host + "/friendrequest", users, sendFriendRequestCallback);
 }
@@ -264,9 +265,11 @@ function create_card_showing_friends(friend){
 function sendFriendsCallback(response) {
     response = JSON.parse(response);
     friends = response.friends;
+    console.log(friends)
     for (var i of friends) {
-        var friend = JSON.parse(i);
-        var friend_card = create_card_showing_friends(friend);
+        console.log(i);
+        //var friend = JSON.parse(i);
+        var friend_card = create_card_showing_friends(i);
         document.getElementById('friend-div').appendChild(friend_card);
     }
 }
@@ -463,6 +466,7 @@ var editPostHandler = function(arg, arg1) {
 // loading and creating cards of post cards
 function get_visible_post_callback(response){
     var response = JSON.parse(response);
+    console.log(response);
     if(response.next == "None" && response.posts==[]){
         console.log("The end");
     }else{
@@ -590,6 +594,40 @@ function get_visible_post_callback(response){
     }
 }
 
+// loading and creating cards of post cards
+function fetch_github_stream_callback(response){
+    var response = JSON.parse(response);
+    for(post of response){
+        console.log(post);
+        var card = document.createElement("div");
+        card.classList.add("card","home-page-post-card");
+
+        var card_body = document.createElement("div");
+        card_body.classList.add("card-body");
+
+        var card_title = document.createElement("a");
+        card_title.classList.add("card-title");
+        card_title.href = '/posts/' + post.postid + "/";
+        var link_to_post_page = document.createElement("h3");
+        link_to_post_page.innerText = "Github Post";  
+        card_title.appendChild(link_to_post_page);
+
+        var publish_time = document.createElement("a");
+        publish_time.classList.add("font-weight-light", "text-muted");
+        publish_time.innerText = post.date;
+
+        var content = document.createElement("p");
+        content.innerText = post.event_message;
+
+        card_body.appendChild(card_title);
+        card_body.appendChild(publish_time);
+        card_body.appendChild(document.createElement("hr"));
+        card_body.appendChild(content);
+        card.appendChild(card_body);
+        document.getElementById("home_page_post_cards").appendChild(card);
+    }
+}
+
 // function for initializing home page
 function init_home_page(user){
     num_post_counter = 0;
@@ -601,11 +639,14 @@ function init_home_page(user){
     var follower_url = user.url+"/follower";
     var following_url = user.url + "/following";
     var fetch_posts_url = user.host + "/author/posts" + "?page="+page_number;
+    var fetch_github_stream_url = user.host + "/posts/view/github";
+    console.log(fetch_github_stream_url);
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
     sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
     sendJSONHTTPGet(following_url, request_body, get_num_following_callback);
     sendJSONHTTPGet(fetch_posts_url, request_body, get_visible_post_callback);
+    sendJSONHTTPGet(fetch_github_stream_url, request_body, fetch_github_stream_callback);
 }
 
 /*
@@ -645,11 +686,20 @@ function sendInitInfoRequestCallback(response) {
 
 function get_profile_callback(response){
     var response = JSON.parse(response);
-
     // add title
     var displayName = document.getElementById("displayName");
     displayName.innerText = response.displayName;
+    user_be_viewed.displayName = response.displayName;
+    try{
+        document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
+        document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
+    }catch{
 
+    }
+    
+    //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
+    //document.getElementById("btn-unfriend").setAttribute("onClick","sendUnFriendRequest(" + current_user+ ","+user_be_viewed+");");
+    console.log(response.first_name);
     // adding first name
     var fn = document.createElement("p");
     fn.classList.add("text-secondary", "profile-card-content");
@@ -722,6 +772,7 @@ function init_info_page(init, recv, remote, from_one_host) {
     var profile_url = recv.url;
     var friend_url = recv.url + "/friends";
     var posts_url = recv.url+"/posts";
+    var github_url = recv.url+"/posts/github";
     // for author from one host, display follower and followings
     if(from_one_host){
         var follower_url = recv.url +"/follower";
@@ -743,4 +794,5 @@ function init_info_page(init, recv, remote, from_one_host) {
         sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
     }
     sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback);
+    // sendJSONHTTPGet(github_url, request_body, fetch_github_stream_callback);
 }
