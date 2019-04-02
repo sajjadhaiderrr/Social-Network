@@ -79,6 +79,7 @@ function init_single_post_page(origin, authenticated){
             document.getElementById("post-content").appendChild(status_code);
         }
     }).then(json =>{
+        console.log(json);
         // display title
         document.getElementById("post-title").innerText = json.post.title;
 
@@ -155,5 +156,46 @@ function init_single_post_page(origin, authenticated){
         commentbox.appendChild(comment_textarea);
         commentbox.appendChild(comment_btn);
         document.getElementById("create-comment").appendChild(commentbox);
+        
+        document.getElementById("post-comments").appendChild(document.createElement("hr"))
+        for(comment of json.post.comments){
+            var comment_title = document.createElement("div");
+            console.log(comment);
+            var comment_author_name = document.createElement("a");
+            comment_author_name.href = "http://"+ window.location.hostname+":"+window.location.port+"/author/"+comment.author.id+"/info/?host=" + comment.author.host;
+            comment_author_name.innerText = comment.author.displayName;
+            comment_author_name.classList.add("float-sm-left", "font-weight-bold",'text-secondary');
+            comment_author_name.setAttribute("style","font-size:10pt; margin-top:-10pt;");
+
+            var comment_published = document.createElement("a");
+            comment_published.classList.add("font-weight-light", "text-muted");
+            comment_published.classList.add("float-sm-left",'text-secondary');
+            comment_published.setAttribute("style","font-size:10pt; margin-top:-10pt; margin-left:5pt;");
+            var publish_date_time = Date.parse(comment.published);
+            var now = new Date();
+            var sec_ago = (now - publish_date_time)/1000;
+            var min_ago = sec_ago / 60;
+            var hr_ago = min_ago / 60;
+            var days_ago = hr_ago / 24;
+            if (min_ago < 60){
+                comment_published.innerText = Math.round(min_ago) + " mins. ago";
+            }else if (hr_ago < 60){
+                comment_published.innerText = Math.round(hr_ago) + " hrs. ago";
+            }else{
+                comment_published.innerText = Math.round(days_ago) + " days ago";
+            }
+
+            var comment_content = document.createElement("p");
+            comment_content.innerText = comment.comment;
+            comment_content.setAttribute("style","font-size:10pt; margin-top:-10pt;");
+            
+            comment_title.appendChild(comment_author_name);
+            comment_title.append(comment_published);
+            document.getElementById("post-comments").appendChild(comment_title);
+            document.getElementById("post-comments").appendChild(document.createElement("br"));
+            document.getElementById("post-comments").append(comment_content);
+            
+            document.getElementById("post-comments").appendChild(document.createElement("hr"));
+        }
     });
 }

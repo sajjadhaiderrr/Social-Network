@@ -1,16 +1,170 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 from posting.models import Post, Comment
 from api.serializers import PostSerializer, CommentSerializer
 from django.shortcuts import render
 from Accounts.models import Author
-from api.ApiHelper import get_friends
+from api.ApiHelper import *
 from django.core.paginator import Paginator
+import requests
 
 import uuid
 import json
 import datetime
+
+# get github stream
+# path: /posts/github
+class ReadGithubStream(APIView):
+    def get(self, request):
+        author_id = request.user.id
+        try:
+            author = Author.objects.get(id=author_id)
+        except:
+            print("Author not found.")
+            return None
+        github_url = author.github
+        try:
+            github_username = github_url.split("/")[3]
+        except:
+            print("Github url is wrong format.")
+            return
+        request_url = "https://api.github.com/users/" + github_username + "/events/public"
+        response = requests.get(request_url)
+        json_data = json.loads(response.text)
+
+        events = []
+        for data in json_data:
+            if (data["type"] == "GollumEvent"):
+                event = {"event_message": None, "avatar_url": None}
+                actor = data["actor"]
+                display_name = actor["display_login"]
+                avatar_url = actor["avatar_url"]
+
+                payload = data["payload"]
+                pages = payload["pages"][0]
+                event_string = display_name + " " + pages["action"] + " " + pages["page_name"]
+
+                event["event_message"] = event_string
+                event["avatar_url"] = avatar_url
+                event["date"] = data["created_at"]
+                events.append(event)
+
+            elif (data["type"] == "CreateEvent"):
+                event = {"event_message": None, "avatar_url": None}
+                actor = data["actor"]
+                display_name = actor["display_login"]
+                avatar_url = actor["avatar_url"]
+
+                payload = data["payload"]
+                repo = data["repo"]
+                if (payload["ref"] != None):
+                    event_string = display_name + " created " + payload["ref_type"] + " " + payload["ref"] + " on " + repo["name"]
+                else:
+                    event_string = display_name + " created " + payload["ref_type"] + " " + repo["name"]
+
+                event["event_message"] = event_string
+                event["avatar_url"] = avatar_url
+                event["date"] = data["created_at"]
+                events.append(event)
+
+            elif (data["type"] == "IssuesEvent"):
+                event = {"event_message": None, "avatar_url": None}
+                actor = data["actor"]
+                display_name = actor["display_login"]
+                avatar_url = actor["avatar_url"]
+
+                payload = data["payload"]
+                issue = payload["issue"]
+                event_string = "{} {} {}".format(display_name, payload["action"], issue["title"])
+
+                event["event_message"] = event_string
+                event["avatar_url"] = avatar_url
+                event["date"] = data["created_at"]
+                events.append(event)
+
+            elif (data["type"] == "IssueCommentEvent"):
+                event = {"event_message": None, "avatar_url": None}
+                actor = data["actor"]
+                display_name = actor["display_login"]
+                avatar_url = actor["avatar_url"]
+
+                payload = data["payload"]
+                issue = payload["issue"]
+                comment = payload["comment"]
+                event_string = "{} {} comment \"{}\" on issue {}".format(display_name, payload["action"], comment["body"], issue["title"])
+
+                event["event_message"] = event_string
+                event["avatar_url"] = avatar_url
+                event["date"] = data["created_at"]
+                events.append(event)
+
+            elif (data["type"] == "PullRequestEvent"):
+                event = {"event_message": None, "avatar_url": None}
+                actor = data["actor"]
+                display_name = actor["display_login"]
+                avatar_url = actor["avatar_url"]
+
+                payload = data["payload"]
+                pull_request = payload["pull_request"]
+                event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
+
+                event["event_message"] = event_string
+                event["avatar_url"] = avatar_url
+                event["date"] = data["created_at"]
+                events.append(event)
+
+            elif (data["type"] == "PushEvent"):
+                event = {"event_message": None, "avatar_url": None}
+                actor = data["actor"]
+                display_name = actor["display_login"]
+                avatar_url = actor["avatar_url"]
+
+                payload = data["payload"]
+                commits = payload["commits"]
+                commit_messages = ""
+                for commit in commits:
+                    commit_messages += "{} commited \"{}\"\n".format(display_name, commit["message"])
+                formatted = commit_messages.strip()
+
+                event["event_message"] = formatted
+                event["avatar_url"] = avatar_url
+                event["date"] = data["created_at"]
+                events.append(event)
+
+            elif (data["type"] == "DeleteEvent"):
+                event = {"event_message": None, "avatar_url": None}
+                actor = data["actor"]
+                display_name = actor["display_login"]
+                avatar_url = actor["avatar_url"]
+
+                payload = data["payload"]
+                event_string = "{} deleted {} \"{}\"".format(display_name, payload["ref_type"], payload["ref"])
+
+                event["event_message"] = event_string
+                event["avatar_url"] = avatar_url
+                event["date"] = data["created_at"]
+                events.append(event)
+
+            elif (data["type"] == "ForkEvent"):
+                event = {"event_message": None, "avatar_url": None}
+                actor = data["actor"]
+                display_name = actor["display_login"]
+                avatar_url = actor["avatar_url"]
+
+                payload = data["payload"]
+                repo = data["repo"]
+                event_string = "{} forked \"{}\"".format(display_name, repo["name"])
+
+                event["event_message"] = event_string
+                event["avatar_url"] = avatar_url
+                event["date"] = data["created_at"]
+                events.append(event)
+
+        return Response(events, status=status.HTTP_200_OK)
 
 def CheckPermissions(author, post):
     #if the visibility is set to FRIENDS,
@@ -24,17 +178,28 @@ def CheckPermissions(author, post):
         return ("This is your post", True)
     '''
     author_of_post = post.postauthor
+    from_one_host = author.host == author_of_post.host
+    print("from_one_host: ", from_one_host)
     if (post.visibility == "FRIENDS"):
-        friends = get_friends(author_of_post)
+        if from_one_host:
+            friends = get_friends(author_of_post)
+        else:
+            friends = update_friends(author_of_post, author_of_post.host)
+
         if (str(author.id) not in friends):
             return ("You are NOT a friend of the author.", False)
         return ("You are a friend of the author.", True)
-    
+
     #if the visibility is set to FOAF,
     #lets check if the current author is in
     #the posting authors friends of friends list
     if (post.visibility == "FOAF"):
-        friends = get_friends(author_of_post)
+        #friends = get_friends(author_of_post)
+        if from_one_host:
+            friends = get_friends(author_of_post)
+        else:
+            friends = update_friends(author_of_post, author_of_post.host)
+
         friends_of_friends = []
         for friend in friends:
             friends_of_friends += get_friends(Author.objects.get(pk=friend))
@@ -49,12 +214,12 @@ def CheckPermissions(author, post):
     #and we check the posting authors
     #host and compare it with the current authors
     if (post.visibility == "SERVERONLY"):
-        local_server = author_of_post.host
+        if (not from_one_host):
+            return ("You are NOT on the same server as the author.", False)
+
         friends = get_friends(author_of_post)
         if (author.id not in friends):
             return ("You are NOT a friend of the author.", False)
-        if (author.host != local_server):
-            return ("You are NOT on the same server as the author.", False)
         return ("You are a friend of and on the same server as the author.", True)
 
     #if the visibility is set to PRIVATE,
@@ -70,6 +235,10 @@ def CheckPermissions(author, post):
 
 # path: /posts
 class ReadAllPublicPosts(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     # get: All posts marked as public on the server
     def get(self, request):
         response_object = {
@@ -84,7 +253,7 @@ class ReadAllPublicPosts(APIView):
         request_url = request.build_absolute_uri("/").strip("/")
         previous_page = None
 
-        #start off by  getting the 
+        #start off by  getting the
         #page and size from the query string
         try:
             page = int(request.GET.get("page", ""))
@@ -97,15 +266,15 @@ class ReadAllPublicPosts(APIView):
 
         posts = Post.objects.filter(visibility="PUBLIC", unlisted = False).order_by('published')  # pylint: disable=maybe-no-member
         count = posts.count()
-    
-        if (page and size):           
+
+        if (page and size):
             paginator = Paginator(posts, size)
 
             if (page > paginator.num_pages):
                 posts = None
             else:
                 posts = paginator.get_page(page)
-            
+
             response_object["size"] = size
             if (page > 1):
                 previous_page = request_url + "/posts?page={}&size={}".format(page-1, size)
@@ -120,8 +289,13 @@ class ReadAllPublicPosts(APIView):
 
 # path: /posts/{post_id}
 class ReadSinglePost(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     # get: Access to a single post with id = `post_id`
     def get(self, request, post_id):
+        is_local = is_local_request(request)
         response_object = {
             "query":"getPost",
             "post": None
@@ -129,48 +303,55 @@ class ReadSinglePost(APIView):
         #first we check to see if the post with the id exists
         try:
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
-            
         except:
-            return Response(response_object, status=status.HTTP_200_OK)
-        
+            return Response(response_object, status=status.HTTP_404_NOT_FOUND)
+
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
         if (post.visibility == "PUBLIC"):
             serializer = PostSerializer(post)
             response_object["post"] = serializer.data
             return Response(response_object, status=status.HTTP_200_OK)
-        
+
         #otherwise, the other privacy settings
         #require that an author be logged in
 
-        # lets check if an author is logged in first    
+        # lets check if an author is logged in first
         # here, author has to login in order to view the posts,
         try:
-            author = Author.objects.get(id=request.user.id)
+            author = get_request_author(is_local, request)
         except:
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
-        
+
         #check if its the currently authenticated
         #users post
         if (author.id == post.postauthor.id):
             serializer = PostSerializer(post)
             response_object["post"] = serializer.data
             return Response(response_object, status=status.HTTP_200_OK)
-        
+
         check_permissions = CheckPermissions(author, post)
 
         # if current author has no permission:
         if (not check_permissions[1]):
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
-        
+
         # current user has permission
         serializer = PostSerializer(post)
         response_object["post"] = serializer.data
         return Response(response_object, status=status.HTTP_200_OK)
-    
+
 
     # put: update single post with id = post_id
     def put(self, request, post_id):
+        is_local = is_local_request(request)
+
+        if not is_local:
+            #request is from foreign user, no permission to edit post
+            response = {'success': False,
+                        'message': 'No permission'}
+            return Response(response, status=403)
+
         if (not Post.objects.filter(pk=post_id).exists()):# pylint: disable=maybe-no-member
             return Response("Invalid Post", status=400)
         else:
@@ -186,15 +367,22 @@ class ReadSinglePost(APIView):
                 return Response("Invalid data", status=400)
 
     def delete(self, request, post_id):
+        is_local = is_local_request(request)
+
+        if not is_local:
+            #request is from foreign user, no permission to edit post
+            response = {'success': False,
+                        'message': 'No permission'}
+            return Response(response, status=403)
+
         if (not Post.objects.filter(pk=post_id).exists()):  # pylint: disable=maybe-no-member
             return Response("Invalid Post", status=404)
         else:
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
-            current_user = Author.objects.get(pk=request.user.id)
 
-            if current_user.id == post.postauthor.id:
+            if request.user.id == post.postauthor.id:
                 post.delete()
-                return Response()
+                return Response("Successfuly deleted", status=204);
             return Response("Invalid data", status=400)
 
 
@@ -202,7 +390,7 @@ class ReadSinglePost(APIView):
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
     # get: Get comments of a post
     def get(self, request, post_id):
-
+        is_local = is_local_request(request)
         response_object = {
             "query":"getComments",
             "count": None,
@@ -221,7 +409,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         except:
             return Response(response_object, status=status.HTTP_200_OK)
 
-        #start off by  getting the 
+        #start off by  getting the
         #page and size from the query string
         try:
             page = int(request.GET.get("page", ""))
@@ -231,21 +419,21 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             size = int(request.GET.get("size", ""))
         except:
             size = ""
-        
+
         #if the posts visibility is set
         #to PUBLIC, we can return comments
         if (post.visibility == "PUBLIC"):
             comments = Comment.objects.filter(post=post_id).order_by('published') # pylint: disable=maybe-no-member
             count = comments.count()
-        
-            if (page and size):           
+
+            if (page and size):
                 paginator = Paginator(comments, size)
 
                 if (page > paginator.num_pages):
                     comments = None
                 else:
                     comments = paginator.get_page(page)
-                
+
                 response_object["size"] = size
                 if (page > 1):
                     previous_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page-1, size)
@@ -263,7 +451,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         #lets check if an author is logged in first
         try:
-            author = Author.objects.get(id=request.user.id)
+            author = get_request_author(is_local, request)
         except:
             return Response(response_object, status=status.HTTP_200_OK)
 
@@ -273,15 +461,15 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         if (author.id == post.postauthor.id):
             comments = Comment.objects.filter(post=post_id).order_by('published') # pylint: disable=maybe-no-member
             count = comments.count()
-        
-            if (page and size):           
+
+            if (page and size):
                 paginator = Paginator(comments, size)
 
                 if (page > paginator.num_pages):
                     comments = None
                 else:
                     comments = paginator.get_page(page)
-                
+
                 response_object["size"] = size
                 if (page > 1):
                     previous_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page-1, size)
@@ -293,14 +481,14 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["comments"] = serializer.data
             response_object["count"] = count
             return Response(response_object, status=status.HTTP_200_OK)
-        
+
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
             return Response(response_object, status=status.HTTP_200_OK)
-        
+
         comments = Comment.objects.filter(post=post_id).order_by('published') # pylint: disable=maybe-no-member
         count = comments.count()
-        
+
         if (page and size):
             paginator = Paginator(comments, size)
 
@@ -308,7 +496,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
                 comments = None
             else:
                 comments = paginator.get_page(page)
-            
+
             response_object["size"] = size
             if (page > 1):
                 previous_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page-1, size)
@@ -323,6 +511,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
     # post: Add a comment to a post
     def post(self, request, post_id):
+        is_local = is_local_request(request)
         response_object = {
             "query":"addComment",
             "type": None,
@@ -330,12 +519,11 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         }
         # initializing data
         data = request.data
-        data['author'] = request.user.id
-        data['post'] = post_id
-
+        data['published'] = datetime.datetime.now()
         #first we check to see if the post with the id exists
         try:
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
+            data['post'] = post_id
         except:
             response_object["type"] = False
             response_object["message"] = "Post does not exist."
@@ -344,14 +532,14 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         #lets check if an author is logged in first
         try:
             author = Author.objects.get(id=request.user.id)
+            data['author'] = author
         except:
             response_object["type"] = False
             response_object["message"] = "Log in to add a comment."
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
-        
         # need to check this part. 'Friend' visibility cannot work?
         if (post.visibility == "PUBLIC"):
-            serializer = CommentSerializer(data=data)
+            serializer = CommentSerializer(data=data, context={'author':author})
             if serializer.is_valid():
                 serializer.save()
                 response_object["type"] = True
@@ -364,7 +552,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         #check if its the currently authenticated
         #users post
         if (author.id == post.postauthor.id):
-            serializer = CommentSerializer(data=data)
+            serializer = CommentSerializer(data=data, context={'author':author})
             if serializer.is_valid():
                 serializer.save()
                 response_object["type"] = True
@@ -373,14 +561,14 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["type"] = False
             response_object["message"] = "Could not add comment."
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
-        
+
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
             response_object["type"] = False
             response_object["message"] = "You do not have permissions to add a comment to this post."
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
 
-        serializer = CommentSerializer(data=data)
+        serializer = CommentSerializer(data=data, context={'author':author})
         if serializer.is_valid():
             serializer.save()
 
@@ -403,7 +591,7 @@ class PostReqHandler(APIView):
     # GET: get all posts
     def get(self, request):
         #Todo: get all public posts
-        posts = Post.objects.all()# pylint: disable=maybe-no-member
+        posts = Post.objects.filter(visibility="PUBLIC")# pylint: disable=maybe-no-member
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
 
@@ -419,6 +607,10 @@ class PostReqHandler(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CommentReqHandler(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
+
     def get(self, request):
         comments = Comment.objects.all()# pylint: disable=maybe-no-member
         serializer = CommentSerializer(comments, many=True)

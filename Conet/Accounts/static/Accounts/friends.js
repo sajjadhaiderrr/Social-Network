@@ -4,7 +4,7 @@ function fetchGetRequest(url){
         mode: "cors",
         credentials: "same-origin",
         headers: {
-            "x-csrftoken": csrf_token,
+            //"x-csrftoken": csrf_token,
             "Accept": "application/json"
         }
     });
@@ -48,3 +48,23 @@ function declineRequest(author, friend){
     }
     fetchPostRequest('/unfriendrequest', send_query);
 }
+
+//first request would be set to 0 sec
+//update counts of friendrequest every 10 sec
+function setBadgeCounter(counts){
+    console.log(counts)
+    var badge = document.getElementsByClassName('badge-danger')[0];
+    if (counts > 0)
+        badge.innerHTML = counts;
+    else
+        badge.innerHTML = null;
+    setTimeout(updateFriendRequestCount, 10000);
+}
+
+function updateFriendRequestCount() {
+    fetchGetRequest('/friendrequest')
+        .then(res=>res.json())
+        .then(data=>setBadgeCounter(data['counts']));
+}
+
+setTimeout(updateFriendRequestCount, 0);

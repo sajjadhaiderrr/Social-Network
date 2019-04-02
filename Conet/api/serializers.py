@@ -4,6 +4,7 @@ from posting.models import Post, Comment
 from django.db import models
 from rest_framework import serializers
 import json
+from django.db.models import F
 
 #Author serializer for GET, PUT author profile
 class AuthorSerializer(serializers.ModelSerializer):
@@ -28,7 +29,7 @@ class Helper_AuthorSerializers(serializers.ModelSerializer):
 class Helper_CommentSerializers(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ('commentid','author', 'post', 'comment', 'contentType', 'published')
+        fields = ('id','author', 'post', 'comment', 'contentType', 'published')
 
 # Helper serializer for the api/author/{authod_id}
 class Helper_AuthorFriendSerializers(serializers.ModelSerializer):
@@ -111,8 +112,9 @@ class PostSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField('get_comments_list')
     def get_comments_list(self, obj):
         try:
-            allcomments = Comment.objects.filter(post=obj.postid).order_by('published')
-            serializer = Helper_CommentSerializers(allcomments, many=True)
+            print()
+            allcomments = Comment.objects.filter(post=obj.postid).order_by(F("published").desc())
+            serializer = CommentSerializer(allcomments, many=True)
             return serializer.data
         except Exception as e:
             return None
@@ -144,27 +146,23 @@ class PostSerializer(serializers.ModelSerializer):
         return instance
 
 class CommentSerializer(serializers.ModelSerializer):
-    # author = serializers.SerializerMethodField('get_author')
-    # post = serializers.SerializerMethodField('get_post')
+    def get_commentauthor(self, obj):
+        return Helper_AuthorSerializers(Author.objects.get(id=obj.commentauthor.id)).data
 
-    # def get_author(self, obj):
-    #     return Helper_AuthorSerializers(Author.objects.get(id=obj.author.id)).data
-
-    def get_post(self,obj):
-        return obj.comment_post.id
-
+    author = serializers.SerializerMethodField('get_commentauthor')
     class Meta:
         model = Comment
-        fields = ('commentid','author', 'post', 'comment', 'contentType', 'published')
+        fields = ('id','post','author', 'comment', 'contentType', 'published')
 
     
     def create(self, validated_data):
-        comment = Comment.objects.create(**validated_data)  # pylint: disable=maybe-no-member
+        print(validated_data)
+        data = {}
+        data['post'] = validated_data['post']
+        data['commentauthor'] = self.context['author']
+        data['comment'] = validated_data['comment']
+        data['contentType'] = validated_data['contentType']
+        comment = Comment.objects.create(**data)  # pylint: disable=maybe-no-member
         comment.save()
         return comment
-    '''
-    def create(self, validated_data):
-        author = self.context['author']
-        post = self.context['post']
-        return Comment.objects.create(author=author, post=post, **validated_data)
-    '''
+

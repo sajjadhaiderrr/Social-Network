@@ -1,38 +1,4 @@
-function addComment(post_url, id){
-    let commentForm = {
-          "comment":"",
-          "contentType":"text/plain"
-    }
 
-    commentForm.comment = document.getElementById(id).value;
-    let body = JSON.stringify(commentForm);
-    url = post_url + "/comments"
-    return fetch(url , {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        body: body,
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token
-        },
-        redirect: "follow",
-        referrer: "no-referrer",
-    })
-    .then(response => {
-        if (response.status === 200)
-        {
-          let url = window.location.href;
-          window.location = url;
-        }
-        else
-        {
-            alert(response.status);
-        }
-    });
-}
 // function to send JSON Http post request
 function sendJSONHTTPPost(url, objects, callback, remote={}) {
     var xhr = new XMLHttpRequest();
@@ -99,6 +65,43 @@ function sendFriendRequestCallback(objects) {
     new_btn.style.display = "block";
 }
 
+
+
+function addComment(post_url, id){
+    let commentForm = {
+          "comment":"",
+          "contentType":"text/plain"
+    }
+
+    commentForm.comment = document.getElementById(id).value;
+    let body = JSON.stringify(commentForm);
+    url = post_url + "/comments"
+    return fetch(url , {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        body: body,
+        headers: {
+            "Content-Type": 'application/json',
+            "Accept": 'application/json',
+            "x-csrftoken": csrf_token
+        },
+        redirect: "follow",
+        referrer: "no-referrer",
+    })
+    .then(response => {
+        if (response.status === 200)
+        {
+          let url = window.location.href;
+          window.location = url;
+        }
+        else
+        {
+        }
+    });
+}
+
 // callback function after sending unfriend request
 // - Simply change the "unfriend" button to "befriend" button
 function sendUnFriendRequestCallback(objects) {
@@ -110,7 +113,7 @@ function sendUnFriendRequestCallback(objects) {
 
 // function to send befriend request
 function sendFriendRequest(init, recv) {
-    console.log(recv.displayName)
+
     users = { "query": "friendrequest", "author": init, "friend": recv };
     sendJSONHTTPPost(init.host + "/friendrequest", users, sendFriendRequestCallback);
 }
@@ -222,9 +225,9 @@ function create_card_showing_friends(friend){
 function sendFriendsCallback(response) {
     response = JSON.parse(response);
     friends = response.friends;
-    console.log(friends)
+
     for (var i of friends) {
-        console.log(i);
+
         //var friend = JSON.parse(i);
         var friend_card = create_card_showing_friends(i);
         document.getElementById('friend-div').appendChild(friend_card);
@@ -382,17 +385,76 @@ function get_num_posts_made_callback(response){
     aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id + '/info/?host=' + user_be_viewed.host;
     document.getElementById("num-posts").appendChild(aTag);
 }
+function deletePost(post) {
+  let url = post.origin;
+  return fetch(url, {
+    method: "DELETE",
+    mode: "cors",
+    cache: "no-cache",
+    credentials: "same-origin",
+    headers: {
+        "x-csrftoken": csrf_token
+    },
+    redirect: "follow",
+    referrer: "no-referrer",
+})
+.then(response => {
+  if (response.status === 204)  {
+    window.location.reload(true);
+  }
+  else
+  {
+    alert(response.status);
+  }
+});
+}
 
+function editPost(post, divElem) {
+  console.log(window.location.origin+'/posts/'+'edit/'+post.postid+'/');
+  window.location.href = window.location.origin+'/posts/'+'edit/'+post.postid+'/';
+}
+
+
+// Reference: https://stackoverflow.com/questions/6048561/setting-onclick-to-use-current-value-of-variable-in-loop
+var deletePostHandler = function(arg) {
+  return function() { deletePost(arg); };
+}
+var editPostHandler = function(arg, arg1) {
+  return function() { editPost(arg, arg1); };
+}
 // loading and creating cards of post cards
 function get_visible_post_callback(response){
     var response = JSON.parse(response);
+
     if(response.next == "None" && response.posts==[]){
         console.log("The end");
     }else{
 
+        var i=0;
         for(post of response.posts){
+
             var card = document.createElement("div");
             card.classList.add("card","home-page-post-card");
+
+            // Card menu for delete
+            var card_menu = document.createElement("a");
+            card_menu.href="#";
+            card_menu.innerHTML = '<i class="material-icons">delete</i>';
+            card_menu.style.color = '#007bff';
+            card_menu.style.position = "absolute";
+            card_menu.style.right="15px";
+            //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
+            card_menu.onclick = deletePostHandler(post);
+
+            var card_edit = document.createElement("a");
+            card_edit.href="#";
+            card_edit.innerHTML = '<i class="material-icons">edit</i>';
+            card_edit.style.color = '#007bff';
+            card_edit.style.position = "absolute";
+            card_edit.style.right="45px";
+            //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
+            card_edit.onclick = editPostHandler(post, card_edit);
+
 
             var card_body = document.createElement("div");
             card_body.classList.add("card-body");
@@ -440,8 +502,7 @@ function get_visible_post_callback(response){
               content.setAttribute("src", post.content);
               content.setAttribute("width", "100%");
               content.setAttribute("height", "auto");
-            }
-          else if(post.contentType=="application/base64"){
+            }else if(post.contentType=="application/base64"){
               var content = document.createElement("a");
               content.setAttribute('href',post.content);
               content.innerText = "View "+post.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
@@ -450,6 +511,7 @@ function get_visible_post_callback(response){
 
             var hr = document.createElement("hr");
 
+            // for comment box and comment btn
             var commentbox = document.createElement("div");
             commentbox.classList.add("input-group", "shadow-textarea");
             var comment_textarea = document.createElement("textarea");
@@ -472,19 +534,103 @@ function get_visible_post_callback(response){
             comment_btn.innerText = "Send";
             commentbox.appendChild(comment_textarea);
             commentbox.appendChild(comment_btn);
+            
+            // for displaying comments
+            var comments_div = document.createElement("div");
+
+            for(comment of post.comments){
+                var comment_title = document.createElement("div");
+                console.log(comment);
+                var comment_author_name = document.createElement("a");
+                comment_author_name.href = "http://"+ window.location.hostname+":"+window.location.port+"/author/"+comment.author.id+"/info/?host=" + comment.author.host;
+                comment_author_name.innerText = comment.author.displayName;
+                comment_author_name.classList.add("float-sm-left", "font-weight-bold",'text-secondary');
+                comment_author_name.setAttribute("style","font-size:10pt; margin-top:-10pt;");
+
+                var comment_published = document.createElement("a");
+                comment_published.classList.add("font-weight-light", "text-muted");
+                comment_published.classList.add("float-sm-left",'text-secondary');
+                comment_published.setAttribute("style","font-size:10pt; margin-top:-10pt; margin-left:5pt;");
+                var publish_date_time = Date.parse(comment.published);
+                var now = new Date();
+                var sec_ago = (now - publish_date_time)/1000;
+                var min_ago = sec_ago / 60;
+                var hr_ago = min_ago / 60;
+                var days_ago = hr_ago / 24;
+                if (min_ago < 60){
+                    comment_published.innerText = Math.round(min_ago) + " mins. ago";
+                }else if (hr_ago < 60){
+                    comment_published.innerText = Math.round(hr_ago) + " hrs. ago";
+                }else{
+                    comment_published.innerText = Math.round(days_ago) + " days ago";
+                }
+
+                var comment_content = document.createElement("p");
+                comment_content.innerText = comment.comment;
+                comment_content.setAttribute("style","font-size:10pt; margin-top:-10pt;");
+                
+                comment_title.appendChild(comment_author_name);
+                comment_title.append(comment_published);
+                comments_div.appendChild(comment_title);
+                comments_div.appendChild(document.createElement("br"));
+                comments_div.append(comment_content);
+                
+                comments_div.appendChild(document.createElement("hr"));
+            }
 
             card_body.appendChild(card_title);
+            // Add edit/delete menu if author
+            if (user_be_viewed.id == post.author.id) {
+              card_body.appendChild(card_edit);
+              card_body.appendChild(card_menu);
+            }
             card_body.appendChild(author_name);
             card_body.appendChild(document.createElement("br"));
             card_body.appendChild(publish_time);
             card_body.appendChild(document.createElement("hr"));
             card_body.appendChild(content);
-            card_body.appendChild(hr);
+            
             card_body.appendChild(commentbox);
+            card_body.appendChild(document.createElement("hr"));
+            card_body.appendChild(comments_div);
             card.appendChild(card_body);
             document.getElementById("home_page_post_cards").appendChild(card);
             num_post_counter += 1;
         }
+    }
+}
+
+// loading and creating cards of post cards
+function fetch_github_stream_callback(response){
+    var response = JSON.parse(response);
+    for(post of response){
+        //console.log(post);
+        var card = document.createElement("div");
+        card.classList.add("card","home-page-post-card");
+
+        var card_body = document.createElement("div");
+        card_body.classList.add("card-body");
+
+        var card_title = document.createElement("a");
+        card_title.classList.add("card-title");
+        card_title.href = '/posts/' + post.postid + "/";
+        var link_to_post_page = document.createElement("h3");
+        link_to_post_page.innerText = "Github Post";
+        card_title.appendChild(link_to_post_page);
+
+        var publish_time = document.createElement("a");
+        publish_time.classList.add("font-weight-light", "text-muted");
+        publish_time.innerText = post.date;
+
+        var content = document.createElement("p");
+        content.innerText = post.event_message;
+
+        card_body.appendChild(card_title);
+        card_body.appendChild(publish_time);
+        card_body.appendChild(document.createElement("hr"));
+        card_body.appendChild(content);
+        card.appendChild(card_body);
+        document.getElementById("home_page_post_cards").appendChild(card);
     }
 }
 
@@ -499,11 +645,14 @@ function init_home_page(user){
     var follower_url = user.url+"/follower";
     var following_url = user.url + "/following";
     var fetch_posts_url = user.host + "/author/posts" + "?page="+page_number;
+    var fetch_github_stream_url = user.host + "/posts/view/github";
+    console.log(fetch_github_stream_url);
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
     sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
     sendJSONHTTPGet(following_url, request_body, get_num_following_callback);
     sendJSONHTTPGet(fetch_posts_url, request_body, get_visible_post_callback);
+    sendJSONHTTPGet(fetch_github_stream_url, request_body, fetch_github_stream_callback);
 }
 
 /*
@@ -543,16 +692,20 @@ function sendInitInfoRequestCallback(response) {
 
 function get_profile_callback(response){
     var response = JSON.parse(response);
-
     // add title
     var displayName = document.getElementById("displayName");
     displayName.innerText = response.displayName;
     user_be_viewed.displayName = response.displayName;
-    document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
-    document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
+    //
+    try{
+        document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
+        document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
+    }catch{
+        
+    }
+
     //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
     //document.getElementById("btn-unfriend").setAttribute("onClick","sendUnFriendRequest(" + current_user+ ","+user_be_viewed+");");
-
     // adding first name
     var fn = document.createElement("p");
     fn.classList.add("text-secondary", "profile-card-content");
@@ -625,6 +778,7 @@ function init_info_page(init, recv, remote, from_one_host) {
     var profile_url = recv.url;
     var friend_url = recv.url + "/friends";
     var posts_url = recv.url+"/posts";
+    var github_url = recv.url+"/posts/github";
     // for author from one host, display follower and followings
     if(from_one_host){
         var follower_url = recv.url +"/follower";
@@ -646,4 +800,5 @@ function init_info_page(init, recv, remote, from_one_host) {
         sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
     }
     sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback);
+    // sendJSONHTTPGet(github_url, request_body, fetch_github_stream_callback);
 }

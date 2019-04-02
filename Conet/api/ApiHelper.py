@@ -32,13 +32,13 @@ def get_two_authors_relation(authorObj1, authorObj2):
     return None
 
 def obtain_from_remote_node(url, host, method='GET', send_query=None, header={}):
-    header['Content-Type'] = 'application/json'
     node = Node.objects.get(foreignHost=host)  # pylint: disable=maybe-no-member
     authentication = HTTPBasicAuth(node.remoteUsername, node.remotePassword)
     try:
         if method == 'GET':
-            res = requests.get(url, auth=authentication)
+            res = requests.get(url, auth=authentication, headers=header)
         elif method == 'POST':
+            header['Content-Type'] = 'application/json'
             res = requests.post(url, headers=header, data=send_query, auth=authentication)
         else:
             return {'code': 405}
@@ -77,7 +77,7 @@ def get_friends(user):
 
 # get a friend by updating local friendship database if needed
 def update_friends(user, host):
-    host = 'http://' + host
+    localhost = host if re.match('http://', host) else 'http://' + host
     local_friends = list()
     remote_friends = dict()
 
@@ -88,7 +88,7 @@ def update_friends(user, host):
     for follower in follower_frdships:
         for following in following_frdships:
             if follower.init_id == following.recv_id:
-                if follower.init_id.host == host:
+                if follower.init_id.host == localhost:
                     local_friends.append(str(follower.init_id.id))
                 else:
                     remote_host = follower.init_id.host
@@ -100,7 +100,8 @@ def update_friends(user, host):
     for host, friends in remote_friends.items():
         friends_api = host + '/author/' + str(user.id) + '/friends'
         send_query = {'query': 'friends',
-                 'authors': friends}
+                    'author': localhost + '/author/' + str(user.id),
+                    'authors': friends}
 
         friend_query, _ = obtain_from_remote_node(url=friends_api, host=host, 
             method='POST', send_query=json.dumps(send_query))
@@ -111,7 +112,7 @@ def update_friends(user, host):
         new_remote_friends += list(friends & friend_query['authors'])
         remove_remote_friends(user, remove_list)
     
-    return local_friends + new_remote_friends
+    return (local_friends, new_remote_friends)
 
 def remove_remote_friends(local_author, remove_list):
     remote_authors = Author.objects.filter(id__in=remove_list)
@@ -156,4 +157,16 @@ def is_local_request(request):
         print(request.user.node)
     except:
         return True
+    return False
+
+def get_request_author(is_local, request):
+    if is_local:
+        return Author.objects.get(id=request.user.id)
+    else:
+        request_user_id = request.META.get('HTTP_X_REQUEST_USER_ID', '')
+        request_user_id = urls_to_ids([request_user_id])[0]
+        return Author.objects.get(id=request_user_id)  
+
+def permission_on_foaf(req_author, rcv_author, is_local):
+    #rcv_localfrds, rcv_remotefrds = update_friends(rcv_author, rcv_author.host)
     return False
