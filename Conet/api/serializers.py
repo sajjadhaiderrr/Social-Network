@@ -117,7 +117,7 @@ class PostSerializer(serializers.ModelSerializer):
             serializer = CommentSerializer(allcomments, many=True)
             return serializer.data
         except Exception as e:
-            return None
+            return e
 
     class Meta:
         model = Post
