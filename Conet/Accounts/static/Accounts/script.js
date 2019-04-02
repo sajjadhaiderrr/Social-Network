@@ -424,9 +424,9 @@ var editPostHandler = function(arg, arg1) {
 }
 // loading and creating cards of post cards
 function get_visible_post_callback(response){
-    var response = JSON.parse(response);
+    //var response = JSON.parse(response);
 
-    if(response.next == "None" && response.posts==[]){
+    if(false&&(response.next == "None" && response.posts==[])){
         console.log("The end");
     }else{
 
@@ -644,7 +644,7 @@ function init_home_page(user){
     var made_posts_url = user.url+"/madeposts";
     var follower_url = user.url+"/follower";
     var following_url = user.url + "/following";
-    var fetch_posts_url = user.host + "/author/posts" + "?page="+page_number;
+    var fetch_posts_url = user.host + "/author/posts";
     var fetch_github_stream_url = user.host + "/posts/view/github";
     console.log(fetch_github_stream_url);
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
