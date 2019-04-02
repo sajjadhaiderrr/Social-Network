@@ -1,21 +1,13 @@
-
-
-
-
-
-function addCommentPostView(post_id)
-{
+function addComment(post_url, id){
     let commentForm = {
           "comment":"",
           "contentType":"text/plain"
     }
 
-    commentForm.comment = document.getElementById("addcommenttextpostview").value;
+    commentForm.comment = document.getElementById(id).value;
     let body = JSON.stringify(commentForm);
-    let url = window.location.href.split("/")
-    url = url[0] + "//" + url[2] ;
-    console.log(commentForm);
-    return fetch(url + "/posts/" + post_id + "/comments" , {
+    url = post_url + "/comments"
+    return fetch(url , {
         method: "POST",
         mode: "cors",
         cache: "no-cache",
@@ -32,7 +24,8 @@ function addCommentPostView(post_id)
     .then(response => {
         if (response.status === 200)
         {
-            document.location.reload(true);
+          let url = window.location.href;
+          window.location = url;
         }
         else
         {
