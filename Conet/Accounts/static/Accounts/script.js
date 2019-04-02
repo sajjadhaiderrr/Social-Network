@@ -1,74 +1,4 @@
-function addComment(post_url, id){
-    let commentForm = {
-          "comment":"",
-          "contentType":"text/plain"
-    }
 
-    commentForm.comment = document.getElementById(id).value;
-    let body = JSON.stringify(commentForm);
-    url = post_url + "/comments"
-    return fetch(url , {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        body: body,
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token
-        },
-        redirect: "follow",
-        referrer: "no-referrer",
-    })
-    .then(response => {
-        if (response.status === 200)
-        {
-          let url = window.location.href;
-          window.location = url;
-        }
-        else
-        {
-            alert(response.status);
-        }
-    });
-}
-
-function addComment(post_url, id){
-    let commentForm = {
-          "comment":"",
-          "contentType":"text/plain"
-    }
-
-    commentForm.comment = document.getElementById(id).value;
-    let body = JSON.stringify(commentForm);
-    url = post_url + "/comments"
-    return fetch(url , {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        body: body,
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token
-        },
-        redirect: "follow",
-        referrer: "no-referrer",
-    })
-    .then(response => {
-        if (response.status === 200)
-        {
-          let url = window.location.href;
-          window.location = url;
-        }
-        else
-        {
-            alert(response.status);
-        }
-    });
-}
 // function to send JSON Http post request
 function sendJSONHTTPPost(url, objects, callback, remote={}) {
     var xhr = new XMLHttpRequest();
@@ -133,6 +63,44 @@ function sendFriendRequestCallback(objects) {
 
     var new_btn = document.getElementById("btn-unfriend");
     new_btn.style.display = "block";
+}
+
+
+
+function addComment(post_url, id){
+    let commentForm = {
+          "comment":"",
+          "contentType":"text/plain"
+    }
+
+    commentForm.comment = document.getElementById(id).value;
+    let body = JSON.stringify(commentForm);
+    url = post_url + "/comments"
+    return fetch(url , {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        body: body,
+        headers: {
+            "Content-Type": 'application/json',
+            "Accept": 'application/json',
+            "x-csrftoken": csrf_token
+        },
+        redirect: "follow",
+        referrer: "no-referrer",
+    })
+    .then(response => {
+        if (response.status === 200)
+        {
+          let url = window.location.href;
+          window.location = url;
+        }
+        else
+        {
+            alert(response.status);
+        }
+    });
 }
 
 // callback function after sending unfriend request
@@ -534,8 +502,7 @@ function get_visible_post_callback(response){
               content.setAttribute("src", post.content);
               content.setAttribute("width", "100%");
               content.setAttribute("height", "auto");
-            }
-          else if(post.contentType=="application/base64"){
+            }else if(post.contentType=="application/base64"){
               var content = document.createElement("a");
               content.setAttribute('href',post.content);
               content.innerText = "View "+post.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
@@ -544,6 +511,7 @@ function get_visible_post_callback(response){
 
             var hr = document.createElement("hr");
 
+            // for comment box and comment btn
             var commentbox = document.createElement("div");
             commentbox.classList.add("input-group", "shadow-textarea");
             var comment_textarea = document.createElement("textarea");
@@ -566,6 +534,11 @@ function get_visible_post_callback(response){
             comment_btn.innerText = "Send";
             commentbox.appendChild(comment_textarea);
             commentbox.appendChild(comment_btn);
+            // for displaying comments
+            
+
+
+
 
             card_body.appendChild(card_title);
             // Add edit/delete menu if author
