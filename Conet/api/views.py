@@ -122,15 +122,18 @@ class FriendRequestHandler(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        reqUsrId = request.user.id
-        try:
-            reqAuthor = Author.objects.get(pk=reqUsrId)
-            requestList = ApiHelper.get_all_friend_requests(reqAuthor)
-            response = {'query': 'friendrequest',
-                        'friends': requestList}
-            return Response(response)
-        except:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        is_local = ApiHelper.is_local_request(request)
+        if is_local:
+            reqUsrId = request.user.id
+            try:
+                reqAuthor = Author.objects.get(pk=reqUsrId)
+                requestList = ApiHelper.get_all_friend_requests(reqAuthor)
+                response = {'query': 'friendrequest_count',
+                            'counts': len(requestList)}
+                return Response(response)
+            except:
+                pass
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
     def post(self, request):
         is_local = ApiHelper.is_local_request(request)
