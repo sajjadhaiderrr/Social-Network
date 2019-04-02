@@ -37,7 +37,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
                     callback(xhr.response);
                 }
             }catch (e) {
-                alert('get xhr Error: ' + e.name);
+                console.log(url);
             }
         }
     };
