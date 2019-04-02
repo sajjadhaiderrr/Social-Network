@@ -98,7 +98,6 @@ function addComment(post_url, id){
         }
         else
         {
-            alert(response.status);
         }
     });
 }
@@ -401,7 +400,6 @@ function deletePost(post) {
 })
 .then(response => {
   if (response.status === 204)  {
-    alert("Post has been deleted!");
     window.location.reload(true);
   }
   else
@@ -439,7 +437,8 @@ function get_visible_post_callback(response){
             card.classList.add("card","home-page-post-card");
 
             // Card menu for delete
-            var card_menu = document.createElement("h5");
+            var card_menu = document.createElement("a");
+            card_menu.href="#";
             card_menu.innerHTML = '<i class="material-icons">delete</i>';
             card_menu.style.color = '#007bff';
             card_menu.style.position = "absolute";
@@ -447,7 +446,8 @@ function get_visible_post_callback(response){
             //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
             card_menu.onclick = deletePostHandler(post);
 
-            var card_edit = document.createElement("h5");
+            var card_edit = document.createElement("a");
+            card_edit.href="#";
             card_edit.innerHTML = '<i class="material-icons">edit</i>';
             card_edit.style.color = '#007bff';
             card_edit.style.position = "absolute";
@@ -534,8 +534,9 @@ function get_visible_post_callback(response){
             comment_btn.innerText = "Send";
             commentbox.appendChild(comment_textarea);
             commentbox.appendChild(comment_btn);
-            // for displaying comments
             
+            // for displaying comments
+            var comments_div = document.createEle
 
 
 
