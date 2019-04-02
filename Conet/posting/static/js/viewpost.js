@@ -79,6 +79,7 @@ function init_single_post_page(origin, authenticated){
             document.getElementById("post-content").appendChild(status_code);
         }
     }).then(json =>{
+        console.log(json);
         // display title
         document.getElementById("post-title").innerText = json.post.title;
 
