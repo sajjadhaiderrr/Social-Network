@@ -4,6 +4,7 @@ from posting.models import Post, Comment
 from django.db import models
 from rest_framework import serializers
 import json
+from django.db.models import F
 
 #Author serializer for GET, PUT author profile
 class AuthorSerializer(serializers.ModelSerializer):
@@ -28,7 +29,7 @@ class Helper_AuthorSerializers(serializers.ModelSerializer):
 class Helper_CommentSerializers(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ('commentid','author', 'post', 'comment', 'contentType', 'published')
+        fields = ('id','author', 'post', 'comment', 'contentType', 'published')
 
 # Helper serializer for the api/author/{authod_id}
 class Helper_AuthorFriendSerializers(serializers.ModelSerializer):
@@ -112,7 +113,7 @@ class PostSerializer(serializers.ModelSerializer):
     def get_comments_list(self, obj):
         try:
             print()
-            allcomments = Comment.objects.filter(post=obj.postid).order_by('published')
+            allcomments = Comment.objects.filter(post=obj.postid).order_by(F("published").desc())
             serializer = CommentSerializer(allcomments, many=True)
             return serializer.data
         except Exception as e:
@@ -151,7 +152,7 @@ class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SerializerMethodField('get_commentauthor')
     class Meta:
         model = Comment
-        fields = ('commentid','post','author', 'comment', 'contentType', 'published')
+        fields = ('id','post','author', 'comment', 'contentType', 'published')
 
     
     def create(self, validated_data):
