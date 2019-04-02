@@ -29,7 +29,7 @@ def CheckPermissions(author, post):
         if (str(author.id) not in friends):
             return ("You are NOT a friend of the author.", False)
         return ("You are a friend of the author.", True)
-    
+
     #if the visibility is set to FOAF,
     #lets check if the current author is in
     #the posting authors friends of friends list
@@ -84,7 +84,7 @@ class ReadAllPublicPosts(APIView):
         request_url = request.build_absolute_uri("/").strip("/")
         previous_page = None
 
-        #start off by  getting the 
+        #start off by  getting the
         #page and size from the query string
         try:
             page = int(request.GET.get("page", ""))
@@ -97,15 +97,15 @@ class ReadAllPublicPosts(APIView):
 
         posts = Post.objects.filter(visibility="PUBLIC", unlisted = False).order_by('published')  # pylint: disable=maybe-no-member
         count = posts.count()
-    
-        if (page and size):           
+
+        if (page and size):
             paginator = Paginator(posts, size)
 
             if (page > paginator.num_pages):
                 posts = None
             else:
                 posts = paginator.get_page(page)
-            
+
             response_object["size"] = size
             if (page > 1):
                 previous_page = request_url + "/posts?page={}&size={}".format(page-1, size)
@@ -129,45 +129,45 @@ class ReadSinglePost(APIView):
         #first we check to see if the post with the id exists
         try:
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
-            
+
         except:
             return Response(response_object, status=status.HTTP_200_OK)
-        
+
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
         if (post.visibility == "PUBLIC"):
             serializer = PostSerializer(post)
             response_object["post"] = serializer.data
             return Response(response_object, status=status.HTTP_200_OK)
-        
+
         #otherwise, the other privacy settings
         #require that an author be logged in
 
-        # lets check if an author is logged in first    
+        # lets check if an author is logged in first
         # here, author has to login in order to view the posts,
         try:
             author = Author.objects.get(id=request.user.id)
         except:
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
-        
+
         #check if its the currently authenticated
         #users post
         if (author.id == post.postauthor.id):
             serializer = PostSerializer(post)
             response_object["post"] = serializer.data
             return Response(response_object, status=status.HTTP_200_OK)
-        
+
         check_permissions = CheckPermissions(author, post)
 
         # if current author has no permission:
         if (not check_permissions[1]):
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
-        
+
         # current user has permission
         serializer = PostSerializer(post)
         response_object["post"] = serializer.data
         return Response(response_object, status=status.HTTP_200_OK)
-    
+
 
     # put: update single post with id = post_id
     def put(self, request, post_id):
@@ -190,11 +190,10 @@ class ReadSinglePost(APIView):
             return Response("Invalid Post", status=404)
         else:
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
-            current_user = Author.objects.get(pk=request.user.id)
 
-            if current_user.id == post.postauthor.id:
+            if request.user.id == post.postauthor.id:
                 post.delete()
-                return Response()
+                return Response("Successfuly deleted", status=204);
             return Response("Invalid data", status=400)
 
 
@@ -221,7 +220,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         except:
             return Response(response_object, status=status.HTTP_200_OK)
 
-        #start off by  getting the 
+        #start off by  getting the
         #page and size from the query string
         try:
             page = int(request.GET.get("page", ""))
@@ -231,21 +230,21 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             size = int(request.GET.get("size", ""))
         except:
             size = ""
-        
+
         #if the posts visibility is set
         #to PUBLIC, we can return comments
         if (post.visibility == "PUBLIC"):
             comments = Comment.objects.filter(post=post_id).order_by('published') # pylint: disable=maybe-no-member
             count = comments.count()
-        
-            if (page and size):           
+
+            if (page and size):
                 paginator = Paginator(comments, size)
 
                 if (page > paginator.num_pages):
                     comments = None
                 else:
                     comments = paginator.get_page(page)
-                
+
                 response_object["size"] = size
                 if (page > 1):
                     previous_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page-1, size)
@@ -273,15 +272,15 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         if (author.id == post.postauthor.id):
             comments = Comment.objects.filter(post=post_id).order_by('published') # pylint: disable=maybe-no-member
             count = comments.count()
-        
-            if (page and size):           
+
+            if (page and size):
                 paginator = Paginator(comments, size)
 
                 if (page > paginator.num_pages):
                     comments = None
                 else:
                     comments = paginator.get_page(page)
-                
+
                 response_object["size"] = size
                 if (page > 1):
                     previous_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page-1, size)
@@ -293,14 +292,14 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["comments"] = serializer.data
             response_object["count"] = count
             return Response(response_object, status=status.HTTP_200_OK)
-        
+
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
             return Response(response_object, status=status.HTTP_200_OK)
-        
+
         comments = Comment.objects.filter(post=post_id).order_by('published') # pylint: disable=maybe-no-member
         count = comments.count()
-        
+
         if (page and size):
             paginator = Paginator(comments, size)
 
@@ -308,7 +307,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
                 comments = None
             else:
                 comments = paginator.get_page(page)
-            
+
             response_object["size"] = size
             if (page > 1):
                 previous_page = request_url + "/posts/{}/comments?page={}&size={}".format(post_id, page-1, size)
@@ -348,7 +347,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["type"] = False
             response_object["message"] = "Log in to add a comment."
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
-        
+
         # need to check this part. 'Friend' visibility cannot work?
         if (post.visibility == "PUBLIC"):
             serializer = CommentSerializer(data=data)
@@ -373,7 +372,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["type"] = False
             response_object["message"] = "Could not add comment."
             return Response(response_object, status=status.HTTP_403_FORBIDDEN)
-        
+
         check_permissions = CheckPermissions(author, post)
         if (not check_permissions[1]):
             response_object["type"] = False

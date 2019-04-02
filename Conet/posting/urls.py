@@ -8,6 +8,7 @@ urlpatterns = [
     path('api/comments', post_api.CommentReqHandler.as_view(), name='view_comments'),
     path('create/', Helper.createPost, name='create_post'),
     path('<post_id>/', Helper.viewPost, name='post_details'),
+    path('edit/<post_id>/', Helper.editPost, name='edit_post'),
 
     ### HELPER END
 

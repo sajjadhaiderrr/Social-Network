@@ -1,3 +1,46 @@
+
+
+
+
+
+function addCommentPostView(post_id)
+{
+    let commentForm = {
+          "comment":"",
+          "contentType":"text/plain"
+    }
+
+    commentForm.comment = document.getElementById("addcommenttextpostview").value;
+    let body = JSON.stringify(commentForm);
+    let url = window.location.href.split("/")
+    url = url[0] + "//" + url[2] ;
+    console.log(commentForm);
+    return fetch(url + "/posts/" + post_id + "/comments" , {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        body: body,
+        headers: {
+            "Content-Type": 'application/json',
+            "Accept": 'application/json',
+            "x-csrftoken": csrf_token
+        },
+        redirect: "follow",
+        referrer: "no-referrer",
+    })
+    .then(response => {
+        if (response.status === 200)
+        {
+            document.location.reload(true);
+        }
+        else
+        {
+            alert(response.status);
+        }
+    });
+}
+
 function addComment(post_url, id){
     let commentForm = {
           "comment":"",
@@ -379,7 +422,44 @@ function get_num_posts_made_callback(response){
     aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id + '/info/?host=' + user_be_viewed.host;
     document.getElementById("num-posts").appendChild(aTag);
 }
+function deletePost(post) {
+  let url = post.origin;
+  return fetch(url, {
+    method: "DELETE",
+    mode: "cors",
+    cache: "no-cache",
+    credentials: "same-origin",
+    headers: {
+        "x-csrftoken": csrf_token
+    },
+    redirect: "follow",
+    referrer: "no-referrer",
+})
+.then(response => {
+  if (response.status === 204)  {
+    alert("Post has been deleted!");
+    document.reload();
+  }
+  else
+  {
+    alert(response.status);
+  }
+});
+}
 
+function editPost(post, divElem) {
+  console.log(window.location.origin+'/posts/'+'edit/'+post.postid+'/');
+  window.location.href = window.location.origin+'/posts/'+'edit/'+post.postid+'/';
+}
+
+
+// Reference: https://stackoverflow.com/questions/6048561/setting-onclick-to-use-current-value-of-variable-in-loop
+var deletePostHandler = function(arg) {
+  return function() { deletePost(arg); };
+}
+var editPostHandler = function(arg, arg1) {
+  return function() { editPost(arg, arg1); };
+}
 // loading and creating cards of post cards
 function get_visible_post_callback(response){
     var response = JSON.parse(response);
@@ -387,9 +467,29 @@ function get_visible_post_callback(response){
         console.log("The end");
     }else{
 
+        var i=0;
         for(post of response.posts){
+
             var card = document.createElement("div");
             card.classList.add("card","home-page-post-card");
+
+            // Card menu for delete
+            var card_menu = document.createElement("h5");
+            card_menu.innerHTML = '<i class="material-icons">delete</i>';
+            card_menu.style.color = '#007bff';
+            card_menu.style.position = "absolute";
+            card_menu.style.right="15px";
+            //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
+            card_menu.onclick = deletePostHandler(post);
+
+            var card_edit = document.createElement("h5");
+            card_edit.innerHTML = '<i class="material-icons">edit</i>';
+            card_edit.style.color = '#007bff';
+            card_edit.style.position = "absolute";
+            card_edit.style.right="45px";
+            //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
+            card_edit.onclick = editPostHandler(post, card_edit);
+
 
             var card_body = document.createElement("div");
             card_body.classList.add("card-body");
@@ -471,6 +571,11 @@ function get_visible_post_callback(response){
             commentbox.appendChild(comment_btn);
 
             card_body.appendChild(card_title);
+            // Add edit/delete menu if author
+            if (user_be_viewed.id == post.author.id) {
+              card_body.appendChild(card_edit);
+              card_body.appendChild(card_menu);
+            }
             card_body.appendChild(author_name);
             card_body.appendChild(document.createElement("br"));
             card_body.appendChild(publish_time);

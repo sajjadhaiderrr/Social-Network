@@ -48,10 +48,14 @@ def currentPostUserVerification(post, request):
 def createPost(request):
     return render(request, "createpost.html")
 
+def editPost(request, post_id):
+    post = Post.objects.get(pk=post_id)
+    return render(request, "editpost.html", {'post': post})
+
 def viewPost(request, post_id):
     comments = Comment.objects.filter(post=post_id)
     post = Post.objects.get(pk=post_id)
-    
+
     if post.contentType == "image/png;base64" or post.contentType == "image/jpeg;base64":
         pictureContent = True
     else:
