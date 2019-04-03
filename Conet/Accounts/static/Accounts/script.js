@@ -77,10 +77,11 @@ function addComment(post_url, id, same_host){
     if (same_host){
         header['x-csrftoken'] = csrf_token;
     }else{
-        console.log(post_url);
-        console.log(r.host);
-        console.log(post_url.includes(r.host));
+        
         for (r of remote){
+            console.log(post_url);
+            console.log(r.host);
+            console.log(post_url.includes(r.host));
             if (post_url.includes(r.host)){
                 header["Authorization"] = "Basic " + btoa(r.username + ":" + r.password);
             }
