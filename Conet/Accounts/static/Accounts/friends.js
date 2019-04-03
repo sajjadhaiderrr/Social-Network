@@ -57,8 +57,8 @@ function setBadgeCounter(counts){
     if (counts > 0)
         badge.innerHTML = counts;
     else
-        badge.innerHTML = null;
-    setTimeout(updateFriendRequestCount, 10000);
+        badge.innerHTML = "";
+    setTimeout(updateFriendRequestCount, 30000);
 }
 
 function updateFriendRequestCount() {
