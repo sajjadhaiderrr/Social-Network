@@ -32,7 +32,7 @@ function addCommentOnSinglePage(post_id, post_url, same_host){
     commentForm.comment.comment = document.getElementById("addcommenttext").value;
     console.log(commentForm);
     let body = JSON.stringify(commentForm);
-    let url = post_url
+    let url = post_url+"/comments"
     return fetch(url , {
         method: "POST",
         mode: "cors",
