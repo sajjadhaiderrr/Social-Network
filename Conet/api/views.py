@@ -604,7 +604,6 @@ class AuthorPostsAPI(APIView):
         allposts = []
         page_size = 10
         posts = Post.objects.none() # pylint: disable=maybe-no-member
-        githubPosts = getGitHubPosts(request.user.id)
 
         #get all public posts
         public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
@@ -699,7 +698,6 @@ class AuthorPostsAPI(APIView):
         response['query'] = "posts"
         response['count'] = len(allposts)
         response['size'] = len(response_posts)
-        response['githubPosts'] = githubPosts
         if(page>0):
             response['previous'] = current_user.host + "/author/posts?page="+str(page-1)
         else:
@@ -780,7 +778,6 @@ class ViewAuthorPostAPI(APIView):
         valid_req_user_id = True
         FOAF = False
         posts = Post.objects.none() # pylint: disable=maybe-no-member
-        githubPosts = getGitHubPosts(pk)
         
         try:
             author_be_viewed = Author.objects.get(pk=pk)
@@ -847,7 +844,6 @@ class ViewAuthorPostAPI(APIView):
         response['query'] = "posts"
         response['count'] = len(allposts)
         response['size'] = len(response_posts)
-        response['githubPosts'] = githubPosts
         if(page>0):
             response['previous'] = author_be_viewed.host + "/author/posts?page="+str(page-1)
 
