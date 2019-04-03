@@ -142,5 +142,13 @@ CORS_ORIGIN_ALLOW_ALL = True
 #    'DEFAULT_PAGINATION_CLASS': 'Conet.posting.pagination',
 #    'PAGE_SIZE': 50
 #}
+CORS_ALLOW_METHODS = (
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+)
 
 django_heroku.settings(locals())
