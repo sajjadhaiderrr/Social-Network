@@ -114,7 +114,7 @@ class InfoPage(APIView):
         print(host)
         print(request.get_host())
         # need to merge
-        if(request.get_host() == host[7:]):
+        if(request.get_host()[7:] == host):
             remote['host'] = host
             from_one_host = True
         else:
