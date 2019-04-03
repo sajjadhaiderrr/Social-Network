@@ -826,10 +826,10 @@ function init_info_page(init, recv, remote, from_one_host) {
         sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback);
     }else{
         // for author from another host, only shows friends and posts.
-        sendJSONHTTPGet(profile_url, {}, get_profile_callback, remote);
-        sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback, remote);
-        sendJSONHTTPGet(posts_url, request_body, get_num_posts_made_callback, remote);
-        sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback, remote);
+        sendJSONHTTPGet(profile_url, {}, get_profile_callback, remote[0]);
+        sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback, remote[0]);
+        sendJSONHTTPGet(posts_url, request_body, get_num_posts_made_callback, remote[0]);
+        sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback, remote[0]);
     }
 
     // loading follow and unfollow btn
