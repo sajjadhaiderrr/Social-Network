@@ -389,6 +389,9 @@ class ReadSinglePost(APIView):
 
 # path: /posts/{post_id}/comments
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
     # get: Get comments of a post
     def get(self, request, post_id):
         is_local = is_local_request(request)
@@ -528,14 +531,14 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["type"] = False
             response_object["message"] = "Post does not exist."
             return Response(response_object, status=status.HTTP_404_NOT_FOUND)
-        
+
         data = request.data['comment']
         data['post'] = post_id
         #print("data: ", data)
         print("is_local: ", is_local)
         if is_local:
             #lets check if an author is logged in firstst
-            print("local user: ", request.user)
+            print("local user: ", request.user.id)
             try:
                 author = Author.objects.get(id=request.user.id)
             except:
