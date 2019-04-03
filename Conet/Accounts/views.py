@@ -62,11 +62,14 @@ class ProfilePage(View):
         # get current user and user that is being viewed
         user_be_viewed_id = pk
         current_user = request.user
-        remote = {}
         nodes = Node.objects.all()
+        remote = []
         for node in nodes:
-            remote[node.foreignHost] = {'username': node.remoteUsername,
-                                        'password': node.remotePassword}
+            remote_info = {}
+            remote_info['host'] = node.foreignHost
+            remote_info['username'] = node.remoteUsername
+            remote_info['password'] = node.remotePassword
+            remote.append(remote_info)
 
         if(str(current_user.id) != str(user_be_viewed_id)):
             return HttpResponseRedirect(403)
@@ -106,12 +109,12 @@ class InfoPage(APIView):
         url = request.GET['host']+"/author/"+ str(authorId)
         
         user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
-        host = request.GET['host'][7:]
+        host = request.GET['host']
         remote = {}
         print(host)
         print(request.get_host())
         # need to merge
-        if(request.get_host() == host):
+        if(request.get_host() == host[7:]):
             remote['host'] = host
             from_one_host = True
         else:

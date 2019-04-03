@@ -12,7 +12,8 @@ function addCommentOnSinglePage(post_id, post_url, same_host){
         header['x-csrftoken'] = csrf_token;
     }else{
         header["Authorization"] = "Basic " + btoa(remote.username + ":" + remote.password);
-    }
+    };
+
     let commentForm = {
         "query":"addComment",
         "post": post_url,
@@ -32,9 +33,7 @@ function addCommentOnSinglePage(post_id, post_url, same_host){
     commentForm.comment.comment = document.getElementById("addcommenttext").value;
     console.log(commentForm);
     let body = JSON.stringify(commentForm);
-    let url = window.location.href.split("/")
-    url = url[0] + "//" + url[2] ;
-    url = url + "/posts/"+post_id+"/comments"
+    let url = post_url+"/comments"
     return fetch(url , {
         method: "POST",
         mode: "cors",
@@ -59,14 +58,16 @@ function addCommentOnSinglePage(post_id, post_url, same_host){
 }
 
 // need to be modified for remote functionality
-function init_single_post_page(origin, authenticated, request_user_id, same_host, remote={}){
+function init_single_post_page(origin, authenticated, request_user_id, same_host,remote={}){
     var url = origin;
+    console.log(url);
     var header = {"Content-Type": 'application/json',
                   "Accept": 'application/json',
                   "x-request-user-id": request_user_id};
     if (same_host){
         header['x-csrftoken'] = csrf_token;
     }else{
+        console.log(remote)
         header["Authorization"] = "Basic " + btoa(remote.username + ":" + remote.password);
     }
     return fetch(url , {
