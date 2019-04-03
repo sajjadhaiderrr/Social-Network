@@ -475,7 +475,7 @@ function get_visible_post_callback(response){
 
             var card_title = document.createElement("a");
             card_title.classList.add("card-title");
-            card_title.href = '/posts/' + post.postid + "/";
+            card_title.href = '/posts/' + post.postid + "/?host=" + post.author.host;
             var link_to_post_page = document.createElement("h3");
             link_to_post_page.innerText = post.title;
             card_title.appendChild(link_to_post_page);
@@ -631,7 +631,7 @@ function fetch_github_stream_callback(response){
 
         var card_title = document.createElement("a");
         card_title.classList.add("card-title");
-        card_title.href = '/posts/' + post.postid + "/";
+        card_title.href = '/posts/' + post.postid + "/?host=" + post.author.host ;
         var link_to_post_page = document.createElement("h3");
         link_to_post_page.innerText = "Github Post";
         card_title.appendChild(link_to_post_page);
