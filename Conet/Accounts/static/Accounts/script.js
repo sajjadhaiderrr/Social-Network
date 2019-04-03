@@ -86,6 +86,7 @@ function addComment(post_url, id, same_host){
             post_host = getLocation(post_url).host;
             remote_host = getLocation(r.host).host;
             console.log(post_host == remote_host)
+            console.log(post_url);
             if (remote_host == post_host){
                 header["Authorization"] = "Basic " + btoa(r.username + ":" + r.password);
             }
