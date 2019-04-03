@@ -135,6 +135,12 @@ def create_remote_author(authorObj):
         return (False, None)
     return (True, author[0])
 
+def update_remote_author(request_author, localcpy_author):
+    if not request_author['displayName'] == localcpy_author[0].displayName:
+        localcpy_author.update(displayName=request_author['displayName'])
+    
+    return localcpy_author[0]
+
 def format_author_posts(post_list):
     res_query = {"query": "posts",
                  "count": len(post_list),
