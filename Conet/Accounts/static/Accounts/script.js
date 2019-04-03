@@ -47,7 +47,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     try{
         xhr.setRequestHeader("x-request-user-id", request_user_id);
     }catch{
-        
+
     }
     
     if (Object.keys(remote).length === 0 && remote.constructor === Object) {
@@ -521,7 +521,7 @@ function get_visible_post_callback(response){
 
                 var card_title = document.createElement("a");
                 card_title.classList.add("card-title");
-                card_title.href = '/posts/' + post.postid + "/";
+                card_title.href = '/posts/' + post.postid +"/info/?host=" + post.author.host;
                 var link_to_post_page = document.createElement("h3");
                 link_to_post_page.innerText = post.title;
                 card_title.appendChild(link_to_post_page);
