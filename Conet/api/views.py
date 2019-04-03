@@ -447,6 +447,7 @@ class AuthorPostsAPI(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
+        print("=============")
         is_local = ApiHelper.is_local_request(request)
         allposts = []
         page_size = 10
@@ -455,7 +456,7 @@ class AuthorPostsAPI(APIView):
         #get all public posts
         public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
         posts |= public
-
+        
         try:
             foreign_posts = list()
             if is_local:
@@ -618,6 +619,7 @@ class ViewAuthorPostAPI(APIView):
     permission_classes = (IsAuthenticated,)
     
     def get(self, request, pk):
+        print("==================")
         is_local = ApiHelper.is_local_request(request)
         allposts = []
         page_size = 10
