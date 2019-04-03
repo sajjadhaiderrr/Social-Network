@@ -59,7 +59,7 @@ function addCommentOnSinglePage(post_id, post_url, same_host){
 }
 
 // need to be modified for remote functionality
-function init_single_post_page(origin, authenticated, request_user_id, same_host, remote={}){
+function init_single_post_page(origin, authenticated, request_user_id, same_host,remote={}){
     var url = origin;
     var header = {"Content-Type": 'application/json',
                   "Accept": 'application/json',
