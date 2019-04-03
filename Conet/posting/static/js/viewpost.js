@@ -19,7 +19,7 @@ function addCommentOnSinglePage(post_id, post_url, same_host){
         "post": post_url,
         "comment":{"author":{"id":current_user.id,
                              "host": current_user.host,
-                             "displayName": current_user.displayName.displayName,
+                             "displayName": current_user.displayName,
                              "url": current_user.url,
                              "github": current_user.github
                     },
