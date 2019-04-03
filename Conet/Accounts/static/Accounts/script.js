@@ -44,6 +44,12 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     xhr.open("GET", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
+    try{
+        xhr.setRequestHeader("x-request-user-id", request_user_id);
+    }catch{
+        
+    }
+    
     if (Object.keys(remote).length === 0 && remote.constructor === Object) {
         xhr.setRequestHeader("x-csrftoken", csrf_token);
     } else {
