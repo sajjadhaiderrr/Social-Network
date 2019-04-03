@@ -1,22 +1,18 @@
-function getPost(url)
-{
-    return fetch(url, {
-        method: "GET",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        headers: {
-            "Content-Type": "application/json"
-
-        },
-        redirect: "follow",
-        referrer: "no-referrer",
-    })
-    .then(response => response.json());
+function uuidv4() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
 }
 
-function addCommentOnSinglePage(post_id, current_user, post_url)
-{
+function addCommentOnSinglePage(post_id, post_url, same_host){
+    var header = {"Content-Type": 'application/json',
+                  "Accept": 'application/json',
+                  "x-request-user-id": request_user_id};
+    if (same_host){
+        header['x-csrftoken'] = csrf_token;
+    }else{
+        header["Authorization"] = "Basic " + btoa(remote.username + ":" + remote.password);
+    }
     let commentForm = {
         "query":"addComment",
         "post": post_url,
@@ -45,11 +41,7 @@ function addCommentOnSinglePage(post_id, current_user, post_url)
         cache: "no-cache",
         credentials: "same-origin",
         body: body,
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token
-        },
+        headers: header,
         redirect: "follow",
         referrer: "no-referrer",
     })
@@ -67,19 +59,22 @@ function addCommentOnSinglePage(post_id, current_user, post_url)
 }
 
 // need to be modified for remote functionality
-function init_single_post_page(origin, authenticated, request_user_id, same_host, current_user, remote={}){
-    url = origin;
+function init_single_post_page(origin, authenticated, request_user_id, same_host, remote={}){
+    var url = origin;
+    var header = {"Content-Type": 'application/json',
+                  "Accept": 'application/json',
+                  "x-request-user-id": request_user_id};
+    if (same_host){
+        header['x-csrftoken'] = csrf_token;
+    }else{
+        header["Authorization"] = "Basic " + btoa(remote.username + ":" + remote.password);
+    }
     return fetch(url , {
         method: "GET",
         mode: "cors",
         cache: "no-cache",
         credentials: "same-origin",
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token,
-            "x-request-user-id": request_user_id
-        },
+        headers: header,
         redirect: "follow",
         referrer: "no-referrer"
     }).then(response => {
@@ -158,7 +153,7 @@ function init_single_post_page(origin, authenticated, request_user_id, same_host
         comment_btn.classList.add("btn", "btn-primary");
         comment_btn.id = "addcommentbutton";
         if(authenticated == "True"){
-            comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid)} ;
+            comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid, json.post.origin, same_host)} ;
         }else{
             comment_btn.onclick = function(){window.location.replace(json.post.author.host);} ;
         }
