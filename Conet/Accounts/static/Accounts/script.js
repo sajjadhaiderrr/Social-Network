@@ -69,10 +69,11 @@ function uuidv4() {
 }
 
 function addComment(post_url, id, same_host){
-    
+
     var header = {"Content-Type": 'application/json',
                   "Accept": 'application/json',
                   "x-request-user-id": request_user_id};
+
     if (same_host){
         header['x-csrftoken'] = csrf_token;
     }else{
@@ -109,6 +110,7 @@ function addComment(post_url, id, same_host){
         credentials: "same-origin",
         body: body,
         headers: header,
+
         redirect: "follow",
         referrer: "no-referrer",
     })
@@ -639,7 +641,7 @@ function fetch_github_stream_callback(response){
 
         var card_title = document.createElement("a");
         card_title.classList.add("card-title");
-        card_title.href = '/posts/' + post.postid + "/";
+        card_title.href = '/posts/' + post.postid + "/?host=" + post.author.host ;
         var link_to_post_page = document.createElement("h3");
         link_to_post_page.innerText = "Github Post";
         card_title.appendChild(link_to_post_page);
