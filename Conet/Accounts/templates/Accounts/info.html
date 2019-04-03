@@ -11,7 +11,7 @@
             request_user_id = '{{ request.user.id }}';
             user_be_viewed = {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' }
             user_be_viewed_id = '{{user_be_viewed_id}}';
-            remote = [{"hose":'{{ remote.host }}', "username":'{{ remote.username }}', "password":"{{remote.password}}"}];
+            remote = [{"host":'{{ remote.host }}', "username":'{{ remote.username }}', "password":"{{remote.password}}"}];
             // send request to given host about given authorId
             if ('{{ from_one_host }}' == "True"){
                 init_info_page(current_user, user_be_viewed, remote, true);
