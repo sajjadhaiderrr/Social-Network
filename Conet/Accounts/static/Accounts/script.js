@@ -1,81 +1,4 @@
 
-
-
-
-
-function addCommentPostView(post_id)
-{
-    let commentForm = {
-          "comment":"",
-          "contentType":"text/plain"
-    }
-
-    commentForm.comment = document.getElementById("addcommenttextpostview").value;
-    let body = JSON.stringify(commentForm);
-    let url = window.location.href.split("/")
-    url = url[0] + "//" + url[2] ;
-    console.log(commentForm);
-    return fetch(url + "/posts/" + post_id + "/comments" , {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        body: body,
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token
-        },
-        redirect: "follow",
-        referrer: "no-referrer",
-    })
-    .then(response => {
-        if (response.status === 200)
-        {
-            document.location.reload(true);
-        }
-        else
-        {
-            alert(response.status);
-        }
-    });
-}
-
-function addComment(post_url, id){
-    let commentForm = {
-          "comment":"",
-          "contentType":"text/plain"
-    }
-
-    commentForm.comment = document.getElementById(id).value;
-    let body = JSON.stringify(commentForm);
-    url = post_url + "/comments"
-    return fetch(url , {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        body: body,
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token
-        },
-        redirect: "follow",
-        referrer: "no-referrer",
-    })
-    .then(response => {
-        if (response.status === 200)
-        {
-          let url = window.location.href;
-          window.location = url;
-        }
-        else
-        {
-            alert(response.status);
-        }
-    });
-}
 // function to send JSON Http post request
 function sendJSONHTTPPost(url, objects, callback, remote={}) {
     var xhr = new XMLHttpRequest();
@@ -85,7 +8,8 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
                 callback(xhr.response);
             }
             catch (e) {
-                alert('Error: ' + e.name);
+                //alert('XHR Error: ' + e.name);
+                console.log(url);
             }
         }
     };
@@ -108,14 +32,10 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4) {
-            try {
-                if (xhr.status == 200) {
-                    callback(xhr.response);
-                }
+            if (xhr.status == 200) {
+                callback(xhr.response);
             }
-            catch (e) {
-                alert('Error: ' + e.name);
-            }
+            
         }
     };
     if (xhr.overrideMimeType) {
@@ -142,6 +62,59 @@ function sendFriendRequestCallback(objects) {
     new_btn.style.display = "block";
 }
 
+function uuidv4() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+}
+
+function addComment(post_url, id){
+    let commentForm = {
+        "query":"addComment",
+        "post": post_url,
+        "comment":{"author":{"id":current_user.id,
+                             "host": current_user.host,
+                             "displayName": current_user.displayName.displayName,
+                             "url": current_user.url,
+                             "github": current_user.github
+                    },
+                   "comment":"",
+                   "contentType":"text/plain",
+                   "published": new Date().toISOString(),
+                   "id": uuidv4()    
+        }
+    };
+
+    commentForm.comment.comment = document.getElementById(id).value;
+    console.log(commentForm);
+    let body = JSON.stringify(commentForm);
+    url = post_url + "/comments"
+    return fetch(url , {
+        method: "POST",
+        mode: "cors",
+        cache: "no-cache",
+        credentials: "same-origin",
+        body: body,
+        headers: {
+            "Content-Type": 'application/json',
+            "Accept": 'application/json',
+            "x-csrftoken": csrf_token
+        },
+        redirect: "follow",
+        referrer: "no-referrer",
+    })
+    .then(response => {
+        if (response.status === 200)
+        {
+          let url = window.location.href;
+          window.location = url;
+        }
+        else
+        {
+        }
+    });
+}
+
 // callback function after sending unfriend request
 // - Simply change the "unfriend" button to "befriend" button
 function sendUnFriendRequestCallback(objects) {
@@ -153,7 +126,7 @@ function sendUnFriendRequestCallback(objects) {
 
 // function to send befriend request
 function sendFriendRequest(init, recv) {
-    console.log(recv.displayName)
+
     users = { "query": "friendrequest", "author": init, "friend": recv };
     sendJSONHTTPPost(init.host + "/friendrequest", users, sendFriendRequestCallback);
 }
@@ -265,9 +238,9 @@ function create_card_showing_friends(friend){
 function sendFriendsCallback(response) {
     response = JSON.parse(response);
     friends = response.friends;
-    console.log(friends)
+
     for (var i of friends) {
-        console.log(i);
+
         //var friend = JSON.parse(i);
         var friend_card = create_card_showing_friends(i);
         document.getElementById('friend-div').appendChild(friend_card);
@@ -440,7 +413,6 @@ function deletePost(post) {
 })
 .then(response => {
   if (response.status === 204)  {
-    alert("Post has been deleted!");
     window.location.reload(true);
   }
   else
@@ -467,10 +439,9 @@ var editPostHandler = function(arg, arg1) {
 function get_visible_post_callback(response){
     var response = JSON.parse(response);
     console.log(response);
-    if(response.next == "None" && response.posts==[]){
+    if(false&&(response.next == "None" && response.posts==[])){
         console.log("The end");
     }else{
-
         var i=0;
         for(post of response.posts){
 
@@ -478,7 +449,8 @@ function get_visible_post_callback(response){
             card.classList.add("card","home-page-post-card");
 
             // Card menu for delete
-            var card_menu = document.createElement("h5");
+            var card_menu = document.createElement("a");
+            card_menu.href="#";
             card_menu.innerHTML = '<i class="material-icons">delete</i>';
             card_menu.style.color = '#007bff';
             card_menu.style.position = "absolute";
@@ -486,7 +458,8 @@ function get_visible_post_callback(response){
             //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
             card_menu.onclick = deletePostHandler(post);
 
-            var card_edit = document.createElement("h5");
+            var card_edit = document.createElement("a");
+            card_edit.href="#";
             card_edit.innerHTML = '<i class="material-icons">edit</i>';
             card_edit.style.color = '#007bff';
             card_edit.style.position = "absolute";
@@ -541,8 +514,7 @@ function get_visible_post_callback(response){
               content.setAttribute("src", post.content);
               content.setAttribute("width", "100%");
               content.setAttribute("height", "auto");
-            }
-          else if(post.contentType=="application/base64"){
+            }else if(post.contentType=="application/base64"){
               var content = document.createElement("a");
               content.setAttribute('href',post.content);
               content.innerText = "View "+post.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
@@ -551,6 +523,7 @@ function get_visible_post_callback(response){
 
             var hr = document.createElement("hr");
 
+            // for comment box and comment btn
             var commentbox = document.createElement("div");
             commentbox.classList.add("input-group", "shadow-textarea");
             var comment_textarea = document.createElement("textarea");
@@ -565,7 +538,7 @@ function get_visible_post_callback(response){
             comment_btn.id = "addcommentbutton"+num_post_counter;
             // if user is logged in, give him permision to add comment
             if(current_user.id != "None"){
-                comment_btn.setAttribute("onClick","addComment('" + post.origin+ "','"+comment_textarea.id+"');");
+                comment_btn.setAttribute("onClick","addComment('" + post.origin+ "','"+comment_textarea.id + "');");
             }else{
                 // else: redirect to login page
                 comment_btn.onclick = function(){window.location.replace(post.author.host);}
@@ -573,6 +546,49 @@ function get_visible_post_callback(response){
             comment_btn.innerText = "Send";
             commentbox.appendChild(comment_textarea);
             commentbox.appendChild(comment_btn);
+            
+            // for displaying comments
+            var comments_div = document.createElement("div");
+
+            for(comment of post.comments){
+                var comment_title = document.createElement("div");
+                console.log(comment);
+                var comment_author_name = document.createElement("a");
+                comment_author_name.href = "http://"+ window.location.hostname+":"+window.location.port+"/author/"+comment.author.id+"/info/?host=" + comment.author.host;
+                comment_author_name.innerText = comment.author.displayName;
+                comment_author_name.classList.add("float-sm-left", "font-weight-bold",'text-secondary');
+                comment_author_name.setAttribute("style","font-size:10pt; margin-top:-10pt;");
+
+                var comment_published = document.createElement("a");
+                comment_published.classList.add("font-weight-light", "text-muted");
+                comment_published.classList.add("float-sm-left",'text-secondary');
+                comment_published.setAttribute("style","font-size:10pt; margin-top:-10pt; margin-left:5pt;");
+                var publish_date_time = Date.parse(comment.published);
+                var now = new Date();
+                var sec_ago = (now - publish_date_time)/1000;
+                var min_ago = sec_ago / 60;
+                var hr_ago = min_ago / 60;
+                var days_ago = hr_ago / 24;
+                if (min_ago < 60){
+                    comment_published.innerText = Math.round(min_ago) + " mins. ago";
+                }else if (hr_ago < 60){
+                    comment_published.innerText = Math.round(hr_ago) + " hrs. ago";
+                }else{
+                    comment_published.innerText = Math.round(days_ago) + " days ago";
+                }
+
+                var comment_content = document.createElement("p");
+                comment_content.innerText = comment.comment;
+                comment_content.setAttribute("style","font-size:10pt; margin-top:-10pt;");
+                
+                comment_title.appendChild(comment_author_name);
+                comment_title.append(comment_published);
+                comments_div.appendChild(comment_title);
+                comments_div.appendChild(document.createElement("br"));
+                comments_div.append(comment_content);
+                
+                comments_div.appendChild(document.createElement("hr"));
+            }
 
             card_body.appendChild(card_title);
             // Add edit/delete menu if author
@@ -585,8 +601,10 @@ function get_visible_post_callback(response){
             card_body.appendChild(publish_time);
             card_body.appendChild(document.createElement("hr"));
             card_body.appendChild(content);
-            card_body.appendChild(hr);
+            
             card_body.appendChild(commentbox);
+            card_body.appendChild(document.createElement("hr"));
+            card_body.appendChild(comments_div);
             card.appendChild(card_body);
             document.getElementById("home_page_post_cards").appendChild(card);
             num_post_counter += 1;
@@ -598,7 +616,7 @@ function get_visible_post_callback(response){
 function fetch_github_stream_callback(response){
     var response = JSON.parse(response);
     for(post of response){
-        console.log(post);
+        //console.log(post);
         var card = document.createElement("div");
         card.classList.add("card","home-page-post-card");
 
@@ -638,7 +656,7 @@ function init_home_page(user){
     var made_posts_url = user.url+"/madeposts";
     var follower_url = user.url+"/follower";
     var following_url = user.url + "/following";
-    var fetch_posts_url = user.host + "/author/posts" + "?page="+page_number;
+    var fetch_posts_url = user.host + "/author/posts";
     var fetch_github_stream_url = user.host + "/posts/view/github";
     console.log(fetch_github_stream_url);
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
@@ -700,7 +718,6 @@ function get_profile_callback(response){
 
     //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
     //document.getElementById("btn-unfriend").setAttribute("onClick","sendUnFriendRequest(" + current_user+ ","+user_be_viewed+");");
-    console.log(response.first_name);
     // adding first name
     var fn = document.createElement("p");
     fn.classList.add("text-secondary", "profile-card-content");
@@ -783,17 +800,19 @@ function init_info_page(init, recv, remote, from_one_host) {
         sendJSONHTTPGet(posts_url, request_body, get_num_posts_made_callback);
         sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
         sendJSONHTTPGet(following_url, request_body, get_num_following_callback);
+        sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback);
     }else{
         // for author from another host, only shows friends and posts.
         sendJSONHTTPGet(profile_url, {}, get_profile_callback, remote);
         sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback, remote);
         sendJSONHTTPGet(posts_url, request_body, get_num_posts_made_callback, remote);
+        sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback, remote);
     }
 
     // loading follow and unfollow btn
     if(init.id != recv.id && init.id!="None"){
         sendJSONHTTPGet(init.host + "/author/" + init.id + "/following", request_body, sendInitInfoRequestCallback);
     }
-    sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback);
+    //sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback, remote);
     // sendJSONHTTPGet(github_url, request_body, fetch_github_stream_callback);
 }

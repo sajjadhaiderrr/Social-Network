@@ -5,12 +5,22 @@
 
 {% block content %}
 {% include 'Accounts/nav.html' %}
-
+    <script src="http://wzrd.in/standalone/uuid%2Fv4@latest"></script>
     <script>
-    init_single_post_page('{{ post.origin }}', '{{ user.is_authenticated }}');
+    var post_url = '{{ post_url }}';
+    var user_authenticate = '{{ user.is_authenticated }}';
+    var request_user_id = '{{ request_user_id }}';
+    var from_one_host = '{{ from_one_host }}';
+    var remote = {"host":"{{ remote.host }}","username":'{{ remote.username }}', "password":"{{remote.password}}"}
+    current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}', "github": '{{ request.user.github }}'  };
+    if(from_one_host == 'True'){
+      init_single_post_page(post_url, user_authenticate, request_user_id, true, current_user, remote);
+    }else{
+      init_single_post_page(post_url, user_authenticate, request_user_id, false, current_user, remote);
+    }
+    
     </script>
     <div class="content" style="margin-left:10%; margin-right:10%;">
-
       <div class="row" >
         <!-- info part -->
         <div class="col-sm-3">

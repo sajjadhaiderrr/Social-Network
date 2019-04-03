@@ -131,4 +131,4 @@ dmypy.json
 
 __pycache__/
 migrations/
-migrations1/
+migrations1/ 

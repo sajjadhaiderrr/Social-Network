@@ -53,16 +53,26 @@ def editPost(request, post_id):
     return render(request, "editpost.html", {'post': post})
 
 def viewPost(request, post_id):
-    comments = Comment.objects.filter(post=post_id)
-    post = Post.objects.get(pk=post_id)
-
-    if post.contentType == "image/png;base64" or post.contentType == "image/jpeg;base64":
-        pictureContent = True
+    url = request.GET['host']+"/post/"+ str(post_id)
+        
+    #user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
+    host = request.GET['host'][7:]
+    remote = {}
+    # need to merge
+    if(request.get_host() == host):
+        remote['host'] = host
+        from_one_host = True
     else:
-        pictureContent = False
-    print("good for now")
-    return render(request, "viewpost.html", {
-                                         'pictureContent': pictureContent,
-                                         'post':post, 'comments': comments
-                                             })
+        from_one_host = False
+        node = Node.objects.get(foreignHost=request.GET['host'])
+        remote['host'] = host
+        remote['username'] = node.remoteUsername
+        remote['password'] = node.remotePassword
+    response = render(request, "viewpost.html", \
+               {'post_url': url,\
+                'remote': remote, \
+                'from_one_host': from_one_host, \
+                'request_user_id': request.user.id})
+    #print("good for now")
+    return response
 ''' VIEW HELPER END '''

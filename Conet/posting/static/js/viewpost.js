@@ -7,6 +7,7 @@ function getPost(url)
         credentials: "same-origin",
         headers: {
             "Content-Type": "application/json"
+
         },
         redirect: "follow",
         referrer: "no-referrer",
@@ -14,14 +15,26 @@ function getPost(url)
     .then(response => response.json());
 }
 
-function addCommentOnSinglePage(post_id)
+function addCommentOnSinglePage(post_id, current_user, post_url)
 {
     let commentForm = {
-          "comment":"",
-          "contentType":"text/plain"
+        "query":"addComment",
+        "post": post_url,
+        "comment":{"author":{"id":current_user.id,
+                             "host": current_user.host,
+                             "displayName": current_user.displayName.displayName,
+                             "url": current_user.url,
+                             "github": current_user.github
+                    },
+                   "comment":"",
+                   "contentType":"text/plain",
+                   "published": new Date().toISOString(),
+                   "id": uuidv4()    
+        }
     }
 
-    commentForm.comment = document.getElementById("addcommenttext").value;
+    commentForm.comment.comment = document.getElementById("addcommenttext").value;
+    console.log(commentForm);
     let body = JSON.stringify(commentForm);
     let url = window.location.href.split("/")
     url = url[0] + "//" + url[2] ;
@@ -54,7 +67,7 @@ function addCommentOnSinglePage(post_id)
 }
 
 // need to be modified for remote functionality
-function init_single_post_page(origin, authenticated){
+function init_single_post_page(origin, authenticated, request_user_id, same_host, current_user, remote={}){
     url = origin;
     return fetch(url , {
         method: "GET",
@@ -64,13 +77,12 @@ function init_single_post_page(origin, authenticated){
         headers: {
             "Content-Type": 'application/json',
             "Accept": 'application/json',
-            "x-csrftoken": csrf_token
+            "x-csrftoken": csrf_token,
+            "x-request-user-id": request_user_id
         },
         redirect: "follow",
-        referrer: "no-referrer",
-
-    })
-    .then(response => {
+        referrer: "no-referrer"
+    }).then(response => {
         if (response.status === 200){
             return response.json();
         }else{
@@ -79,6 +91,7 @@ function init_single_post_page(origin, authenticated){
             document.getElementById("post-content").appendChild(status_code);
         }
     }).then(json =>{
+        console.log(json);
         // display title
         document.getElementById("post-title").innerText = json.post.title;
 
@@ -155,5 +168,46 @@ function init_single_post_page(origin, authenticated){
         commentbox.appendChild(comment_textarea);
         commentbox.appendChild(comment_btn);
         document.getElementById("create-comment").appendChild(commentbox);
+        
+        document.getElementById("post-comments").appendChild(document.createElement("hr"))
+        for(comment of json.post.comments){
+            var comment_title = document.createElement("div");
+            console.log(comment);
+            var comment_author_name = document.createElement("a");
+            comment_author_name.href = "http://"+ window.location.hostname+":"+window.location.port+"/author/"+comment.author.id+"/info/?host=" + comment.author.host;
+            comment_author_name.innerText = comment.author.displayName;
+            comment_author_name.classList.add("float-sm-left", "font-weight-bold",'text-secondary');
+            comment_author_name.setAttribute("style","font-size:10pt; margin-top:-10pt;");
+
+            var comment_published = document.createElement("a");
+            comment_published.classList.add("font-weight-light", "text-muted");
+            comment_published.classList.add("float-sm-left",'text-secondary');
+            comment_published.setAttribute("style","font-size:10pt; margin-top:-10pt; margin-left:5pt;");
+            var publish_date_time = Date.parse(comment.published);
+            var now = new Date();
+            var sec_ago = (now - publish_date_time)/1000;
+            var min_ago = sec_ago / 60;
+            var hr_ago = min_ago / 60;
+            var days_ago = hr_ago / 24;
+            if (min_ago < 60){
+                comment_published.innerText = Math.round(min_ago) + " mins. ago";
+            }else if (hr_ago < 60){
+                comment_published.innerText = Math.round(hr_ago) + " hrs. ago";
+            }else{
+                comment_published.innerText = Math.round(days_ago) + " days ago";
+            }
+
+            var comment_content = document.createElement("p");
+            comment_content.innerText = comment.comment;
+            comment_content.setAttribute("style","font-size:10pt; margin-top:-10pt;");
+            
+            comment_title.appendChild(comment_author_name);
+            comment_title.append(comment_published);
+            document.getElementById("post-comments").appendChild(comment_title);
+            document.getElementById("post-comments").appendChild(document.createElement("br"));
+            document.getElementById("post-comments").append(comment_content);
+            
+            document.getElementById("post-comments").appendChild(document.createElement("hr"));
+        }
     });
 }
