@@ -112,7 +112,6 @@ class PostSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField('get_comments_list')
     def get_comments_list(self, obj):
         try:
-            print()
             allcomments = Comment.objects.filter(post=obj.postid).order_by(F("published").desc())
             serializer = CommentSerializer(allcomments, many=True)
             return serializer.data

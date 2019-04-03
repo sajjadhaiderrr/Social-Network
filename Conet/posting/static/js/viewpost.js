@@ -7,6 +7,7 @@ function getPost(url)
         credentials: "same-origin",
         headers: {
             "Content-Type": "application/json"
+
         },
         redirect: "follow",
         referrer: "no-referrer",
@@ -14,14 +15,26 @@ function getPost(url)
     .then(response => response.json());
 }
 
-function addCommentOnSinglePage(post_id)
+function addCommentOnSinglePage(post_id, current_user, post_url)
 {
     let commentForm = {
-          "comment":"",
-          "contentType":"text/plain"
+        "query":"addComment",
+        "post": post_url,
+        "comment":{"author":{"id":current_user.id,
+                             "host": current_user.host,
+                             "displayName": current_user.displayName.displayName,
+                             "url": current_user.url,
+                             "github": current_user.github
+                    },
+                   "comment":"",
+                   "contentType":"text/plain",
+                   "published": new Date().toISOString(),
+                   "id": uuidv4()    
+        }
     }
 
-    commentForm.comment = document.getElementById("addcommenttext").value;
+    commentForm.comment.comment = document.getElementById("addcommenttext").value;
+    console.log(commentForm);
     let body = JSON.stringify(commentForm);
     let url = window.location.href.split("/")
     url = url[0] + "//" + url[2] ;
@@ -54,7 +67,7 @@ function addCommentOnSinglePage(post_id)
 }
 
 // need to be modified for remote functionality
-function init_single_post_page(origin, authenticated){
+function init_single_post_page(origin, authenticated, request_user_id, same_host, current_user, remote={}){
     url = origin;
     return fetch(url , {
         method: "GET",
@@ -64,13 +77,12 @@ function init_single_post_page(origin, authenticated){
         headers: {
             "Content-Type": 'application/json',
             "Accept": 'application/json',
-            "x-csrftoken": csrf_token
+            "x-csrftoken": csrf_token,
+            "x-request-user-id": request_user_id
         },
         redirect: "follow",
-        referrer: "no-referrer",
-
-    })
-    .then(response => {
+        referrer: "no-referrer"
+    }).then(response => {
         if (response.status === 200){
             return response.json();
         }else{
