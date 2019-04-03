@@ -40,7 +40,7 @@ def getGitHubPosts(author_id):
             github_username = github_url.split("/")[3]
         except:
             print("Github url is wrong format.")
-            return
+            return {}
         request_url = "https://api.github.com/users/" + github_username + "/events/public"
         response = requests.get(request_url)
         json_data = json.loads(response.text)

@@ -47,7 +47,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     try{
         xhr.setRequestHeader("x-request-user-id", request_user_id);
     }catch{
-        
+
     }
     
     if (Object.keys(remote).length === 0 && remote.constructor === Object) {
@@ -495,7 +495,6 @@ function get_visible_post_callback(response){
 
                 var card = document.createElement("div");
                 card.classList.add("card","home-page-post-card");
-
                 // Card menu for delete
                 var card_menu = document.createElement("a");
                 card_menu.href="#";
@@ -505,7 +504,6 @@ function get_visible_post_callback(response){
                 card_menu.style.right="15px";
                 //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
                 card_menu.onclick = deletePostHandler(post);
-
                 var card_edit = document.createElement("a");
                 card_edit.href="#";
                 card_edit.innerHTML = '<i class="material-icons">edit</i>';
@@ -514,18 +512,14 @@ function get_visible_post_callback(response){
                 card_edit.style.right="45px";
                 //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
                 card_edit.onclick = editPostHandler(post, card_edit);
-
-
                 var card_body = document.createElement("div");
                 card_body.classList.add("card-body");
-
                 var card_title = document.createElement("a");
                 card_title.classList.add("card-title");
-                card_title.href = '/posts/' + post.postid + "/";
+                card_title.href = '/posts/' + post.postid + "/?host=" + post.author.host;
                 var link_to_post_page = document.createElement("h3");
                 link_to_post_page.innerText = post.title;
                 card_title.appendChild(link_to_post_page);
-
                 /* modify for remote */
                 var author_name = document.createElement("a")
                 author_name.classList.add("font-weight-light", "text-muted");
@@ -547,10 +541,9 @@ function get_visible_post_callback(response){
                     publish_time.innerText = Math.round(days_ago) + " days ago";
                 }
                 publish_time.href = '/posts/' + post.postid + "/";
-
                 if (post.contentType=="text/plain") {
-                var content = document.createElement("p");
-                content.innerText = post.content;
+                  var content = document.createElement("p");
+                  content.innerText = post.content;
                 }else if(post.contentType=="text/markdown"){
                     var converter = new showdown.Converter();
                     var md = post.content;
@@ -558,19 +551,17 @@ function get_visible_post_callback(response){
                     var content = document.createElement("div");
                     content.innerHTML = html;
                 } else if(post.contentType=="image/png;base64" || post.contentType=="image/jpeg;base64" ){
-                var content = document.createElement("img");
-                content.setAttribute("src", post.content);
-                content.setAttribute("width", "100%");
-                content.setAttribute("height", "auto");
+                  var content = document.createElement("img");
+                  content.setAttribute("src", post.content);
+                  content.setAttribute("width", "100%");
+                  content.setAttribute("height", "auto");
                 }else if(post.contentType=="application/base64"){
-                var content = document.createElement("a");
-                content.setAttribute('href',post.content);
-                content.innerText = "View "+post.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
-                content.click()
+                  var content = document.createElement("a");
+                  content.setAttribute('href',post.content);
+                  content.innerText = "View "+post.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
+                  content.click()
                 }
-
                 var hr = document.createElement("hr");
-
                 // for comment box and comment btn
                 var commentbox = document.createElement("div");
                 commentbox.classList.add("input-group", "shadow-textarea");
@@ -580,7 +571,6 @@ function get_visible_post_callback(response){
                 comment_textarea.setAttribute("rows", "1");
                 comment_textarea.setAttribute("placeholder", "Comment...");
                 comment_textarea.setAttribute("style", "resize:none");
-
                 var comment_btn = document.createElement("span");
                 comment_btn.classList.add("btn", "btn-primary");
                 comment_btn.id = "addcommentbutton"+num_post_counter;
@@ -598,10 +588,8 @@ function get_visible_post_callback(response){
                 comment_btn.innerText = "Send";
                 commentbox.appendChild(comment_textarea);
                 commentbox.appendChild(comment_btn);
-
                 // for displaying comments
                 var comments_div = document.createElement("div");
-
                 for(comment of post.comments){
                     var comment_title = document.createElement("div");
                     console.log(comment);
@@ -610,7 +598,6 @@ function get_visible_post_callback(response){
                     comment_author_name.innerText = comment.author.displayName;
                     comment_author_name.classList.add("float-sm-left", "font-weight-bold",'text-secondary');
                     comment_author_name.setAttribute("style","font-size:10pt; margin-top:-10pt;");
-
                     var comment_published = document.createElement("a");
                     comment_published.classList.add("font-weight-light", "text-muted");
                     comment_published.classList.add("float-sm-left",'text-secondary');
@@ -628,32 +615,27 @@ function get_visible_post_callback(response){
                     }else{
                         comment_published.innerText = Math.round(days_ago) + " days ago";
                     }
-
                     var comment_content = document.createElement("p");
                     comment_content.innerText = comment.comment;
                     comment_content.setAttribute("style","font-size:10pt; margin-top:-10pt;");
-
                     comment_title.appendChild(comment_author_name);
                     comment_title.append(comment_published);
                     comments_div.appendChild(comment_title);
                     comments_div.appendChild(document.createElement("br"));
                     comments_div.append(comment_content);
-
                     comments_div.appendChild(document.createElement("hr"));
                 }
-
                 card_body.appendChild(card_title);
                 // Add edit/delete menu if author
                 if (current_user.id == post.author.id) {
-                card_body.appendChild(card_edit);
-                card_body.appendChild(card_menu);
+                  card_body.appendChild(card_edit);
+                  card_body.appendChild(card_menu);
                 }
                 card_body.appendChild(author_name);
                 card_body.appendChild(document.createElement("br"));
                 card_body.appendChild(publish_time);
                 card_body.appendChild(document.createElement("hr"));
                 card_body.appendChild(content);
-
                 card_body.appendChild(commentbox);
                 card_body.appendChild(document.createElement("hr"));
                 card_body.appendChild(comments_div);
