@@ -68,13 +68,14 @@ function uuidv4() {
     );
 }
 
-function addComment(post_url, id){
+function addComment(post_url, id, same_host){
+
     let commentForm = {
         "query":"addComment",
         "post": post_url,
         "comment":{"author":{"id":current_user.id,
                              "host": current_user.host,
-                             "displayName": current_user.displayName.displayName,
+                             "displayName": current_user.displayName,
                              "url": current_user.url,
                              "github": current_user.github
                     },
@@ -538,7 +539,11 @@ function get_visible_post_callback(response){
             comment_btn.id = "addcommentbutton"+num_post_counter;
             // if user is logged in, give him permision to add comment
             if(current_user.id != "None"){
-                comment_btn.setAttribute("onClick","addComment('" + post.origin+ "','"+comment_textarea.id + "');");
+                var same_host = true;
+                if (post.author.host != current_user.host){
+                    var same_host = false;
+                }
+                comment_btn.setAttribute("onClick","addComment('" + post.origin+ "','"+comment_textarea.id +"',"+same_host +");");
             }else{
                 // else: redirect to login page
                 comment_btn.onclick = function(){window.location.replace(post.author.host);}
