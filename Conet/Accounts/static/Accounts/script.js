@@ -69,7 +69,31 @@ function uuidv4() {
 }
 
 function addComment(post_url, id, same_host){
+    // Reference: https://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
+    var getLocation = function(href) {
+        var l = document.createElement("a");
+        l.href = href;
+        return l;
+    };
 
+    var header = {"Content-Type": 'application/json',
+                  "Accept": 'application/json',
+                  "x-request-user-id": request_user_id};
+    if (same_host){
+        header['x-csrftoken'] = csrf_token;
+    }else{
+        for (r of remote){
+            post_host = getLocation(post_url).host;
+            remote_host = getLocation(r.host).host;
+            console.log(post_host == remote_host)
+            console.log(post_url);
+            console.log(remote_host);
+            console.log(r.host);
+            if (remote_host == post_host){
+                header["Authorization"] = "Basic " + btoa(r.username + ":" + r.password);
+            }
+        } 
+    };
     let commentForm = {
         "query":"addComment",
         "post": post_url,
@@ -96,11 +120,8 @@ function addComment(post_url, id, same_host){
         cache: "no-cache",
         credentials: "same-origin",
         body: body,
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token
-        },
+        headers: header,
+
         redirect: "follow",
         referrer: "no-referrer",
     })
@@ -664,7 +685,6 @@ function init_home_page(user){
     var following_url = user.url + "/following";
     var fetch_posts_url = user.host + "/author/posts";
     var fetch_github_stream_url = user.host + "/posts/view/github";
-    console.log(fetch_github_stream_url);
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
     sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
@@ -809,10 +829,10 @@ function init_info_page(init, recv, remote, from_one_host) {
         sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback);
     }else{
         // for author from another host, only shows friends and posts.
-        sendJSONHTTPGet(profile_url, {}, get_profile_callback, remote);
-        sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback, remote);
-        sendJSONHTTPGet(posts_url, request_body, get_num_posts_made_callback, remote);
-        sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback, remote);
+        sendJSONHTTPGet(profile_url, {}, get_profile_callback, remote[0]);
+        sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback, remote[0]);
+        sendJSONHTTPGet(posts_url, request_body, get_num_posts_made_callback, remote[0]);
+        sendJSONHTTPGet(posts_url, request_body, get_visible_post_callback, remote[0]);
     }
 
     // loading follow and unfollow btn
