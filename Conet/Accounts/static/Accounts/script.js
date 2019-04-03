@@ -466,7 +466,6 @@ function get_visible_post_callback(response){
         console.log("The end");
     }else{
         var i=0;
-<<<<<<< HEAD
         allposts = [];
         for (post of response.posts) {
             allposts.push(post);
@@ -474,85 +473,6 @@ function get_visible_post_callback(response){
         for (githubPost of response.githubPosts) {
             allposts.push(githubPost);
         }
-=======
-        for(post of response.posts){
-
-            var card = document.createElement("div");
-            card.classList.add("card","home-page-post-card");
-
-            // Card menu for delete
-            var card_menu = document.createElement("a");
-            card_menu.href="#";
-            card_menu.innerHTML = '<i class="material-icons">delete</i>';
-            card_menu.style.color = '#007bff';
-            card_menu.style.position = "absolute";
-            card_menu.style.right="15px";
-            //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
-            card_menu.onclick = deletePostHandler(post);
-
-            var card_edit = document.createElement("a");
-            card_edit.href="#";
-            card_edit.innerHTML = '<i class="material-icons">edit</i>';
-            card_edit.style.color = '#007bff';
-            card_edit.style.position = "absolute";
-            card_edit.style.right="45px";
-            //card_menu.addEventListener("click", function () {("click",function(){deletePost(post)}));
-            card_edit.onclick = editPostHandler(post, card_edit);
-
-
-            var card_body = document.createElement("div");
-            card_body.classList.add("card-body");
-
-            var card_title = document.createElement("a");
-            card_title.classList.add("card-title");
-            card_title.href = '/posts/' + post.postid + "/?host=" + post.author.host;
-            var link_to_post_page = document.createElement("h3");
-            link_to_post_page.innerText = post.title;
-            card_title.appendChild(link_to_post_page);
-
-            /* modify for remote */
-            var author_name = document.createElement("a")
-            author_name.classList.add("font-weight-light", "text-muted");
-            author_name.innerText = post.author.displayName;
-            author_name.href = "http://"+ window.location.hostname+":"+window.location.port+"/author/"+post.author.id+"/info/?host=" + post.author.host;
-            var publish_time = document.createElement("a");
-            publish_time.classList.add("font-weight-light", "text-muted");
-            var publish_date_time = Date.parse(post.published);
-            var now = new Date();
-            var sec_ago = (now - publish_date_time)/1000;
-            var min_ago = sec_ago / 60;
-            var hr_ago = min_ago / 60;
-            var days_ago = hr_ago / 24;
-            if (min_ago < 60){
-                publish_time.innerText = Math.round(min_ago) + " mins. ago";
-            }else if (hr_ago < 60){
-                publish_time.innerText = Math.round(hr_ago) + " hrs. ago";
-            }else{
-                publish_time.innerText = Math.round(days_ago) + " days ago";
-            }
-            publish_time.href = '/posts/' + post.postid + "/";
-
-            if (post.contentType=="text/plain") {
-              var content = document.createElement("p");
-              content.innerText = post.content;
-            }else if(post.contentType=="text/markdown"){
-                var converter = new showdown.Converter();
-                var md = post.content;
-                var html = converter.makeHtml(md);
-                var content = document.createElement("div");
-                content.innerHTML = html;
-            } else if(post.contentType=="image/png;base64" || post.contentType=="image/jpeg;base64" ){
-              var content = document.createElement("img");
-              content.setAttribute("src", post.content);
-              content.setAttribute("width", "100%");
-              content.setAttribute("height", "auto");
-            }else if(post.contentType=="application/base64"){
-              var content = document.createElement("a");
-              content.setAttribute('href',post.content);
-              content.innerText = "View "+post.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
-              content.click()
-            }
->>>>>>> a2bd1acbb81905263da62a4ca9d8d42e0b7be7d9
 
         console.log(allposts);
 
@@ -825,12 +745,8 @@ function init_home_page(user){
     var follower_url = user.url+"/follower";
     var following_url = user.url + "/following";
     var fetch_posts_url = user.host + "/author/posts";
-<<<<<<< HEAD
     // var fetch_github_stream_url = user.host + "/posts/view/github";
     // console.log(fetch_github_stream_url);
-=======
-    var fetch_github_stream_url = user.host + "/posts/view/github";
->>>>>>> a2bd1acbb81905263da62a4ca9d8d42e0b7be7d9
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
     sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);
