@@ -69,13 +69,18 @@ function uuidv4() {
 }
 
 function addComment(post_url, id, same_host){
+    
     var header = {"Content-Type": 'application/json',
                   "Accept": 'application/json',
                   "x-request-user-id": request_user_id};
     if (same_host){
         header['x-csrftoken'] = csrf_token;
     }else{
-        header["Authorization"] = "Basic " + btoa(remote.username + ":" + remote.password);
+        for (r of remote){
+            if (post_url.includes(r.host)){
+                header["Authorization"] = "Basic " + btoa(r.username + ":" + r.password);
+            }
+        } 
     };
     let commentForm = {
         "query":"addComment",
