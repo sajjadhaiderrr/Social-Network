@@ -69,9 +69,11 @@ function uuidv4() {
 }
 
 function addComment(post_url, id, same_host){
+
     var header = {"Content-Type": 'application/json',
-    "Accept": 'application/json',
-    "x-request-user-id": request_user_id};
+                  "Accept": 'application/json',
+                  "x-request-user-id": request_user_id};
+
     if (same_host){
         header['x-csrftoken'] = csrf_token;
     }else{
@@ -107,7 +109,8 @@ function addComment(post_url, id, same_host){
         cache: "no-cache",
         credentials: "same-origin",
         body: body,
-        headers:header,
+        headers: header,
+
         redirect: "follow",
         referrer: "no-referrer",
     })
@@ -671,7 +674,6 @@ function init_home_page(user){
     var following_url = user.url + "/following";
     var fetch_posts_url = user.host + "/author/posts";
     var fetch_github_stream_url = user.host + "/posts/view/github";
-    console.log(fetch_github_stream_url);
     sendJSONHTTPGet(friend_url, request_body, get_num_friend_callback);
     sendJSONHTTPGet(made_posts_url, request_body, get_num_posts_made_callback);
     sendJSONHTTPGet(follower_url, request_body, get_num_follower_callback);

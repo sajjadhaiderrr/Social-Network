@@ -12,7 +12,8 @@ function addCommentOnSinglePage(post_id, post_url, same_host){
         header['x-csrftoken'] = csrf_token;
     }else{
         header["Authorization"] = "Basic " + btoa(remote.username + ":" + remote.password);
-    }
+    };
+
     let commentForm = {
         "query":"addComment",
         "post": post_url,
@@ -59,6 +60,7 @@ function addCommentOnSinglePage(post_id, post_url, same_host){
 // need to be modified for remote functionality
 function init_single_post_page(origin, authenticated, request_user_id, same_host,remote={}){
     var url = origin;
+    console.log(url);
     var header = {"Content-Type": 'application/json',
                   "Accept": 'application/json',
                   "x-request-user-id": request_user_id};

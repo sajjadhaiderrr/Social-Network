@@ -6,12 +6,21 @@
 {% block content %}
     {% if user.is_authenticated%}
         {% include 'Accounts/nav.html' %}
+        <script>remote = [];</script>
+        {% for info in remote %}
+            <script>
+                remote_info = {"host": '{{ info.host }}', 'username':'{{ info.username }}', 'password':'{{ info.password }}' };
+                remote.push(remote_info);
+            </script>
+        {% endfor %}
         <script>
             const csrf_token = '{{ csrf_token }}';
             var user_be_viewed =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
-            request_user_id = '{{request.user.id}}'; 
-            current_user = user_be_viewed;
-            init_home_page(user_be_viewed);
+
+            current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
+            request_user_id = '{{ request.user.id }}'; 
+            init_home_page(user_be_viewed, remote);
+
         </script>
         <div class="content row">
             <!-- card -->
