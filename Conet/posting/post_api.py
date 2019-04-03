@@ -389,6 +389,9 @@ class ReadSinglePost(APIView):
 
 # path: /posts/{post_id}/comments
 class ReadAndCreateAllCommentsOnSinglePost(APIView):
+    #Authentication
+    authentication_classes = (SessionAuthentication, BasicAuthentication)
+    permission_classes = (IsAuthenticated,)
     # get: Get comments of a post
     def get(self, request, post_id):
         is_local = is_local_request(request)
