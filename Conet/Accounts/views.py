@@ -62,10 +62,19 @@ class ProfilePage(View):
         # get current user and user that is being viewed
         user_be_viewed_id = pk
         current_user = request.user
+        nodes = Node.objects.all()
+        remote = []
+        for node in nodes:
+            remote_info = {}
+            remote_info['host'] = node.foreignHost
+            remote_info['username'] = node.remoteUsername
+            remote_info['password'] = node.remotePassword
+            remote.append(remote_info)
+
 
         if(str(current_user.id) != str(user_be_viewed_id)):
             return HttpResponseRedirect(403)
-        return render(request, self.template_name, {'user_be_viewed_id':user_be_viewed_id, 'current_user':current_user})
+        return render(request, self.template_name, {'user_be_viewed_id':user_be_viewed_id, 'current_user':current_user, 'remote':remote})
             
 
 class HomePage(View):
