@@ -62,15 +62,31 @@ function sendFriendRequestCallback(objects) {
     new_btn.style.display = "block";
 }
 
-
+function uuidv4() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
+}
 
 function addComment(post_url, id){
     let commentForm = {
-          "comment":"",
-          "contentType":"text/plain"
-    }
+        "query":"addComment",
+        "post": post_url,
+        "comment":{"author":{"id":current_user.id,
+                             "host": current_user.host,
+                             "displayName": current_user.displayName.displayName,
+                             "url": current_user.url,
+                             "github": current_user.github
+                    },
+                   "comment":"",
+                   "contentType":"text/plain",
+                   "published": new Date().toISOString(),
+                   "id": uuidv4()    
+        }
+    };
 
-    commentForm.comment = document.getElementById(id).value;
+    commentForm.comment.comment = document.getElementById(id).value;
+    console.log(commentForm);
     let body = JSON.stringify(commentForm);
     url = post_url + "/comments"
     return fetch(url , {
@@ -522,7 +538,7 @@ function get_visible_post_callback(response){
             comment_btn.id = "addcommentbutton"+num_post_counter;
             // if user is logged in, give him permision to add comment
             if(current_user.id != "None"){
-                comment_btn.setAttribute("onClick","addComment('" + post.origin+ "','"+comment_textarea.id+"');");
+                comment_btn.setAttribute("onClick","addComment('" + post.origin+ "','"+comment_textarea.id + "');");
             }else{
                 // else: redirect to login page
                 comment_btn.onclick = function(){window.location.replace(post.author.host);}
