@@ -1,27 +1,36 @@
-function getPost(url)
-{
-    return fetch(url, {
-        method: "GET",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        redirect: "follow",
-        referrer: "no-referrer",
-    })
-    .then(response => response.json());
+function uuidv4() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+    );
 }
 
-function addCommentOnSinglePage(post_id)
-{
+function addCommentOnSinglePage(post_id, post_url, same_host){
+    var header = {"Content-Type": 'application/json',
+                  "Accept": 'application/json',
+                  "x-request-user-id": request_user_id};
+    if (same_host){
+        header['x-csrftoken'] = csrf_token;
+    }else{
+        header["Authorization"] = "Basic " + btoa(remote.username + ":" + remote.password);
+    }
     let commentForm = {
-          "comment":"",
-          "contentType":"text/plain"
+        "query":"addComment",
+        "post": post_url,
+        "comment":{"author":{"id":current_user.id,
+                             "host": current_user.host,
+                             "displayName": current_user.displayName,
+                             "url": current_user.url,
+                             "github": current_user.github
+                    },
+                   "comment":"",
+                   "contentType":"text/plain",
+                   "published": new Date().toISOString(),
+                   "id": uuidv4()    
+        }
     }
 
-    commentForm.comment = document.getElementById("addcommenttext").value;
+    commentForm.comment.comment = document.getElementById("addcommenttext").value;
+    console.log(commentForm);
     let body = JSON.stringify(commentForm);
     let url = window.location.href.split("/")
     url = url[0] + "//" + url[2] ;
@@ -32,11 +41,7 @@ function addCommentOnSinglePage(post_id)
         cache: "no-cache",
         credentials: "same-origin",
         body: body,
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token
-        },
+        headers: header,
         redirect: "follow",
         referrer: "no-referrer",
     })
@@ -54,23 +59,25 @@ function addCommentOnSinglePage(post_id)
 }
 
 // need to be modified for remote functionality
-function init_single_post_page(origin, authenticated){
-    url = origin;
+function init_single_post_page(origin, authenticated, request_user_id, same_host, remote={}){
+    var url = origin;
+    var header = {"Content-Type": 'application/json',
+                  "Accept": 'application/json',
+                  "x-request-user-id": request_user_id};
+    if (same_host){
+        header['x-csrftoken'] = csrf_token;
+    }else{
+        header["Authorization"] = "Basic " + btoa(remote.username + ":" + remote.password);
+    }
     return fetch(url , {
         method: "GET",
         mode: "cors",
         cache: "no-cache",
         credentials: "same-origin",
-        headers: {
-            "Content-Type": 'application/json',
-            "Accept": 'application/json',
-            "x-csrftoken": csrf_token
-        },
+        headers: header,
         redirect: "follow",
-        referrer: "no-referrer",
-
-    })
-    .then(response => {
+        referrer: "no-referrer"
+    }).then(response => {
         if (response.status === 200){
             return response.json();
         }else{
@@ -146,7 +153,7 @@ function init_single_post_page(origin, authenticated){
         comment_btn.classList.add("btn", "btn-primary");
         comment_btn.id = "addcommentbutton";
         if(authenticated == "True"){
-            comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid)} ;
+            comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid, json.post.origin, same_host)} ;
         }else{
             comment_btn.onclick = function(){window.location.replace(json.post.author.host);} ;
         }

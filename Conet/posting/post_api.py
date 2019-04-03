@@ -184,8 +184,8 @@ def CheckPermissions(author, post):
         if from_one_host:
             friends = get_friends(author_of_post)
         else:
-            friends = update_friends(author_of_post, author_of_post.host)
-
+            local_frds, remote_frds = update_friends(author_of_post, author_of_post.host)
+            friends = local_frds + remote_frds
         if (str(author.id) not in friends):
             return ("You are NOT a friend of the author.", False)
         return ("You are a friend of the author.", True)
@@ -198,7 +198,8 @@ def CheckPermissions(author, post):
         if from_one_host:
             friends = get_friends(author_of_post)
         else:
-            friends = update_friends(author_of_post, author_of_post.host)
+            local_frds, remote_frds = update_friends(author_of_post, author_of_post.host)
+            friends = local_frds + remote_frds
 
         friends_of_friends = []
         for friend in friends:
@@ -511,40 +512,58 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
     # post: Add a comment to a post
     def post(self, request, post_id):
+        #print("comment: ", request.data['comment'])
         is_local = is_local_request(request)
         response_object = {
             "query":"addComment",
             "type": None,
             "message": None,
         }
-        # initializing data
-        data = request.data
-        data['published'] = datetime.datetime.now()
+        #init data
+        data = {}
         #first we check to see if the post with the id exists
         try:
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
-            data['post'] = post_id
         except:
             response_object["type"] = False
             response_object["message"] = "Post does not exist."
             return Response(response_object, status=status.HTTP_404_NOT_FOUND)
+        
+        data = request.data['comment']
+        data['post'] = post_id
+        #print("data: ", data)
+        print("is_local: ", is_local)
+        if is_local:
+            #lets check if an author is logged in first
+            try:
+                author = Author.objects.get(id=request.user.id)
+            except:
+                response_object["type"] = False
+                response_object["message"] = "Log in to add a comment."
+                return Response(response_object, status=status.HTTP_403_FORBIDDEN)
+        else:
+            print("from remote")
+            request_author = request.data['comment']['author']
+            request_author_id = urls_to_ids([request_author['id']])[0]
+            author = Author.objects.filter(id=request_author_id)
+            if author.exists():
+                #update author
+                author = update_remote_author(request_author, author)
+            else:
+                #create author
+                success, author = create_remote_author(request_author)
+                if not success:
+                    return Response(status=400)
 
-        #lets check if an author is logged in first
-        try:
-            author = Author.objects.get(id=request.user.id)
-            data['author'] = author
-        except:
-            response_object["type"] = False
-            response_object["message"] = "Log in to add a comment."
-            return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         # need to check this part. 'Friend' visibility cannot work?
         if (post.visibility == "PUBLIC"):
-            serializer = CommentSerializer(data=data, context={'author':author})
+            serializer = CommentSerializer(data=data, context={'author': author})
             if serializer.is_valid():
                 serializer.save()
                 response_object["type"] = True
                 response_object["message"] = "Successfully added comment."
                 return Response(response_object, status=status.HTTP_200_OK)
+            print(serializer.validated_data)
             response_object["type"] = False
             response_object["message"] = "Could not add comment."
             return Response(response_object, status=status.HTTP_400_BAD_REQUEST)
