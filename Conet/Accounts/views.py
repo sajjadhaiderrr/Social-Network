@@ -71,7 +71,6 @@ class ProfilePage(View):
             remote_info['password'] = node.remotePassword
             remote.append(remote_info)
 
-
         if(str(current_user.id) != str(user_be_viewed_id)):
             return HttpResponseRedirect(403)
         return render(request, self.template_name, {'user_be_viewed_id':user_be_viewed_id, 'current_user':current_user, 'remote':remote})
