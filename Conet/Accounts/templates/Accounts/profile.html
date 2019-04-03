@@ -9,7 +9,8 @@
         <script>
             const csrf_token = '{{ csrf_token }}';
             var user_be_viewed =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
-            user_be_viewed_id = '{{user_be_viewed_id}}'; 
+            request_user_id = '{{request.user.id}}'; 
+            current_user = user_be_viewed;
             init_home_page(user_be_viewed);
         </script>
         <div class="content row">
