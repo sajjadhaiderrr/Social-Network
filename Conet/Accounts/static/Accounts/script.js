@@ -534,7 +534,7 @@ function get_visible_post_callback(response){
             comment_btn.innerText = "Send";
             commentbox.appendChild(comment_textarea);
             commentbox.appendChild(comment_btn);
-            
+
             // for displaying comments
             var comments_div = document.createElement("div");
 
@@ -568,19 +568,19 @@ function get_visible_post_callback(response){
                 var comment_content = document.createElement("p");
                 comment_content.innerText = comment.comment;
                 comment_content.setAttribute("style","font-size:10pt; margin-top:-10pt;");
-                
+
                 comment_title.appendChild(comment_author_name);
                 comment_title.append(comment_published);
                 comments_div.appendChild(comment_title);
                 comments_div.appendChild(document.createElement("br"));
                 comments_div.append(comment_content);
-                
+
                 comments_div.appendChild(document.createElement("hr"));
             }
 
             card_body.appendChild(card_title);
             // Add edit/delete menu if author
-            if (user_be_viewed.id == post.author.id) {
+            if (current_user.id == post.author.id) {
               card_body.appendChild(card_edit);
               card_body.appendChild(card_menu);
             }
@@ -589,7 +589,7 @@ function get_visible_post_callback(response){
             card_body.appendChild(publish_time);
             card_body.appendChild(document.createElement("hr"));
             card_body.appendChild(content);
-            
+
             card_body.appendChild(commentbox);
             card_body.appendChild(document.createElement("hr"));
             card_body.appendChild(comments_div);
@@ -701,7 +701,7 @@ function get_profile_callback(response){
         document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
         document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
     }catch{
-        
+
     }
 
     //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
