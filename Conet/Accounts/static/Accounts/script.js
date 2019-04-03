@@ -107,13 +107,14 @@ function addComment(post_url, id, same_host){
     .then(response => {
         if (response.status === 200)
         {
-          let url = window.location.href;
-          window.location = url;
+        let url = window.location.href;
+        window.location = url;
         }
         else
         {
         }
     });
+    
 }
 
 // callback function after sending unfriend request

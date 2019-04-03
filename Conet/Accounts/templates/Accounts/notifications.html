@@ -7,20 +7,20 @@
     {% if user.is_authenticated %}
         {% include 'Accounts/nav.html' %}
         <script>
-                const csrf_token = "{{csrf_token}}";
-                const author = {'id': '{{author.id}}',
-                                'host': '{{author.host}}',
-                                'displayName': '{{author.displayName}}',
-                                'url': '{{author.url}}'};
-                var friends = [];
-                {% for friend in friends %}
-                    friends.push({
-                            'id': '{{friend.id}}',
-                            'host': '{{friend.host}}',
-                            'displayName': '{{friend.displayName}}',
-                            'url': '{{friend.url}}'});
-                {% endfor %}
-                </script>
+            const csrf_token = "{{csrf_token}}";
+            const author = {'id': '{{author.id}}',
+                            'host': '{{author.host}}',
+                            'displayName': '{{author.displayName}}',
+                            'url': '{{author.url}}'};
+            var friends = [];
+            {% for friend in friends %}
+                friends.push({
+                        'id': '{{friend.id}}',
+                        'host': '{{friend.host}}',
+                        'displayName': '{{friend.displayName}}',
+                        'url': '{{friend.url}}'});
+            {% endfor %}
+        </script>
         <div class="container">
             {% if friends|length > 0 %}
                 {% for friend in friends %}

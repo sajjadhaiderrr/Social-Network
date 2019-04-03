@@ -512,15 +512,15 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
     # post: Add a comment to a post
     def post(self, request, post_id):
-        print("comment: ", request.data)
+        #print("comment: ", request.data['comment'])
         is_local = is_local_request(request)
         response_object = {
             "query":"addComment",
             "type": None,
             "message": None,
         }
-        # initializing data
-        data = request.data
+        #init data
+        data = {}
         #first we check to see if the post with the id exists
         try:
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
@@ -528,7 +528,11 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             response_object["type"] = False
             response_object["message"] = "Post does not exist."
             return Response(response_object, status=status.HTTP_404_NOT_FOUND)
-          
+        
+        data = request.data['comment']
+        data['post'] = post_id
+        #print("data: ", data)
+        print("is_local: ", is_local)
         if is_local:
             #lets check if an author is logged in first
             try:
@@ -538,7 +542,8 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
                 response_object["message"] = "Log in to add a comment."
                 return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         else:
-            request_author = data['comment']['author']
+            print("from remote")
+            request_author = request.data['comment']['author']
             request_author_id = urls_to_ids([request_author['id']])[0]
             author = Author.objects.filter(id=request_author_id)
             if author.exists():
@@ -552,12 +557,13 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         # need to check this part. 'Friend' visibility cannot work?
         if (post.visibility == "PUBLIC"):
-            serializer = CommentSerializer(data=data, context={'author':author})
+            serializer = CommentSerializer(data=data, context={'author': author})
             if serializer.is_valid():
                 serializer.save()
                 response_object["type"] = True
                 response_object["message"] = "Successfully added comment."
                 return Response(response_object, status=status.HTTP_200_OK)
+            print(serializer.validated_data)
             response_object["type"] = False
             response_object["message"] = "Could not add comment."
             return Response(response_object, status=status.HTTP_400_BAD_REQUEST)
