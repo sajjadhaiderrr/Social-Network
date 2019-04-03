@@ -535,7 +535,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
         print("is_local: ", is_local)
         if is_local:
             #lets check if an author is logged in firstst
-            print("local user: ", request.user.id)
+            print("local user: ", request.user)
             try:
                 author = Author.objects.get(id=request.user.id)
             except:
