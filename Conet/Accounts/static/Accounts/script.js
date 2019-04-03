@@ -69,20 +69,24 @@ function uuidv4() {
 }
 
 function addComment(post_url, id, same_host){
+    // Reference: https://stackoverflow.com/questions/736513/how-do-i-parse-a-url-into-hostname-and-path-in-javascript
+    var getLocation = function(href) {
+        var l = document.createElement("a");
+        l.href = href;
+        return l;
+    };
 
     var header = {"Content-Type": 'application/json',
                   "Accept": 'application/json',
                   "x-request-user-id": request_user_id};
-
+    console.log(same_host);
     if (same_host){
         header['x-csrftoken'] = csrf_token;
     }else{
-        
         for (r of remote){
-            console.log(post_url);
-            console.log(r.host);
-            console.log(post_url.includes(r.host));
-            if (post_url.includes(r.host)){
+            post_host = getLocation(post_url).host;
+            remote_host = getLocation(r.host).hot;
+            if (remote_host == post_host){
                 header["Authorization"] = "Basic " + btoa(r.username + ":" + r.password);
             }
         } 
