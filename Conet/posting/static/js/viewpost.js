@@ -67,6 +67,7 @@ function init_single_post_page(origin, authenticated, request_user_id, same_host
     if (same_host){
         header['x-csrftoken'] = csrf_token;
     }else{
+        console.log(remote)
         header["Authorization"] = "Basic " + btoa(remote.username + ":" + remote.password);
     }
     return fetch(url , {
