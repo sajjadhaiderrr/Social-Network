@@ -615,8 +615,8 @@ class AuthorPostsAPI(APIView):
                 for node in Node.objects.all():
                     posts_url = node.foreignHost + '/author/posts'
                     header = {'X-Request-User-ID': current_user.host+'/author/'+str(current_user.id),
-                            'X-UUID': current_user.id}
-                    print("remote request header: " header)
+                            'X-UUID': str(current_user.id)}
+                    print("remote request header: ", header)
                     query_posts, status_code = ApiHelper.obtain_from_remote_node(url=posts_url, host=node.foreignHost, header=header)
                     if status_code == 200:
                         foreign_posts += query_posts['posts']
