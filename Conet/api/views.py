@@ -183,9 +183,6 @@ def getGitHubPosts(author_id):
 # api for /author
 class AuthorAPI(APIView):
     model = Author
-    #Authentication
-    authentication_classes = (SessionAuthentication, BasicAuthentication)
-    permission_classes = (IsAuthenticated,)
 
     def get(self, request,*args, **kwargs):
         authorId = kwargs['pk']
@@ -617,7 +614,8 @@ class AuthorPostsAPI(APIView):
                 #get all visible posts from remote server(s)
                 for node in Node.objects.all():
                     posts_url = node.foreignHost + '/author/posts'
-                    header = {'X-Request-User-ID': current_user.host+'/author/'+str(current_user.id)}
+                    header = {'X-Request-User-ID': current_user.host+'/author/'+str(current_user.id),
+                            'X-UUID': current_user.id}
                     query_posts, status_code = ApiHelper.obtain_from_remote_node(url=posts_url, host=node.foreignHost, header=header)
                     if status_code == 200:
                         foreign_posts += query_posts['posts']
@@ -783,7 +781,7 @@ class ViewAuthorPostAPI(APIView):
             author_be_viewed = Author.objects.get(pk=pk)
             #get all public posts of author be viewed
             posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC", unlisted=False)  # pylint: disable=maybe-no-member
-            
+
             if is_local:
                 # request from local user
                 current_user = Author.objects.get(pk=request.user.id)
