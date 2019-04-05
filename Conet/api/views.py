@@ -193,7 +193,7 @@ class AuthorAPI(APIView):
             #if ApiHelper.local_author(current_user, request.get_host()):
             
             # get current user's data. Note that friends' data is excluded
-            author_data = ExtendAuthorSerializers(current_user).data
+            author"_data = ExtendAuthorSerializers(current_user).data
             
             # append each data to response
             for i in author_data.keys():
