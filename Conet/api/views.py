@@ -534,6 +534,7 @@ class AuthorFriends(APIView):
             else:
                 # current requested user is from remote server
                 friends = ApiHelper.get_friends(current_user)
+                friends = [author.url for author in Author.objects.filter(id__in=friends)]
                 response['authors'] = friends
                 return Response(response)         
         except Exception as e:
@@ -616,7 +617,6 @@ class AuthorPostsAPI(APIView):
                     posts_url = node.foreignHost + '/author/posts'
                     header = {'X-Request-User-ID': current_user.host+'/author/'+str(current_user.id),
                             'X-UUID': str(current_user.id)}
-                    print("remote request header: ", header)
                     query_posts, status_code = ApiHelper.obtain_from_remote_node(url=posts_url, host=node.foreignHost, header=header)
                     if status_code == 200:
                         foreign_posts += query_posts['posts']
