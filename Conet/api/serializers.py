@@ -106,6 +106,11 @@ class PostSerializer(serializers.ModelSerializer):
     #  size
     #  ...
     author = serializers.SerializerMethodField('get_author_data')
+    id = serializers.SerializerMethodField()
+
+    def get_id(self, obj):
+        return obj.postid
+
     def get_author_data(self, obj):
         return Helper_AuthorSerializers(Author.objects.get(id=obj.postauthor.id)).data
 
@@ -120,7 +125,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ('postid', 'author', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted','comments')
+        fields = ('author', 'title', 'source', 'origin', 'description', 'contentType', 'published', 'content','visibility','visibleTo','unlisted','comments')
 
     
 

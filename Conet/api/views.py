@@ -676,7 +676,7 @@ class AuthorPostsAPI(APIView):
         allposts = foreign_posts
         for post in posts:
             serializer = PostSerializer(post).data
-            serializer['postid'] = str(serializer['postid'])
+            serializer['id'] = str(serializer['id'])
             allposts.append(serializer)
 
         #order post py bublished date
@@ -853,6 +853,6 @@ class ViewAuthorPostAPI(APIView):
         response['posts'] = []
         for post in response_posts:
             serializer = PostSerializer(post).data
-            serializer['postid'] = str(serializer['postid'])
+            serializer['id'] = str(serializer['id'])
             response['posts'].append(serializer)
         return Response(response)

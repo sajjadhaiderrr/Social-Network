@@ -450,8 +450,8 @@ function deletePost(post) {
 }
 
 function editPost(post, divElem) {
-  console.log(window.location.origin+'/posts/'+'edit/'+post.postid+'/');
-  window.location.href = window.location.origin+'/posts/'+'edit/'+post.postid+'/';
+  console.log(window.location.origin+'/posts/'+'edit/'+post.id+'/');
+  window.location.href = window.location.origin+'/posts/'+'edit/'+post.id+'/';
 }
 
 
@@ -500,7 +500,7 @@ function get_visible_post_callback(response){
 
             var card_title = document.createElement("a");
             card_title.classList.add("card-title");
-            card_title.href = '/posts/' + post.postid + "/?host=" + post.author.host;
+            card_title.href = '/posts/' + post.id + "/?host=" + post.author.host;
             var link_to_post_page = document.createElement("h3");
             link_to_post_page.innerText = post.title;
             card_title.appendChild(link_to_post_page);
@@ -525,7 +525,7 @@ function get_visible_post_callback(response){
             }else{
                 publish_time.innerText = Math.round(days_ago) + " days ago";
             }
-            publish_time.href = '/posts/' + post.postid + "/";
+            publish_time.href = '/posts/' + post.id + "/";
 
             if (post.contentType=="text/plain") {
               var content = document.createElement("p");
@@ -656,7 +656,7 @@ function fetch_github_stream_callback(response){
 
         var card_title = document.createElement("a");
         card_title.classList.add("card-title");
-        card_title.href = '/posts/' + post.postid + "/?host=" + post.author.host ;
+        card_title.href = '/posts/' + post.id + "/?host=" + post.author.host ;
         var link_to_post_page = document.createElement("h3");
         link_to_post_page.innerText = "Github Post";
         card_title.appendChild(link_to_post_page);
