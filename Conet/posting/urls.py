@@ -22,4 +22,8 @@ urlpatterns = [
     ### API END
 
     path('view/github', post_api.ReadGithubStream.as_view(), name='view_github'),
+
+    #for remote
+    path('<post_id>/comments/', post_api.ReadAndCreateAllCommentsOnSinglePost.as_view()),
+    path('/', post_api.ReadAllPublicPosts.as_view()),
 ]
