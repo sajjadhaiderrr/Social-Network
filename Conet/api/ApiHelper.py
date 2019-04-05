@@ -149,7 +149,7 @@ def format_author_posts(post_list):
     
     for post in post_list: 
         post = PostSerializer(post).data
-        post['postid'] = str(post['postid'])
+        post['id'] = str(post['id'])
         res_query['posts'].append(post)
     
     return res_query
