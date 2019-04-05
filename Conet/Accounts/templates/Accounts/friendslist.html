@@ -8,11 +8,17 @@
         <div id='friend-div'>
         </div>
         <script>
-            const csrf_token = "{{ csrf_token }}"
-            console.log('{{query}}');
+            const csrf_token = "{{ csrf_token }}";
             if('{{query}}' == 'friends'){
-                console.log("friends");
-                getFriends('{{user_be_viewed.url}}');
+                current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
+                request_user_id = '{{ request.user.id }}';
+                user_be_viewed = {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
+                remote = [{"host":'{{ remote.host }}', "username":'{{ remote.username }}', "password":"{{remote.password}}"}];
+                if ('{{ from_one_host }}' == "True"){
+                    getFriends(user_be_viewed, remote,true);
+                }else{
+                    getFriends(user_be_viewed, remote, false);
+                }
             }else if ('{{query}}' == 'followers'){
                 getFollowers('{{user_be_viewed.url}}');
             }else if ('{{query}}' == 'following'){

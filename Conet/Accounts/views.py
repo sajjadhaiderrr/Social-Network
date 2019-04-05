@@ -147,9 +147,27 @@ class InfoPage(APIView):
 
 class FriendsPage(View):
     template_name = 'Accounts/friendslist.html'
-    def get(self, request, *args, **kwargs):
-        user_be_viewed = Author.objects.get(id=kwargs['pk'])
-        return render(request, self.template_name,{'query':'friends', 'user_be_viewed': user_be_viewed})
+    def get(self, request, authorId):
+
+        url = request.GET['host']+"/author/"+ str(authorId)+"/friends"
+        
+        user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
+        host = request.GET['host']
+        remote = {}
+        print(host)
+        print(request.get_host())
+        # need to merge
+        if(request.get_host() == host[7:]):
+            remote['host'] = host
+            from_one_host = True
+        else:
+            from_one_host = False
+            node = Node.objects.get(foreignHost=request.GET['host'])
+            remote['host'] = host
+            remote['username'] = node.remoteUsername
+            remote['password'] = node.remotePassword
+
+        return render(request, self.template_name,{'query':'friends','remote':remote, 'user_be_viewed': user_be_viewed,'from_one_host':from_one_host})
 
 class FollowersPage(View):
     template_name = 'Accounts/friendslist.html'

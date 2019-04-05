@@ -288,10 +288,15 @@ function sendFollowingFollwerCallback(response) {
 }
 
 // function to get a list of friends of current user.
-function getFriends(user) {
-    url = user
+function getFriends(user, remote, from_one_host) {
+    url = user.url
     request_body = {};
-    sendJSONHTTPGet(url, request_body, sendFriendsCallback);
+    if (from_one_host){
+        sendJSONHTTPGet(url, request_body, sendFriendsCallback);
+    }else{
+        sendJSONHTTPGet(url, request_body, sendFriendsCallback, remote);
+    }
+    
 }
 
 function getFollowers(user) {
@@ -395,7 +400,7 @@ function get_num_friend_callback(response){
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
-    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id+'/friends/';
+    aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id+'/friends/?host='+user_be_viewed.host;
     document.getElementById("num-friends").appendChild(aTag);
 }
 
@@ -743,7 +748,7 @@ function get_profile_callback(response){
         document.getElementById("btn-befriend").onclick = function(){sendFriendRequest(current_user, user_be_viewed);};
         document.getElementById("btn-unfriend").onclick = function(){sendUnFriendRequest(current_user, user_be_viewed);};
     }catch{
-
+        console.log(response);
     }
 
     //document.getElementById("btn-befriend").setAttribute("onClick","sendFriendRequest(" + current_user+ ","+user_be_viewed+");");
