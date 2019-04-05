@@ -154,7 +154,7 @@ function init_single_post_page(origin, authenticated, request_user_id, same_host
         comment_btn.classList.add("btn", "btn-primary");
         comment_btn.id = "addcommentbutton";
         if(authenticated == "True"){
-            comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid, json.post.origin, same_host)} ;
+            comment_btn.onclick = function(){addCommentOnSinglePage(json.post.id, json.post.origin, same_host)} ;
         }else{
             comment_btn.onclick = function(){window.location.replace(json.post.author.host);} ;
         }
