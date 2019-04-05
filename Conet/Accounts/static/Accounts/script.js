@@ -400,6 +400,7 @@ function get_num_friend_callback(response){
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
+    console.log(user_be_viewed)
     aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id+'/friends/?host='+user_be_viewed.host;
     document.getElementById("num-friends").appendChild(aTag);
 }
