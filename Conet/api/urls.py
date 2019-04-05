@@ -17,5 +17,5 @@ urlpatterns = [
     path('author/<uuid:pk>/posts', views.ViewAuthorPostAPI.as_view(), name='authoridposts'),
 
     path('author/<uuid:pk>/friends/', views.AuthorFriends.as_view()),
-    path('author/<uuid:pk>/posts/', views.ViewAuthorPostAPI.as_view())
+    path('author/posts/', views.AuthorPostsAPI.as_view())
 ]
