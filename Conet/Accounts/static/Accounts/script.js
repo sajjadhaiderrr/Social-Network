@@ -49,6 +49,11 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     } else {
         xhr.setRequestHeader("Authorization", "Basic " + btoa(remote.username + ":" + remote.password));
     }
+    try{
+        xhr.setRequestHeader("x-request-user-id", request_user_id);
+    }catch{
+
+    }
     xhr.send(JSON.stringify(objects));
 }
 
@@ -383,7 +388,6 @@ function setMultiAttributes(obj, attributes){
 #     # #    # #    # #         #####  ###### #  ### #
 #     # #    # #    # #         #      #    # #    # #
 #     #  ####  #    # ######    #      #    #  ####  ######
-
 */
 // set # of friends on home page to its # of friends
 function get_num_friend_callback(response){
