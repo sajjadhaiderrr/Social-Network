@@ -35,7 +35,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
             if (xhr.status == 200) {
                 callback(xhr.response);
             }
-            
+
         }
     };
     if (xhr.overrideMimeType) {
@@ -97,7 +97,7 @@ function addComment(post_url, id, same_host){
             if (remote_host == post_host){
                 header["Authorization"] = "Basic " + btoa(r.username + ":" + r.password);
             }
-        } 
+        }
     };
     let commentForm = {
         "query":"addComment",
@@ -111,7 +111,7 @@ function addComment(post_url, id, same_host){
                    "comment":"",
                    "contentType":"text/plain",
                    "published": new Date().toISOString(),
-                   "id": uuidv4()    
+                   "id": uuidv4()
         }
     };
 
@@ -140,7 +140,7 @@ function addComment(post_url, id, same_host){
         {
         }
     });
-    
+
 }
 
 // callback function after sending unfriend request
