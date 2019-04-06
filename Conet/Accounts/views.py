@@ -107,10 +107,10 @@ class InfoPage(APIView):
     
     def get(self, request, authorId):
         #strip end / for remote server
-        url = request.GET['host'].rstrip('/') + "/author/"+ str(authorId)
+        host = request.GET['host'].rstrip('/')
+        url = host + "/author/"+ str(authorId)
         
         user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
-        host = request.GET['host']
         remote = {}
         print(host)
         print(request.get_host())
@@ -120,7 +120,7 @@ class InfoPage(APIView):
             from_one_host = True
         else:
             from_one_host = False
-            node = Node.objects.get(foreignHost=request.GET['host'])
+            node = Node.objects.get(foreignHost=host)
             remote['host'] = host
             remote['username'] = node.remoteUsername
             remote['password'] = node.remotePassword
