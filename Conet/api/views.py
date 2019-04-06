@@ -198,7 +198,9 @@ class AuthorAPI(APIView):
             # append each data to response
             for i in author_data.keys():
                 response[i] = author_data[i]
-            friends = ApiHelper.get_friends(current_user)
+            #friends = ApiHelper.get_friends(current_user)
+            local_frds, foreign_frds = ApiHelper.update_friends(current_user, request.get_host())
+            friends = local_frds + foreign_frds
             # append friend's detailed information to response
             response['friends'] = []
             for friend in friends:
@@ -630,7 +632,8 @@ class AuthorPostsAPI(APIView):
             print("Exception on author/posts: ", e)
             return Response(ApiHelper.format_author_posts(posts))
 
-        friends = ApiHelper.get_friends(current_user)
+        local_frds, foreign_frds = ApiHelper.update_friends(current_user, request.get_host())
+        friends = local_frds + foreign_frds
         #get posts mde by current user
         posts |= Post.objects.filter(postauthor=current_user, unlisted=False)  # pylint: disable=maybe-no-member
 
