@@ -54,7 +54,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     }catch{
         console.log("no");
     }
-    console.log(remote);
+    console.log(remote.username + ":" + remote.password);
     xhr.send(JSON.stringify(objects));
 }
 
