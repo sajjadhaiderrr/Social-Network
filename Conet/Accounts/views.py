@@ -149,7 +149,7 @@ class FriendsPage(View):
     template_name = 'Accounts/friendslist.html'
     def get(self, request, authorId):
 
-        url = request.GET['host']+"/author/"+ str(authorId)+"/friends"
+        url = request.GET['host']+"/author/"+ str(authorId)
         
         user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
         host = request.GET['host']
