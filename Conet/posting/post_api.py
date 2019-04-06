@@ -466,7 +466,7 @@ class ReadSinglePost(APIView):
         #to PUBLIC, we are ok to return it
         if (post.visibility == "PUBLIC"):
             serializer = PostSerializer(post)
-            response_object["post"] = serializer.data
+            response_object = serializer.data
             return Response(response_object, status=status.HTTP_200_OK)
 
         #otherwise, the other privacy settings
@@ -483,7 +483,7 @@ class ReadSinglePost(APIView):
         #users post
         if (author.id == post.postauthor.id):
             serializer = PostSerializer(post)
-            response_object["post"] = serializer.data
+            response_object = serializer.data
             return Response(response_object, status=status.HTTP_200_OK)
 
         check_permissions = CheckPermissions(author, post)
@@ -494,7 +494,7 @@ class ReadSinglePost(APIView):
 
         # current user has permission
         serializer = PostSerializer(post)
-        response_object["post"] = serializer.data
+        response_object = serializer.data
         return Response(response_object, status=status.HTTP_200_OK)
 
 
