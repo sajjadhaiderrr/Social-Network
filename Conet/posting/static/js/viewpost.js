@@ -89,14 +89,14 @@ function init_single_post_page(origin, authenticated, request_user_id, same_host
     }).then(json =>{
         console.log(json);
         // display title
-        document.getElementById("post-title").innerText = json.post.title;
+        document.getElementById("post-title").innerText = json.title;
 
         // display who is author
-        document.getElementById("post-author-link").innerText = json.post.author.displayName;
-        document.getElementById("post-author-link").href = json.post.author.url + "/";
+        document.getElementById("post-author-link").innerText = json.author.displayName;
+        document.getElementById("post-author-link").href = json.author.url + "/";
 
         // display times
-        var publish_date_time = Date.parse(json.post.published);
+        var publish_date_time = Date.parse(json.published);
         var now = new Date();
         var sec_ago = (now - publish_date_time)/1000;
         var min_ago = sec_ago / 60;
@@ -111,29 +111,29 @@ function init_single_post_page(origin, authenticated, request_user_id, same_host
         }
 
         // display content
-        if(json.post.contentType == 'text/plain'){
+        if(json.contentType == 'text/plain'){
             // display the plain text content
             var content = document.createElement("p");
-            content.innerText = json.post.content;
+            content.innerText = json.content;
             document.getElementById("post-content").appendChild(content);
-        }else if(json.post.contentType=="text/markdown"){
+        }else if(json.contentType=="text/markdown"){
             var converter = new showdown.Converter();
-            var md = json.post.content;
+            var md = json.content;
             var html = converter.makeHtml(md);
             var content = document.createElement("div");
             content.innerHTML = html;
             document.getElementById("post-content").appendChild(content);
-        }else if(json.post.contentType=="image/png;base64" || json.post.contentType=="image/jpeg;base64" ){
+        }else if(json.contentType=="image/png;base64" || json.contentType=="image/jpeg;base64" ){
             var content = document.createElement("img");
-            content.setAttribute("src", json.post.content);
+            content.setAttribute("src", json.content);
             content.setAttribute("width", "100%");
             content.setAttribute("height", "auto");
             document.getElementById("post-image").appendChild(content);
         }
-        else if(json.post.contentType=="application/base64"){
+        else if(json.contentType=="application/base64"){
             var content = document.createElement("a");
-            content.setAttribute('href',json.post.content);
-            content.innerText = "View "+json.post.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
+            content.setAttribute('href',json.content);
+            content.innerText = "View "+json.title+" in new tab (if application is supported by your browser) or Download (Right click -> Save As)";
             content.click()
             document.getElementById("post-image").appendChild(content);
         }
@@ -154,9 +154,9 @@ function init_single_post_page(origin, authenticated, request_user_id, same_host
         comment_btn.classList.add("btn", "btn-primary");
         comment_btn.id = "addcommentbutton";
         if(authenticated == "True"){
-            comment_btn.onclick = function(){addCommentOnSinglePage(json.post.postid, json.post.origin, same_host)} ;
+            comment_btn.onclick = function(){addCommentOnSinglePage(json.id, json.origin, same_host)} ;
         }else{
-            comment_btn.onclick = function(){window.location.replace(json.post.author.host);} ;
+            comment_btn.onclick = function(){window.location.replace(json.author.host);} ;
         }
 
         comment_btn.innerText = "Send";
@@ -166,7 +166,7 @@ function init_single_post_page(origin, authenticated, request_user_id, same_host
         document.getElementById("create-comment").appendChild(commentbox);
         
         document.getElementById("post-comments").appendChild(document.createElement("hr"))
-        for(comment of json.post.comments){
+        for(comment of json.comments){
             var comment_title = document.createElement("div");
             console.log(comment);
             var comment_author_name = document.createElement("a");
