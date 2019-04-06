@@ -52,8 +52,9 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     try{
         xhr.setRequestHeader("x-request-user-id", request_user_id);
     }catch{
-
+        console.log("no");
     }
+    console.log(remote);
     xhr.send(JSON.stringify(objects));
 }
 
@@ -292,7 +293,6 @@ function sendFollowingFollwerCallback(response) {
 function getFriends(user, remote, from_one_host) {
     url = user.url
     request_body = {};
-    console.log(remote)
     if (from_one_host){
         sendJSONHTTPGet(url, request_body, sendFriendsCallback);
     }else{
