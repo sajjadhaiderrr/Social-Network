@@ -9,11 +9,12 @@
         </div>
         <script>
             const csrf_token = "{{ csrf_token }}";
+            current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
+            request_user_id = '{{ request.user.id }}';
+            user_be_viewed = {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
+            remote = [{"host":'{{ remote.host }}', "username":'{{ remote.username }}', "password":"{{remote.password}}"}];
+                
             if('{{query}}' == 'friends'){
-                current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
-                request_user_id = '{{ request.user.id }}';
-                user_be_viewed = {"id": '{{ user_be_viewed.id }}', "host": '{{ user_be_viewed.host }}', "displayName": '{{ user_be_viewed.displayName }}', "url": '{{ user_be_viewed.url }}' };
-                remote = [{"host":'{{ remote.host }}', "username":'{{ remote.username }}', "password":"{{remote.password}}"}];
                 if ('{{ from_one_host }}' == "True"){
                     getFriends(user_be_viewed, remote,true);
                 }else{

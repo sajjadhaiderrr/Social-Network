@@ -265,7 +265,8 @@ function create_card_showing_friends(friend){
 // create a list of cards shows the friends
 function sendFriendsCallback(response) {
     response = JSON.parse(response);
-    friends = response.authors;
+    friends = response.friends;
+    console.log("Friendscallbacks")
     console.log(response)
     for (var i of friends) {
 
@@ -291,6 +292,7 @@ function sendFollowingFollwerCallback(response) {
 function getFriends(user, remote, from_one_host) {
     url = user.url
     request_body = {};
+    console.log(url)
     if (from_one_host){
         sendJSONHTTPGet(url, request_body, sendFriendsCallback);
     }else{
