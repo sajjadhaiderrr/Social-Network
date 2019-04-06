@@ -54,6 +54,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     }catch{
         console.log("no");
     }
+    console.log(remote)
     console.log(remote.username + ":" + remote.password);
     xhr.send(JSON.stringify(objects));
 }
@@ -298,7 +299,7 @@ function getFriends(user, remote, from_one_host) {
         sendJSONHTTPGet(url, request_body, sendFriendsCallback);
     }else{
         console.log("not from one host")
-        sendJSONHTTPGet(url, request_body, sendFriendsCallback, remote);
+        sendJSONHTTPGet(url, request_body, sendFriendsCallback, remote[0]);
     }
     
 }
