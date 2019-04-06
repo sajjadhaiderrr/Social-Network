@@ -49,7 +49,7 @@ def obtain_from_remote_node(url, host, method='GET', send_query=None, header={})
         return (None, 500)
 
 def urls_to_ids(url_list):
-    pattern = re.compile('http://.+/author/')
+    pattern = re.compile('.+/author/')
     return [pattern.sub('', url) for url in url_list]
 
 # get a list of friends of given user on local database
@@ -149,7 +149,7 @@ def format_author_posts(post_list):
     
     for post in post_list: 
         post = PostSerializer(post).data
-        post['postid'] = str(post['postid'])
+        post['id'] = str(post['id'])
         res_query['posts'].append(post)
     
     return res_query

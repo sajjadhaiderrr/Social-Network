@@ -40,7 +40,7 @@ def getGitHubPosts(author_id):
             github_username = github_url.split("/")[3]
         except:
             print("Github url is wrong format.")
-            return
+            return {}
         request_url = "https://api.github.com/users/" + github_username + "/events/public"
         response = requests.get(request_url)
         json_data = json.loads(response.text)
@@ -183,9 +183,6 @@ def getGitHubPosts(author_id):
 # api for /author
 class AuthorAPI(APIView):
     model = Author
-    #Authentication
-    authentication_classes = (SessionAuthentication, BasicAuthentication)
-    permission_classes = (IsAuthenticated,)
 
     def get(self, request,*args, **kwargs):
         authorId = kwargs['pk']
@@ -335,6 +332,7 @@ class FriendRequestHandler(APIView):
                                 state=1, starting_date=datetime.datetime.now())
                             friendship.save()
                         else:
+                            response = {"query": 'friendrequest'}
                             response['success'] = False
                             response['message'] = 'Failed to create remote author on server'
                             return Response(response, status=500)
@@ -377,6 +375,7 @@ class FriendRequestHandler(APIView):
                                 reverse_friendship.update(state=1, starting_date=datetime.datetime.now())
                             friendship.state = 1
                             friendship.save()
+                            response = {"query": 'friendrequest'}
                             response['success'] = True
                             response['message'] = 'Your friend request is sent successfully.'
                             return Response(response, status=200)
@@ -537,6 +536,7 @@ class AuthorFriends(APIView):
             else:
                 # current requested user is from remote server
                 friends = ApiHelper.get_friends(current_user)
+                friends = [author.url for author in Author.objects.filter(id__in=friends)]
                 response['authors'] = friends
                 return Response(response)         
         except Exception as e:
@@ -604,7 +604,6 @@ class AuthorPostsAPI(APIView):
         allposts = []
         page_size = 10
         posts = Post.objects.none() # pylint: disable=maybe-no-member
-        githubPosts = getGitHubPosts(request.user.id)
 
         #get all public posts
         public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
@@ -618,7 +617,8 @@ class AuthorPostsAPI(APIView):
                 #get all visible posts from remote server(s)
                 for node in Node.objects.all():
                     posts_url = node.foreignHost + '/author/posts'
-                    header = {'X-Request-User-ID': current_user.host+'/author/'+str(current_user.id)}
+                    header = {'X-Request-User-ID': current_user.host+'/author/'+str(current_user.id),
+                            'X-UUID': str(current_user.id)}
                     query_posts, status_code = ApiHelper.obtain_from_remote_node(url=posts_url, host=node.foreignHost, header=header)
                     if status_code == 200:
                         foreign_posts += query_posts['posts']
@@ -677,7 +677,7 @@ class AuthorPostsAPI(APIView):
         allposts = foreign_posts
         for post in posts:
             serializer = PostSerializer(post).data
-            serializer['postid'] = str(serializer['postid'])
+            serializer['id'] = str(serializer['id'])
             allposts.append(serializer)
 
         #order post py bublished date
@@ -699,7 +699,6 @@ class AuthorPostsAPI(APIView):
         response['query'] = "posts"
         response['count'] = len(allposts)
         response['size'] = len(response_posts)
-        response['githubPosts'] = githubPosts
         if(page>0):
             response['previous'] = current_user.host + "/author/posts?page="+str(page-1)
         else:
@@ -780,13 +779,12 @@ class ViewAuthorPostAPI(APIView):
         valid_req_user_id = True
         FOAF = False
         posts = Post.objects.none() # pylint: disable=maybe-no-member
-        githubPosts = getGitHubPosts(pk)
         
         try:
             author_be_viewed = Author.objects.get(pk=pk)
             #get all public posts of author be viewed
             posts |= Post.objects.filter(postauthor=author_be_viewed, visibility="PUBLIC", unlisted=False)  # pylint: disable=maybe-no-member
-            
+
             if is_local:
                 # request from local user
                 current_user = Author.objects.get(pk=request.user.id)
@@ -847,7 +845,6 @@ class ViewAuthorPostAPI(APIView):
         response['query'] = "posts"
         response['count'] = len(allposts)
         response['size'] = len(response_posts)
-        response['githubPosts'] = githubPosts
         if(page>0):
             response['previous'] = author_be_viewed.host + "/author/posts?page="+str(page-1)
 
@@ -857,6 +854,6 @@ class ViewAuthorPostAPI(APIView):
         response['posts'] = []
         for post in response_posts:
             serializer = PostSerializer(post).data
-            serializer['postid'] = str(serializer['postid'])
+            serializer['id'] = str(serializer['id'])
             response['posts'].append(serializer)
         return Response(response)
