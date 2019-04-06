@@ -53,13 +53,14 @@ def editPost(request, post_id):
     return render(request, "editpost.html", {'post': post})
 
 def viewPost(request, post_id):
-    url = request.GET['host']+"/posts/"+ str(post_id)
+    #strip end / for remote server
+    url = request.GET['host'].rstrip('/')+"/posts/" + str(post_id)
         
     #user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
-    host = request.GET['host'][7:]
+    host = request.GET['host']
     remote = {}
     # need to merge
-    if(request.get_host() == host):
+    if(request.get_host() in host):
         remote['host'] = host
         from_one_host = True
     else:
