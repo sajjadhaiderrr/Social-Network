@@ -332,6 +332,7 @@ class FriendRequestHandler(APIView):
                                 state=1, starting_date=datetime.datetime.now())
                             friendship.save()
                         else:
+                            response = {"query": 'friendrequest'}
                             response['success'] = False
                             response['message'] = 'Failed to create remote author on server'
                             return Response(response, status=500)
@@ -374,6 +375,7 @@ class FriendRequestHandler(APIView):
                                 reverse_friendship.update(state=1, starting_date=datetime.datetime.now())
                             friendship.state = 1
                             friendship.save()
+                            response = {"query": 'friendrequest'}
                             response['success'] = True
                             response['message'] = 'Your friend request is sent successfully.'
                             return Response(response, status=200)

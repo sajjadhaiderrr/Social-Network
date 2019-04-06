@@ -106,7 +106,8 @@ class InfoPage(APIView):
     template_name = 'Accounts/info.html'
     
     def get(self, request, authorId):
-        url = request.GET['host']+"/author/"+ str(authorId)
+        #strip end / for remote server
+        url = request.GET['host'].rstrip('/') + "/author/"+ str(authorId)
         
         user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
         host = request.GET['host']
@@ -114,7 +115,7 @@ class InfoPage(APIView):
         print(host)
         print(request.get_host())
         # need to merge
-        if(request.get_host() == host[7:]):
+        if(request.get_host() in host):
             remote['host'] = host
             from_one_host = True
         else:
