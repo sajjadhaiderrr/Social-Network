@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.decorators.csrf import csrf_exempt
 from . import views
+from posting import post_api
 
 urlpatterns = [
     path('friendrequest', views.FriendRequestHandler.as_view(), name='friendrequest'),
@@ -16,8 +17,10 @@ urlpatterns = [
     path('author/<uuid:pk>/madeposts', views.AuthorMadePostAPI.as_view(), name='authormadeposts'),
     path('author/<uuid:pk>/posts', views.ViewAuthorPostAPI.as_view(), name='authoridposts'),
 
+    #remote request
     path('author/<uuid:pk>/posts/', views.ViewAuthorPostAPI.as_view()),
     path('author/<uuid:pk>/friends/', views.AuthorFriends.as_view()),
     path('author/posts/', views.AuthorPostsAPI.as_view()),
     path('friendrequest/', views.FriendRequestHandler.as_view()),
+    path('<post_id>/comments/',post_api.ReadAndCreateAllCommentsOnSinglePost.as_view())
 ]

@@ -27,6 +27,5 @@ urlpatterns = [
 
     #for connecting to remote server
     path('service/', include('api.urls')),
-    path('service/', include('posting.urls')),
 
 ]
