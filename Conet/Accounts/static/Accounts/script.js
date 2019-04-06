@@ -265,7 +265,7 @@ function create_card_showing_friends(friend){
 // create a list of cards shows the friends
 function sendFriendsCallback(response) {
     response = JSON.parse(response);
-    friends = response.friends;
+    friends = response.authors;
     console.log(response)
     for (var i of friends) {
 
