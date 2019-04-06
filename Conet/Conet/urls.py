@@ -26,6 +26,7 @@ urlpatterns = [
     path('', HomePage.as_view(), name='home'),
 
     #for connecting to remote server
-    path('service/', include('api.urls'))
+    path('service/', include('api.urls')),
+    path('service/', include('posting.urls')),
 
 ]
