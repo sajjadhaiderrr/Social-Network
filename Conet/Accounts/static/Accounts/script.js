@@ -54,8 +54,6 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     }catch{
         console.log("no");
     }
-    console.log(remote)
-    console.log(remote.username + ":" + remote.password);
     xhr.send(JSON.stringify(objects));
 }
 
@@ -92,10 +90,6 @@ function addComment(post_url, id, same_host){
         for (r of remote){
             post_host = getLocation(post_url).host;
             remote_host = getLocation(r.host).host;
-            console.log(post_host == remote_host)
-            console.log(post_url);
-            console.log(remote_host);
-            console.log(r.host);
             if (remote_host == post_host){
                 header["Authorization"] = "Basic " + btoa(r.username + ":" + r.password);
             }
@@ -118,7 +112,6 @@ function addComment(post_url, id, same_host){
     };
 
     commentForm.comment.comment = document.getElementById(id).value;
-    console.log(commentForm);
     let body = JSON.stringify(commentForm);
     url = post_url + "/comments"
     return fetch(url , {
@@ -268,8 +261,6 @@ function create_card_showing_friends(friend){
 function sendFriendsCallback(response) {
     response = JSON.parse(response);
     friends = response.friends;
-    console.log("Friendscallbacks")
-    console.log(response)
     for (var i of friends) {
 
         //var friend = JSON.parse(i);
@@ -294,11 +285,9 @@ function sendFollowingFollwerCallback(response) {
 function getFriends(user, remote, from_one_host) {
     url = user.url
     request_body = {};
-    console.log(from_one_host)
     if (from_one_host){
         sendJSONHTTPGet(url, request_body, sendFriendsCallback);
     }else{
-        console.log("not from one host")
         sendJSONHTTPGet(url, request_body, sendFriendsCallback, remote[0]);
     }
     
@@ -331,7 +320,6 @@ function fetchPutRequest(url, profileInfo) {
         },
         body: JSON.stringify(profileInfo),
     }).then(res => {
-        console.log(res);
         if(res.status == 400)
             console.log("input data is invalid");
         else
@@ -405,7 +393,6 @@ function get_num_friend_callback(response){
     var num_friends = response.authors.length;
     var aTag = document.createElement("a");
     aTag.innerText=num_friends;
-    console.log(user_be_viewed)
     aTag.href = "http://"+ window.location.host+"/author/"+user_be_viewed.id+'/friends/?host='+user_be_viewed.host;
     document.getElementById("num-friends").appendChild(aTag);
 }
@@ -476,7 +463,6 @@ var editPostHandler = function(arg, arg1) {
 // loading and creating cards of post cards
 function get_visible_post_callback(response){
     var response = JSON.parse(response);
-    console.log(response);
     if(false&&(response.next == "None" && response.posts==[])){
         console.log("The end");
     }else{
@@ -594,7 +580,6 @@ function get_visible_post_callback(response){
 
             for(comment of post.comments){
                 var comment_title = document.createElement("div");
-                console.log(comment);
                 var comment_author_name = document.createElement("a");
                 comment_author_name.href = "http://"+ window.location.hostname+":"+window.location.port+"/author/"+comment.author.id+"/info/?host=" + comment.author.host;
                 comment_author_name.innerText = comment.author.displayName;
@@ -722,7 +707,6 @@ function init_home_page(user){
 // - Simply change the button to "unfriend" if they are friends
 function sendInitInfoRequestCallback(response) {
     var response = JSON.parse(response);
-    console.log(response);
     var following = false;
     for(var relation of response.authors){
         if(relation.id == user_be_viewed.id){
