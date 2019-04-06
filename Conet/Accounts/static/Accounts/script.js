@@ -292,7 +292,7 @@ function sendFollowingFollwerCallback(response) {
 function getFriends(user, remote, from_one_host) {
     url = user.url
     request_body = {};
-    console.log(url)
+    console.log(remote)
     if (from_one_host){
         sendJSONHTTPGet(url, request_body, sendFriendsCallback);
     }else{
