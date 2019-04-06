@@ -122,6 +122,7 @@ def remove_remote_friends(local_author, remove_list):
     reverse_friendship.delete()
 
 def create_remote_author(authorObj):
+    authorObj['host'] = authorObj['host'].rstrip('/')
     authorObj['id'] = authorObj['id'].replace(authorObj['host']+'/author/', '')
     username = authorObj['id']
     password = '!@#$%^&*'
