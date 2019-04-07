@@ -553,6 +553,7 @@ class AuthorFriends(APIView):
         request_friends = ApiHelper.urls_to_ids(request_body['authors'])
         response = {"query":'friends',
                     "author": request_body['author']}
+                    
         try:
             # get current user on URL
             current_user = Author.objects.get(id=kwargs['pk'])
