@@ -721,13 +721,15 @@ class AuthorPostsAPI(APIView):
         return Response(response)
     def post(self, request):
         # POST: Create a post
-        curAuthor = Author.objects.get(id=request.user.id)
-        origin = request.scheme+ "://" +request.get_host()+ "/"
-        serializer = PostSerializer(data=request.data, context={'author': curAuthor, 'origin': origin})
-        if serializer.is_valid():
-            serializer.save()
-            #Todo: response success message on json format
-            return Response()
+        is_local = is_local = ApiHelper.is_local_request(request)
+        if is_local:
+            curAuthor = Author.objects.get(id=request.user.id)
+            origin = request.scheme+ "://" +request.get_host()+ "/"
+            serializer = PostSerializer(data=request.data, context={'author': curAuthor, 'origin': origin})
+            if serializer.is_valid():
+                serializer.save()
+                #Todo: response success message on json format
+                return Response()
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

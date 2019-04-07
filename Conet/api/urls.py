@@ -22,5 +22,6 @@ urlpatterns = [
     path('author/<uuid:pk>/friends/', views.AuthorFriends.as_view()),
     path('author/posts/', views.AuthorPostsAPI.as_view()),
     path('friendrequest/', views.FriendRequestHandler.as_view()),
-    path('posts/<post_id>/comments/',post_api.ReadAndCreateAllCommentsOnSinglePost.as_view())
+    path('posts/<post_id>/comments/',post_api.ReadAndCreateAllCommentsOnSinglePost.as_view()),
+    path('posts/<post_id>', post_api.ReadSinglePost.as_view()),
 ]
