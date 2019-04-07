@@ -15,3 +15,4 @@ For more information, please visit our [wiki page](https://github.com/sajjadhaid
 - Django Rest framework: https://www.django-rest-framework.org/
 - django-bootstrap4: https://pypi.org/project/django-bootstrap4/
 - showdownjs: http://showdownjs.com/
+- django-cors-headers: https://github.com/ottoyiu/django-cors-headers
