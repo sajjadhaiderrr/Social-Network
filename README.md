@@ -3,6 +3,8 @@ This is an implementation of distributed social network based [Django](https://w
 
 For remote funcionalities, we will not store any information of posts from other server. But we do temperarily store authors' information for friendship and comments functionalities to work (since it will violates the foreign key constraint if we don't store them). All remote authors' information will be updated if corresponding author interacts with out server.
 
+For more information, please visit our [wiki page](https://github.com/sajjadhaiderrr/CMPUT404-Project/wiki)
+
 ## Group Member
 - Jiahao Guo
 - Hussain Khan
