@@ -443,6 +443,7 @@ class ReadAllPublicPosts(APIView):
         response_object["count"] = count
         return Response(response_object, status=status.HTTP_200_OK)
 
+
 # path: /posts/{post_id}
 class ReadSinglePost(APIView):
     #Authentication

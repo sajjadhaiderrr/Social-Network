@@ -290,7 +290,7 @@ function getFriends(user, remote, from_one_host) {
     }else{
         sendJSONHTTPGet(url, request_body, sendFriendsCallback, remote[0]);
     }
-    
+
 }
 
 function getFollowers(user) {
