@@ -296,14 +296,11 @@ class FriendRequestHandler(APIView):
         # instanciate initiator and receiver as Author object
         send_id = request_body['author']['id'].replace(request_body['author']['host']+'/author/','')
         rcv_id = request_body['friend']['id'].replace(request_body['friend']['host']+'/author/','')
-        print(is_local)
+
         if is_local:
             #reqeust from local user
             friend_host = request_body['friend']['host']
             frd_req_url = friend_host + '/friendrequest'
-
-            print('send author: ',  request_body['author']['displayName'])
-            print('rcv author: ', request_body['friend']['displayName'])
 
             try:
                 init_user = Author.objects.get(id=send_id)
@@ -607,6 +604,9 @@ class AuthorPostsAPI(APIView):
         page_size = 10
         posts = Post.objects.none() # pylint: disable=maybe-no-member
 
+        if not ApiHelper.is_sharePosts(is_local, request.user):
+            return Response(status=403)
+
         #get all public posts
         public = Post.objects.filter(visibility="PUBLIC", unlisted=False)   # pylint: disable=maybe-no-member
         posts |= public
@@ -795,6 +795,9 @@ class ViewAuthorPostAPI(APIView):
         valid_req_user_id = True
         FOAF = False
         posts = Post.objects.none() # pylint: disable=maybe-no-member
+
+        if not ApiHelper.is_sharePosts(is_local, request.user):
+            return Response(status=403)
 
         try:
             author_be_viewed = Author.objects.get(pk=pk)
