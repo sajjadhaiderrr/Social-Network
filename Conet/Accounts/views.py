@@ -149,14 +149,15 @@ class FriendsPage(View):
     template_name = 'Accounts/friendslist.html'
     def get(self, request, authorId):
 
-        url = request.GET['host']+"/author/"+ str(authorId)
-        
+        host = request.GET['host'].rstrip('/')
+        url = host + "/author/"+ str(authorId)
+
         user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
         host = request.GET['host']
         remote = {}
 
         # need to merge
-        if(request.get_host() == host[7:]):
+        if(request.get_host() in host):
             remote['host'] = host
             from_one_host = True
         else:
