@@ -299,7 +299,7 @@ class FriendRequestHandler(APIView):
 
         if is_local:
             #reqeust from local user
-            friend_host = request_body['friend']['host']
+            friend_host = request_body['friend']['host'].rstrip('/')
             frd_req_url = friend_host + '/friendrequest'
 
             try:
