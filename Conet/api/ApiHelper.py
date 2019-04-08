@@ -42,7 +42,7 @@ def obtain_from_remote_node(url, host, method='GET', send_query=None, header={})
             res = requests.post(url, headers=header, data=send_query, auth=authentication)
         else:
             return {'code': 405}
-        print("response json: ", res.json())
+        #print("response json: ", res.json())
         return (res.json(), res.status_code)
     except Exception as e:
         print("Exception on remote request: ", e)
@@ -165,6 +165,11 @@ def is_local_request(request):
     except:
         return True
     return False
+
+def is_sharePosts(is_local, userObj):
+    if not is_local and not userObj.node.sharePosts:
+        return False
+    return True
 
 def get_request_author(is_local, request):
     if is_local:
