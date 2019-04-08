@@ -163,7 +163,6 @@ function createPost() {
   })
   .then (response => {
     if (response.status == 200) {
-      alert("Success")
       let url = window.location.href.split("/");
       url = url[0] + "//" + url[2];
       window.location = url;
