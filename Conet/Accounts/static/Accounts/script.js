@@ -8,8 +8,7 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
                 callback(xhr.response);
             }
             catch (e) {
-                //alert('XHR Error: ' + e.name);
-                console.log(url);
+                console.log('XHR Error: ' + e.name);
             }
         }
     };
@@ -19,12 +18,7 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
-
-    //if (Object.keys(remote).length === 0 && remote.constructor === Object){
-    xhr.setRequestHeader("x-csrftoken", csrf_token);
-    //}else{
-    //    xhr.setRequestHeader("Authorization", "Basic "+ Base64.encode(remote.username + ":" + remote.password));
-    //}
+    xhr.setRequestHeader("x-csrftoken", csrf_token);    // csrf_token is global. Initiated as long as each page is loaded.
     xhr.send(JSON.stringify(objects));
 }
 
@@ -44,11 +38,16 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     xhr.open("GET", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
+    
+    // if remote is an empty onject. We know it's a local server reqeust. Use x-csrf-token
+    // Else, it's a remote request. Use Authorization
     if (Object.keys(remote).length === 0 && remote.constructor === Object) {
         xhr.setRequestHeader("x-csrftoken", csrf_token);
     } else {
         xhr.setRequestHeader("Authorization", "Basic " + btoa(remote.username + ":" + remote.password));
     }
+    
+    // try to set x-request-user-id header.
     try{
         xhr.setRequestHeader("x-request-user-id", request_user_id);
     }catch{
