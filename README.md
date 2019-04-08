@@ -20,10 +20,17 @@ To view a demo of our project, check out our [Video Demo!](https://youtu.be/oUkN
 * Account to connect with [https://myblog-cool.herokuapp.com/](https://myblog-cool.herokuapp.com/)
     * username: conecRemote
     * password: conetRemote
+* Account to connect with [http://socialdist2.herokuapp.com/author/login/](http://socialdist2.herokuapp.com/author/login/)
+    * username: remote1 
+    * password: 123
 * Account to connect with us (as [https://myblog-cool.herokuapp.com/](https://myblog-cool.herokuapp.com/)):
     * Do not use this account as a common author
     * username: remotenode2
     * password: remotenode2
+* Account to connect with us (as [http://socialdist2.herokuapp.com/author/login/](http://socialdist2.herokuapp.com/author/login/)):
+    * Do not use this account as a common author
+    * username: remotenode1
+    * password: remotenode1
 
 
 #### Servers connecting with us:
