@@ -7,6 +7,37 @@ For more information, please visit our [wiki page](https://github.com/sajjadhaid
 
 To view a demo of our project, check out our [Video Demo!](https://youtu.be/oUkNwVjryOQ)
 
+## Project Information
+#### Main deployment of our project:
+
+* [http://conet-socialdistribution.herokuapp.com/](http://conet-socialdistribution.herokuapp.com/)
+* Admin Account (Do not use admin as a common author):
+    * username: andrew
+    * password: 123
+* Common Author Account:
+    * username: Dorrryu
+    * password: !@#$%^&*
+* Account to connect with [https://myblog-cool.herokuapp.com/](https://myblog-cool.herokuapp.com/)
+    * username: conecRemote
+    * password: conetRemote
+* Account to connect with us (as [https://myblog-cool.herokuapp.com/](https://myblog-cool.herokuapp.com/)):
+    * Do not use this account as a common author
+    * username: remotenode2
+    * password: remotenode2
+
+
+#### Servers connecting with us:
+
+Deleting [`Node`](https://github.com/sajjadhaiderrr/CMPUT404-Project/wiki/Models#node) objects would cause forever-pending issue. To correctly remove `Node` object, you will also need to remove remote [`Author`](https://github.com/sajjadhaiderrr/CMPUT404-Project/wiki/Models#author) objects for corresponding host.
+
+* [http://socialdist2.herokuapp.com/author/login/](http://socialdist2.herokuapp.com/author/login/)
+    * This is a duplicate deployment of our project. Technically, we can treat it as a remote host, since every communication are through RESTful API.
+    * Common Author Account:
+        * username: test1
+        * password: apple1996
+        
+* [https://myblog-cool.herokuapp.com/](https://myblog-cool.herokuapp.com/)
+
 ## Group Members
 - Jiahao Guo
 - Hussain Khan
