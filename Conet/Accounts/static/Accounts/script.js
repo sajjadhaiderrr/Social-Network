@@ -641,34 +641,66 @@ function get_visible_post_callback(response){
 // loading and creating cards of post cards
 function fetch_github_stream_callback(response){
     var response = JSON.parse(response);
-    for(post of response){
-        //console.log(post);
+    console.log("RESPONSE IS " +response.message);
+    if(response.message == "error"){
+        resmessage = document.createElement("h5");
+        resmessage.innerHTML = "Add a github url to your profile to see your github activity!";
         var card = document.createElement("div");
-        card.classList.add("card","home-page-post-card");
+        card.classList.add("card","home-page-github-card");
+        card.appendChild(resmessage);
 
-        var card_body = document.createElement("div");
-        card_body.classList.add("card-body");
+        document.getElementById("home_page_github_cards").appendChild(card);
+    }
+    else {
+        for(post of response){
+            console.log(post);
+            var card = document.createElement("div");
+            card.classList.add("card","home-page-post-card");
 
-        var card_title = document.createElement("a");
-        card_title.classList.add("card-title");
-        card_title.href = '/posts/' + post.id + "/?host=" + post.author.host ;
-        var link_to_post_page = document.createElement("h3");
-        link_to_post_page.innerText = "Github Post";
-        card_title.appendChild(link_to_post_page);
+            var card_body = document.createElement("div");
+            card_body.classList.add("card-body");
 
-        var publish_time = document.createElement("a");
-        publish_time.classList.add("font-weight-light", "text-muted");
-        publish_time.innerText = post.date;
+            var card_title = document.createElement("a");
+            card_title.classList.add("card-title");
+            var link_to_post_page = document.createElement("h3");
+            const image = new Image();
+            image.src = post.avatar_url;
+            image.width = "40";
+            image.height = "40";
+            image.style.borderRadius = "50%";
+            
+            link_to_post_page.appendChild(image);
+            
+        
+            
+            card_title.appendChild(link_to_post_page);
 
-        var content = document.createElement("p");
-        content.innerText = post.event_message;
+            var publish_time = document.createElement("a");
+            publish_time.classList.add("font-weight-light", "text-muted");
 
-        card_body.appendChild(card_title);
-        card_body.appendChild(publish_time);
-        card_body.appendChild(document.createElement("hr"));
-        card_body.appendChild(content);
-        card.appendChild(card_body);
-        document.getElementById("home_page_post_cards").appendChild(card);
+            var publish_date_time = Date.parse(post.date);
+            var now = new Date();
+            var sec_ago = (now - publish_date_time)/1000;
+            var min_ago = sec_ago / 60;
+            var hr_ago = min_ago / 60;
+            var days_ago = hr_ago / 24;
+            if (min_ago < 60){
+                publish_time.innerText = Math.round(min_ago) + " mins. ago";
+            }else if (hr_ago < 60){
+                publish_time.innerText = Math.round(hr_ago) + " hrs. ago";
+            }else{
+                publish_time.innerText = Math.round(days_ago) + " days ago";
+            }
+
+            var content = document.createElement("p");
+            content.innerText = post.event_message;
+            card_body.appendChild(card_title);
+            card_body.appendChild(publish_time);
+            card_body.appendChild(document.createElement("hr"));
+            card_body.appendChild(content);
+            card.appendChild(card_body);
+            document.getElementById("home_page_github_cards").appendChild(card);
+        }
     }
 }
 

@@ -82,6 +82,14 @@
     margin-top:5pt;
 }
 
+.home-page-github-card{
+    margin-top:5pt;
+}
+.home-page-github-card h5{
+    margin:2%;
+}
+
+
 #profile-card-button{
     display: block;
     margin-left: auto;

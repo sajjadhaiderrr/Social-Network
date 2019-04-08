@@ -25,7 +25,7 @@
         </script>
         <div class='content row'>
             <!-- card -->  
-            <div id="profile-card" class='col-sm-3 card' style="height:fit-content">
+            <div id="profile-card" class='col-sm-3 card' style="height: 100%;">
                 <h1 id="displayName" class="h1 text-primary center-text"></h1>
                 <hr>
                 <div id='profile-card-info'>
@@ -60,7 +60,7 @@
                         <button id="btn-unfriend" class="btn btn-outline-primary" onclick="sendUnFriendRequest(current_user, user_be_viewed)">Unfollow</a>
                     {% endif %}
                 {% else %}
-                    <button id="btn-edit" class="btn btn-primary" onclick="editProfile()">Edit</button>
+                    <button id="btn-edit" class="btn btn-primary" onclick="editProfile()" style="margin-bottom: 3%">Edit</button>
                 {% endif %}
             </div>
             <!-- end of card -->
