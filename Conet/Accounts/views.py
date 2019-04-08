@@ -162,7 +162,7 @@ class FriendsPage(View):
             from_one_host = True
         else:
             from_one_host = False
-            node = Node.objects.get(foreignHost=request.GET['host'])
+            node = Node.objects.get(foreignHost=host)
             remote['host'] = host
             remote['username'] = node.remoteUsername
             remote['password'] = node.remotePassword
