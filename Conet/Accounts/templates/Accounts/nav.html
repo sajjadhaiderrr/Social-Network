@@ -25,7 +25,7 @@
                     <a class="nav-link" href='{{request.user.url|add:"/info/?host="|add:request.user.host}} '>Profile</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href='{{request.user.url|add:"/friends/"}}'>Friends</a>
+                    <a class="nav-link" href='{{request.user.url|add:"/friends/?host="|add:request.user.host}}'>Friends</a>
                 </li>
             </ul>
             <form class="form-inline" action="{% url 'searchresult' %}" method='get' >
