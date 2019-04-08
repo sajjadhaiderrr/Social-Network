@@ -62,7 +62,7 @@ class ProfilePage(View):
         # get current user and user that is being viewed
         scheme = urlsplit(request.build_absolute_uri(None)).scheme
         if (scheme=="https"):
-            return HttpResponseRedirect('/')
+            return HttpResponseRedirect('http://'+request.META['HTTP_HOST']+"/")
         user_be_viewed_id = pk
         current_user = request.user
         nodes = Node.objects.all()
