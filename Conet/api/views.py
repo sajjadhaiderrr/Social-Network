@@ -566,6 +566,7 @@ class AuthorFriends(APIView):
             for friend in friends:
                 if friend.url in request_friends:
                     response['authors'].append(friend.url)
+            print('friends api: ', response['authors'])
             return Response(response)
         except:
             response['authors'] = []
