@@ -173,6 +173,11 @@ def is_sharePosts(is_local, userObj):
         return False
     return True
 
+def is_shareImgs(is_local, userObj):
+    if not is_local and not userObj.node.shareImgs:
+        return False
+    return True
+
 def get_request_author(is_local, request):
     if is_local:
         return Author.objects.get(id=request.user.id)

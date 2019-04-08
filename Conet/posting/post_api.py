@@ -10,6 +10,7 @@ from django.shortcuts import render
 from Accounts.models import Author
 from api.ApiHelper import *
 from django.core.paginator import Paginator
+from django.db.models import Q
 import requests
 
 import uuid
@@ -273,6 +274,11 @@ class ReadAllPublicPosts(APIView):
             size = ""
 
         posts = Post.objects.filter(visibility="PUBLIC", unlisted = False).order_by('published')  # pylint: disable=maybe-no-member
+        
+        if not is_shareImgs(is_local, request.user):
+            posts = posts.exclude(Q(contentType='image/png;base64') |
+                                  Q(contentType='image/jpeg;base64'))
+        
         count = posts.count()
 
         if (page and size):
@@ -329,6 +335,11 @@ class ReadSinglePost(APIView):
         if not is_sharePosts(is_local, request.user):
             return Response(response_object, status=403)
         
+        if not is_shareImgs(is_local, request.user):
+            if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64':
+                return Response(status=403)
+
+
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
         if (post.visibility == "PUBLIC"):
@@ -438,6 +449,10 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             post = Post.objects.get(pk=post_id) # pylint: disable=maybe-no-member
         except:
             return Response(response_object, status=status.HTTP_200_OK)
+
+        if not is_shareImgs(is_local, request.user):
+            if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64':
+                return Response(status=403)
 
         #start off by  getting the
         #page and size from the query string
@@ -562,6 +577,10 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         if not is_sharePosts(is_local, request.user):
             return Response(status=403)
+
+        if not is_shareImgs(is_local, request.user):
+            if post.contentType == 'image/png;base64' or post.contentType == 'image/jpeg;base64':
+                return Response(status=403)
 
         if is_local:
             #lets check if an author is logged in firstst

@@ -605,7 +605,7 @@ class AuthorPostsAPI(APIView):
         print("=============")
         is_local = ApiHelper.is_local_request(request)
         allposts = []
-        page_size = 10
+        page_size = 1000
         posts = Post.objects.none() # pylint: disable=maybe-no-member
 
         if not ApiHelper.is_sharePosts(is_local, request.user):
@@ -680,6 +680,10 @@ class AuthorPostsAPI(APIView):
             posts |= newposts
         #get all private which can fullfill condition
         posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
+
+        if not ApiHelper.is_shareImgs(is_local, request.user):
+            posts = posts.exclude(Q(contentType='image/png;base64') |
+                          Q(contentType='image/jpeg;base64'))
 
         allposts = foreign_posts
         for post in posts:
@@ -795,7 +799,7 @@ class ViewAuthorPostAPI(APIView):
         print("==================")
         is_local = ApiHelper.is_local_request(request)
         allposts = []
-        page_size = 10
+        page_size = 1000
         valid_req_user_id = True
         FOAF = False
         posts = Post.objects.none() # pylint: disable=maybe-no-member
@@ -847,6 +851,10 @@ class ViewAuthorPostAPI(APIView):
                     foaf_posts = Post.objects.filter(postauthor=author_be_viewed, visibility="FOAF", unlisted=False)
                     if foaf_posts.exists() and ApiHelper.permission_on_foaf(current_user, author_be_viewed, is_local):
                         posts |= foaf_posts
+
+        if not ApiHelper.is_shareImgs(is_local, request.user):
+            posts = posts.exclude(Q(contentType='image/png;base64') |
+                                  Q(contentType='image/jpeg;base64'))
 
         posts = posts.order_by(F("published").desc())
         for post in posts:
