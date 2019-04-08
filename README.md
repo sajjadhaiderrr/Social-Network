@@ -5,6 +5,8 @@ For remote funcionalities, we will not store any information of posts from other
 
 For more information, please visit our [wiki page](https://github.com/sajjadhaiderrr/CMPUT404-Project/wiki)
 
+[Video Demo](https://youtu.be/oUkNwVjryOQ)
+
 ## Group Member
 - Jiahao Guo
 - Hussain Khan
