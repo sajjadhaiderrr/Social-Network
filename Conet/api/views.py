@@ -681,6 +681,10 @@ class AuthorPostsAPI(APIView):
         #get all private which can fullfill condition
         posts |= Post.objects.filter(postid__in=visible_post)  # pylint: disable=maybe-no-member
 
+        if not ApiHelper.is_shareImgs(is_local, request.user):
+            posts = posts.exclude(Q(contentType='image/png;base64') |
+                          Q(contentType='image/jpeg;base64'))
+
         allposts = foreign_posts
         for post in posts:
             serializer = PostSerializer(post).data
@@ -847,6 +851,10 @@ class ViewAuthorPostAPI(APIView):
                     foaf_posts = Post.objects.filter(postauthor=author_be_viewed, visibility="FOAF", unlisted=False)
                     if foaf_posts.exists() and ApiHelper.permission_on_foaf(current_user, author_be_viewed, is_local):
                         posts |= foaf_posts
+
+        if not ApiHelper.is_shareImgs(is_local, request.user):
+            posts = posts.exclude(Q(contentType='image/png;base64') |
+                                  Q(contentType='image/jpeg;base64'))
 
         posts = posts.order_by(F("published").desc())
         for post in posts:
