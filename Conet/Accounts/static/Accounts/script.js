@@ -8,8 +8,7 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
                 callback(xhr.response);
             }
             catch (e) {
-                //alert('XHR Error: ' + e.name);
-                console.log(url);
+                console.log('XHR Error: ' + e.name);
             }
         }
     };
@@ -19,12 +18,7 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
-
-    //if (Object.keys(remote).length === 0 && remote.constructor === Object){
-    xhr.setRequestHeader("x-csrftoken", csrf_token);
-    //}else{
-    //    xhr.setRequestHeader("Authorization", "Basic "+ Base64.encode(remote.username + ":" + remote.password));
-    //}
+    xhr.setRequestHeader("x-csrftoken", csrf_token);    // csrf_token is global. Initiated as long as each page is loaded.
     xhr.send(JSON.stringify(objects));
 }
 
@@ -35,7 +29,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
             if (xhr.status == 200) {
                 callback(xhr.response);
             }
-            
+
         }
     };
     if (xhr.overrideMimeType) {
@@ -44,11 +38,16 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     xhr.open("GET", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
+    
+    // if remote is an empty onject. We know it's a local server reqeust. Use x-csrf-token
+    // Else, it's a remote request. Use Authorization
     if (Object.keys(remote).length === 0 && remote.constructor === Object) {
         xhr.setRequestHeader("x-csrftoken", csrf_token);
     } else {
         xhr.setRequestHeader("Authorization", "Basic " + btoa(remote.username + ":" + remote.password));
     }
+    
+    // try to set x-request-user-id header.
     try{
         xhr.setRequestHeader("x-request-user-id", request_user_id);
     }catch{
@@ -93,7 +92,7 @@ function addComment(post_url, id, same_host){
             if (remote_host == post_host){
                 header["Authorization"] = "Basic " + btoa(r.username + ":" + r.password);
             }
-        } 
+        }
     };
     let commentForm = {
         "query":"addComment",
@@ -107,7 +106,7 @@ function addComment(post_url, id, same_host){
                    "comment":"",
                    "contentType":"text/plain",
                    "published": new Date().toISOString(),
-                   "id": uuidv4()    
+                   "id": uuidv4()
         }
     };
 
@@ -135,7 +134,7 @@ function addComment(post_url, id, same_host){
         {
         }
     });
-    
+
 }
 
 // callback function after sending unfriend request
@@ -290,7 +289,7 @@ function getFriends(user, remote, from_one_host) {
     }else{
         sendJSONHTTPGet(url, request_body, sendFriendsCallback, remote[0]);
     }
-    
+
 }
 
 function getFollowers(user) {

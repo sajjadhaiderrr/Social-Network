@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% load bootstrap4 %}
-
+{% load static %}
 {% block title %} Edit Post {% endblock %}
 
 {% block content %}
   {% if user.is_authenticated %}
   <script>
-      var current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}' };
+      var current_user =  {"id": '{{ request.user.id }}', "host": '{{ request.user.host }}', "displayName": '{{ request.user.displayName }}', "url": '{{ request.user.url }}', "postId": '{{post.postid}}' };
+      editPage();
   </script>
     <div class="createpost-back">
       <div class="container">
@@ -16,7 +17,7 @@
             <div class="card-body">
               <form class="form" id="createform"action="" method="post">
                 <select name="content-type" id=contentType onchange="contentEnable()" value='{{post.contentType}}' >
-                  <option value="text/plain" selected> Text </option>
+                  <option value="text/plain"> Text </option>
                   <option value="image/png;base64"> PNG </option>
                   <option value="image/jpeg;base64"> JPEG </option>
                   <option value="application/base64"> Application </option>
@@ -37,7 +38,7 @@
 
                 <form> Who should see this? <br>
                   <select name="visibilityOptions" id="visibility" onchange="selectFriends()" value='{{post.visibility}}'>
-                    <option value="PUBLIC" selected> Public </option>
+                    <option value="PUBLIC"> Public </option>
                     <option value="FRIENDS" > Friends </option>
                     <option value="FOAF" > Friend of a Friend </option>
                     <option value="PRIVATE" > Private To </option>

@@ -112,8 +112,7 @@ class InfoPage(APIView):
         
         user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
         remote = {}
-        print(host)
-        print(request.get_host())
+
         # need to merge
         if(request.get_host() in host):
             remote['host'] = host
@@ -155,8 +154,7 @@ class FriendsPage(View):
         user_be_viewed={"id":authorId, "host":request.GET['host'], "url":url, "displayName":"abc"}
         host = request.GET['host']
         remote = {}
-        print(host)
-        print(request.get_host())
+
         # need to merge
         if(request.get_host() == host[7:]):
             remote['host'] = host

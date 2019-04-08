@@ -1,4 +1,52 @@
 //https://stackoverflow.com/questions/22087076/how-to-make-a-simple-image-upload-using-javascript-html
+
+var form = {
+  title: "",
+  description: "",
+  categories: "",
+  contentType: "",
+  content: "",
+  visibility: "",
+  unlisted: "",
+  visibleTo: ""
+}
+
+function editPage(){
+  var postJSON = getPost();
+  var data = Promise.resolve(postJSON);
+  data.then(function(post) {
+  document.getElementById("title").value = form.title = post.title;
+  document.getElementById("description").value = form.description = post.description;
+  document.getElementById("categories").value = form.categories= post.categories;
+  document.getElementById("contentType").value = form.contentType = post.contentType;
+  document.getElementById("content").value = form.content = post.content;
+  document.getElementById("visibility").value = form.visibility = post.visibility;
+  form.unlisted = post.unlisted;
+  form.visibleTo = post.visibleTo;
+  });
+}
+
+
+function getPost() {
+  url = '/posts/'+current_user.postId;
+  return fetch(url, {
+      method: "GET",
+      mode: "cors",
+      cache: "no-cache",
+      credentials: "same-origin",
+      redirect: "follow",
+      referrer: "no-referrer",
+  })
+  .then(response => {
+    if (response.status === 200) {
+      return response.json();
+    }
+    else {
+      alert(response.status);
+    }
+  });
+}
+
 var uploadedImage="";
 function uploadFile() {
   var file = document.querySelector('input[type=file]').files[0];
@@ -32,6 +80,7 @@ function uploadFile() {
 
 
 function contentEnable() {
+  console.log(current_user);
   var checkContentType = document.getElementById("contentType").value;
   if (checkContentType=="text/plain" || checkContentType=="text/markdown") {
     document.getElementById("content").placeholder = "What would you like to share?";
@@ -82,38 +131,7 @@ function setFriends() {
 }
 
 
-function getFriends() {
-  url = '/author/'+current_user.id+'/friends';
-  return fetch(url, {
-      method: "GET",
-      mode: "cors",
-      cache: "no-cache",
-      credentials: "same-origin",
-      redirect: "follow",
-      referrer: "no-referrer",
-  })
-  .then(response => {
-    if (response.status === 200) {
-      return response.json();
-    }
-    else {
-      alert(response.status);
-    }
-  });
-}
-
 function editPost() {
-  let form = {
-    title: "",
-    description: "",
-    categories: "",
-    contentType: "",
-    content: "",
-    visibility: "",
-    unlisted: "",
-    visibleTo: ""
-  }
-
   form.title = document.getElementById("title").value;
   form.description = document.getElementById("description").value;
   form.categories = document.getElementById("categories").value;
@@ -125,7 +143,9 @@ function editPost() {
   }
 
   else if (form.contentType == "image/png;base64" || form.contentType == "image/jpeg;base64" || form.contentType == "application/base64") {
-    form.content = uploadedImage;
+    if (uploadedImage != "") {
+      form.content = uploadedImage;
+  }
   }
 
   form.visibility = document.getElementById("visibility").value;

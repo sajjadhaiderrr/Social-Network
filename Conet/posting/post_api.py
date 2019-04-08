@@ -334,7 +334,6 @@ def CheckPermissions(author, post):
     '''
     author_of_post = post.postauthor
     from_one_host = author.host == author_of_post.host
-    print("from_one_host: ", from_one_host)
     if (post.visibility == "FRIENDS"):
         if from_one_host:
             friends = get_friends(author_of_post)
@@ -397,6 +396,8 @@ class ReadAllPublicPosts(APIView):
 
     # get: All posts marked as public on the server
     def get(self, request):
+        is_local = is_local_request(request)
+
         response_object = {
             "query":"getPosts",
             "count": None,
@@ -405,6 +406,9 @@ class ReadAllPublicPosts(APIView):
             "previous": None,
             "posts": None
         }
+
+        if not is_sharePosts(is_local, request.user):
+            return Response(status=403)
 
         request_url = request.build_absolute_uri("/").strip("/")
         previous_page = None
@@ -443,6 +447,18 @@ class ReadAllPublicPosts(APIView):
         response_object["count"] = count
         return Response(response_object, status=status.HTTP_200_OK)
 
+    def post(self, request):
+        # POST: Create a post
+        curAuthor = Author.objects.get(id=request.user.id)
+        origin = request.scheme+ "://" +request.get_host()+ "/"
+        serializer = PostSerializer(data=request.data, context={'author': curAuthor, 'origin': origin})
+        if serializer.is_valid():
+            serializer.save()
+            #Todo: response success message on json format
+            return Response()
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # path: /posts/{post_id}
 class ReadSinglePost(APIView):
     #Authentication
@@ -462,6 +478,9 @@ class ReadSinglePost(APIView):
         except:
             return Response(response_object, status=status.HTTP_404_NOT_FOUND)
 
+        if not is_sharePosts(is_local, request.user):
+            return Response(response_object, status=403)
+        
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
         if (post.visibility == "PUBLIC"):
@@ -559,6 +578,9 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             "previous": None,
             "comments": None
         }
+
+        if not is_sharePosts(is_local, request.user):
+            return Response(response_object, status=403)
 
         request_url = request.build_absolute_uri("/").strip("/")
         previous_page = None
@@ -671,7 +693,6 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
     # post: Add a comment to a post
     def post(self, request, post_id):
-        #print("comment: ", request.data['comment'])
         is_local = is_local_request(request)
         response_object = {
             "query":"addComment",
@@ -690,11 +711,12 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         data = request.data['comment']
         data['post'] = post_id
-        #print("data: ", data)
-        print("is_local: ", is_local)
+
+        if not is_sharePosts(is_local, request.user):
+            return Response(status=403)
+
         if is_local:
             #lets check if an author is logged in firstst
-            print("local user: ", request.user.id)
             try:
                 author = Author.objects.get(id=request.user.id)
             except:
@@ -702,7 +724,6 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
                 response_object["message"] = "Log in to add a comment."
                 return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         else:
-            print("from remote")
             request_author = request.data['comment']['author']
             request_author_id = urls_to_ids([request_author['id']])[0]
             author = Author.objects.filter(id=request_author_id)
@@ -723,7 +744,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
                 response_object["type"] = True
                 response_object["message"] = "Successfully added comment."
                 return Response(response_object, status=status.HTTP_200_OK)
-            print(serializer.validated_data)
+
             response_object["type"] = False
             response_object["message"] = "Could not add comment."
             return Response(response_object, status=status.HTTP_400_BAD_REQUEST)
