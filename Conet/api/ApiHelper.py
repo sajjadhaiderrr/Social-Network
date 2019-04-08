@@ -103,8 +103,10 @@ def update_friends(user, host):
                     'author': localhost + '/author/' + str(user.id),
                     'authors': friends}
 
+        #print("update friend req: ", send_query)
         friend_query, _ = obtain_from_remote_node(url=friends_api, host=host, 
             method='POST', send_query=json.dumps(send_query))
+        #print("update friend res: ", friend_query)
         #add = list(set(friend_query['authors']) - set(friends))
         friends = {friend.replace(host+'/author/', '') for friend in friends}
         friend_query['authors'] = {friend.replace(host+'/author/', '') for friend in friend_query['authors']}

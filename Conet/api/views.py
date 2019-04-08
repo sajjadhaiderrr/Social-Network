@@ -550,8 +550,8 @@ class AuthorFriends(APIView):
         request_body = json.loads(request.body.decode())
 
         # get the authors who are checked be a friend of author shows in URL
-        #request_friends = ApiHelper.urls_to_ids(request_body['authors'])
-        request_friends = request_body['authors']
+        request_friends = ApiHelper.urls_to_ids(request_body['authors'])
+        #request_friends = request_body['authors']
 
         response = {"query":'friends',
                     "author": request_body['author']}
@@ -561,12 +561,11 @@ class AuthorFriends(APIView):
             current_user = Author.objects.get(id=kwargs['pk'])
 
             friends = ApiHelper.get_friends(current_user)
-            friends = Author.objects.filter(id__in=friends)
+            #friends = Author.objects.filter(id__in=friends)
             response['authors'] = []
             for friend in friends:
-                if friend.url in request_friends:
-                    response['authors'].append(friend.url)
-            print('friends api: ', response['authors'])
+                if friend in request_friends:
+                    response['authors'].append(friend)
             return Response(response)
         except:
             response['authors'] = []
