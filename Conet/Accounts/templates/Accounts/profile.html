@@ -24,7 +24,7 @@
         </script>
         <div class="content row">
             <!-- card -->
-            <div class='col-sm-3 card' style="height:fit-content;">
+            <div class='col-sm-3 card' style="height: 100%;">
                 <h1 id="displayName"class="h1 text-primary center-text">{{request.user.displayName}}</h1>
                 <hr>
                 <div class='row'>
@@ -52,7 +52,15 @@
             </div>
             <!-- end of card -->
 
-            <div class='col-sm-8' id="home_page_post_cards" style="margin-left:1%">
+            <div class='col-sm-5' id="home_page_post_cards" style="margin-left:1%">
+
+            </div>
+            <div class='col-sm-3' id="home_page_github_cards" style="margin-left:1%">
+                <div class='card'>
+                    <h2 style="margin-top:1%;margin-left:2%;"><img src="{% static 'img/github.png' %}" height="42" width="42">
+                        Github Activity
+                    </h2>
+                </div>
 
             </div>
         </div>

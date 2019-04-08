@@ -42,7 +42,7 @@ def obtain_from_remote_node(url, host, method='GET', send_query=None, header={})
             res = requests.post(url, headers=header, data=send_query, auth=authentication)
         else:
             return {'code': 405}
-        print("response json: ", res.json())
+        #print("response json: ", res.json())
         return (res.json(), res.status_code)
     except Exception as e:
         print("Exception on remote request: ", e)
@@ -103,8 +103,10 @@ def update_friends(user, host):
                     'author': localhost + '/author/' + str(user.id),
                     'authors': friends}
 
+        #print("update friend req: ", send_query)
         friend_query, _ = obtain_from_remote_node(url=friends_api, host=host, 
             method='POST', send_query=json.dumps(send_query))
+        #print("update friend res: ", friend_query)
         #add = list(set(friend_query['authors']) - set(friends))
         friends = {friend.replace(host+'/author/', '') for friend in friends}
         friend_query['authors'] = {friend.replace(host+'/author/', '') for friend in friend_query['authors']}
@@ -165,6 +167,11 @@ def is_local_request(request):
     except:
         return True
     return False
+
+def is_sharePosts(is_local, userObj):
+    if not is_local and not userObj.node.sharePosts:
+        return False
+    return True
 
 def get_request_author(is_local, request):
     if is_local:

@@ -8,5 +8,5 @@ urlpatterns = [
     path('<uuid:authorId>/info/', views.InfoPage.as_view(), name='info'),
     path('<uuid:authorId>/friends/', views.FriendsPage.as_view(), name='friends'),
     path('<uuid:pk>/followers/', views.FollowersPage.as_view(), name='followers'),
-    path('<uuid:pk>/following/', views.FollowingPage.as_view(), name='following'),
+    path('<uuid:pk>/following/', views.FollowingPage.as_view(), name='following'),    
 ]

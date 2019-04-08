@@ -17,162 +17,7 @@ import json
 import datetime
 
 
-
-
-def getGitHubPosts(author_id):
-        try:
-            author = Author.objects.get(id=author_id)
-        except:
-            print("Author not found.")
-            return None
-        github_url = author.github
-        try:
-            github_username = github_url.split("/")[3]
-        except:
-            print("Github url is wrong format.")
-            return
-        request_url = "https://api.github.com/users/" + github_username + "/events/public"
-        response = requests.get(request_url)
-        json_data = json.loads(response.text)
-
-        events = []
-        for data in json_data:
-            if (data["type"] == "GollumEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
-
-                payload = data["payload"]
-                pages = payload["pages"][0]
-                event_string = display_name + " " + pages["action"] + " " + pages["page_name"]
-
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
-
-            elif (data["type"] == "CreateEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
-
-                payload = data["payload"]
-                repo = data["repo"]
-                if (payload["ref"] != None):
-                    event_string = display_name + " created " + payload["ref_type"] + " " + payload["ref"] + " on " + repo["name"]
-                else:
-                    event_string = display_name + " created " + payload["ref_type"] + " " + repo["name"]
-
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
-
-            elif (data["type"] == "IssuesEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
-
-                payload = data["payload"]
-                issue = payload["issue"]
-                event_string = "{} {} {}".format(display_name, payload["action"], issue["title"])
-
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
-
-            elif (data["type"] == "IssueCommentEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
-
-                payload = data["payload"]
-                issue = payload["issue"]
-                comment = payload["comment"]
-                event_string = "{} {} comment \"{}\" on issue {}".format(display_name, payload["action"], comment["body"], issue["title"])
-
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
-
-            elif (data["type"] == "PullRequestEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
-
-                payload = data["payload"]
-                pull_request = payload["pull_request"]
-                event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
-
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
-
-            elif (data["type"] == "PushEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
-
-                payload = data["payload"]
-                commits = payload["commits"]
-                commit_messages = ""
-                for commit in commits:
-                    commit_messages += "{} commited \"{}\"\n".format(display_name, commit["message"])
-                formatted = commit_messages.strip()
-
-                event["event_message"] = formatted
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
-
-            elif (data["type"] == "DeleteEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
-
-                payload = data["payload"]
-                event_string = "{} deleted {} \"{}\"".format(display_name, payload["ref_type"], payload["ref"])
-
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
-
-            elif (data["type"] == "ForkEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
-
-                payload = data["payload"]
-                repo = data["repo"]
-                event_string = "{} forked \"{}\"".format(display_name, repo["name"])
-
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
-
-        return events
-
-
-
-
-
-
-
 # get github stream
-# path: /posts/github
 class ReadGithubStream(APIView):
     def get(self, request):
         author_id = request.user.id
@@ -180,146 +25,149 @@ class ReadGithubStream(APIView):
             author = Author.objects.get(id=author_id)
         except:
             print("Author not found.")
-            return None
+            return Response({"message": "error"}, status=status.HTTP_200_OK)
         github_url = author.github
         try:
             github_username = github_url.split("/")[3]
         except:
-            print("Github url is wrong format.")
-            return
+            return Response({"message": "error"}, status=status.HTTP_200_OK)
         request_url = "https://api.github.com/users/" + github_username + "/events/public"
-        response = requests.get(request_url)
-        json_data = json.loads(response.text)
+        try:
+            response = requests.get(request_url)
+            json_data = json.loads(response.text)
 
-        events = []
-        for data in json_data:
-            if (data["type"] == "GollumEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
+            events = []
+            for data in json_data:
+                if (data["type"] == "GollumEvent"):
+                    event = {"event_message": None, "avatar_url": None}
+                    actor = data["actor"]
+                    display_name = actor["display_login"]
+                    avatar_url = actor["avatar_url"]
 
-                payload = data["payload"]
-                pages = payload["pages"][0]
-                event_string = display_name + " " + pages["action"] + " " + pages["page_name"]
+                    payload = data["payload"]
+                    pages = payload["pages"][0]
+                    event_string = display_name + " " + pages["action"] + " " + pages["page_name"]
 
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
+                    event["event_message"] = event_string
+                    event["avatar_url"] = avatar_url
+                    event["date"] = data["created_at"]
+                    events.append(event)
 
-            elif (data["type"] == "CreateEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
+                elif (data["type"] == "CreateEvent"):
+                    event = {"event_message": None, "avatar_url": None}
+                    actor = data["actor"]
+                    display_name = actor["display_login"]
+                    avatar_url = actor["avatar_url"]
 
-                payload = data["payload"]
-                repo = data["repo"]
-                if (payload["ref"] != None):
-                    event_string = display_name + " created " + payload["ref_type"] + " " + payload["ref"] + " on " + repo["name"]
-                else:
-                    event_string = display_name + " created " + payload["ref_type"] + " " + repo["name"]
+                    payload = data["payload"]
+                    repo = data["repo"]
+                    if (payload["ref"] != None):
+                        event_string = display_name + " created " + payload["ref_type"] + " " + payload["ref"] + " on " + repo["name"]
+                    else:
+                        event_string = display_name + " created " + payload["ref_type"] + " " + repo["name"]
 
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
+                    event["event_message"] = event_string
+                    event["avatar_url"] = avatar_url
+                    event["date"] = data["created_at"]
+                    events.append(event)
 
-            elif (data["type"] == "IssuesEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
+                elif (data["type"] == "IssuesEvent"):
+                    event = {"event_message": None, "avatar_url": None}
+                    actor = data["actor"]
+                    display_name = actor["display_login"]
+                    avatar_url = actor["avatar_url"]
 
-                payload = data["payload"]
-                issue = payload["issue"]
-                event_string = "{} {} {}".format(display_name, payload["action"], issue["title"])
+                    payload = data["payload"]
+                    issue = payload["issue"]
+                    event_string = "{} {} {}".format(display_name, payload["action"], issue["title"])
 
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
+                    event["event_message"] = event_string
+                    event["avatar_url"] = avatar_url
+                    event["date"] = data["created_at"]
+                    events.append(event)
 
-            elif (data["type"] == "IssueCommentEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
+                elif (data["type"] == "IssueCommentEvent"):
+                    event = {"event_message": None, "avatar_url": None}
+                    actor = data["actor"]
+                    display_name = actor["display_login"]
+                    avatar_url = actor["avatar_url"]
 
-                payload = data["payload"]
-                issue = payload["issue"]
-                comment = payload["comment"]
-                event_string = "{} {} comment \"{}\" on issue {}".format(display_name, payload["action"], comment["body"], issue["title"])
+                    payload = data["payload"]
+                    issue = payload["issue"]
+                    comment = payload["comment"]
+                    event_string = "{} {} comment \"{}\" on issue {}".format(display_name, payload["action"], comment["body"], issue["title"])
 
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
+                    event["event_message"] = event_string
+                    event["avatar_url"] = avatar_url
+                    event["date"] = data["created_at"]
+                    events.append(event)
 
-            elif (data["type"] == "PullRequestEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
+                elif (data["type"] == "PullRequestEvent"):
+                    event = {"event_message": None, "avatar_url": None}
+                    actor = data["actor"]
+                    display_name = actor["display_login"]
+                    avatar_url = actor["avatar_url"]
 
-                payload = data["payload"]
-                pull_request = payload["pull_request"]
-                event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
+                    payload = data["payload"]
+                    pull_request = payload["pull_request"]
+                    event_string = "{} {} pull request \"{}\"".format(display_name, payload["action"], pull_request["title"])
 
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
+                    event["event_message"] = event_string
+                    event["avatar_url"] = avatar_url
+                    event["date"] = data["created_at"]
+                    events.append(event)
 
-            elif (data["type"] == "PushEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
+                elif (data["type"] == "PushEvent"):
+                    event = {"event_message": None, "avatar_url": None}
+                    actor = data["actor"]
+                    display_name = actor["display_login"]
+                    avatar_url = actor["avatar_url"]
 
-                payload = data["payload"]
-                commits = payload["commits"]
-                commit_messages = ""
-                for commit in commits:
-                    commit_messages += "{} commited \"{}\"\n".format(display_name, commit["message"])
-                formatted = commit_messages.strip()
+                    payload = data["payload"]
+                    commits = payload["commits"]
+                    commit_messages = ""
+                    for commit in commits:
+                        commit_messages += "{} commited \"{}\"\n".format(display_name, commit["message"])
+                    formatted = commit_messages.strip()
 
-                event["event_message"] = formatted
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
+                    event["event_message"] = formatted
+                    event["avatar_url"] = avatar_url
+                    event["date"] = data["created_at"]
+                    events.append(event)
 
-            elif (data["type"] == "DeleteEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
+                elif (data["type"] == "DeleteEvent"):
+                    event = {"event_message": None, "avatar_url": None}
+                    actor = data["actor"]
+                    display_name = actor["display_login"]
+                    avatar_url = actor["avatar_url"]
 
-                payload = data["payload"]
-                event_string = "{} deleted {} \"{}\"".format(display_name, payload["ref_type"], payload["ref"])
+                    payload = data["payload"]
+                    event_string = "{} deleted {} \"{}\"".format(display_name, payload["ref_type"], payload["ref"])
 
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
+                    event["event_message"] = event_string
+                    event["avatar_url"] = avatar_url
+                    event["date"] = data["created_at"]
+                    events.append(event)
 
-            elif (data["type"] == "ForkEvent"):
-                event = {"event_message": None, "avatar_url": None}
-                actor = data["actor"]
-                display_name = actor["display_login"]
-                avatar_url = actor["avatar_url"]
+                elif (data["type"] == "ForkEvent"):
+                    event = {"event_message": None, "avatar_url": None}
+                    actor = data["actor"]
+                    display_name = actor["display_login"]
+                    avatar_url = actor["avatar_url"]
 
-                payload = data["payload"]
-                repo = data["repo"]
-                event_string = "{} forked \"{}\"".format(display_name, repo["name"])
+                    payload = data["payload"]
+                    repo = data["repo"]
+                    event_string = "{} forked \"{}\"".format(display_name, repo["name"])
 
-                event["event_message"] = event_string
-                event["avatar_url"] = avatar_url
-                event["date"] = data["created_at"]
-                events.append(event)
+                    event["event_message"] = event_string
+                    event["avatar_url"] = avatar_url
+                    event["date"] = data["created_at"]
+                    events.append(event)
 
-        return Response(events, status=status.HTTP_200_OK)
+            return Response(events[0:10], status=status.HTTP_200_OK)
+        except:
+            return Response({"message": "error"}, status=status.HTTP_200_OK)
+
 
 def CheckPermissions(author, post):
     #if the visibility is set to FRIENDS,
@@ -334,7 +182,6 @@ def CheckPermissions(author, post):
     '''
     author_of_post = post.postauthor
     from_one_host = author.host == author_of_post.host
-    print("from_one_host: ", from_one_host)
     if (post.visibility == "FRIENDS"):
         if from_one_host:
             friends = get_friends(author_of_post)
@@ -397,6 +244,8 @@ class ReadAllPublicPosts(APIView):
 
     # get: All posts marked as public on the server
     def get(self, request):
+        is_local = is_local_request(request)
+
         response_object = {
             "query":"getPosts",
             "count": None,
@@ -405,6 +254,9 @@ class ReadAllPublicPosts(APIView):
             "previous": None,
             "posts": None
         }
+
+        if not is_sharePosts(is_local, request.user):
+            return Response(status=403)
 
         request_url = request.build_absolute_uri("/").strip("/")
         previous_page = None
@@ -443,6 +295,18 @@ class ReadAllPublicPosts(APIView):
         response_object["count"] = count
         return Response(response_object, status=status.HTTP_200_OK)
 
+    def post(self, request):
+        # POST: Create a post
+        curAuthor = Author.objects.get(id=request.user.id)
+        origin = request.scheme+ "://" +request.get_host()+ "/"
+        serializer = PostSerializer(data=request.data, context={'author': curAuthor, 'origin': origin})
+        if serializer.is_valid():
+            serializer.save()
+            #Todo: response success message on json format
+            return Response()
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # path: /posts/{post_id}
 class ReadSinglePost(APIView):
     #Authentication
@@ -462,6 +326,9 @@ class ReadSinglePost(APIView):
         except:
             return Response(response_object, status=status.HTTP_404_NOT_FOUND)
 
+        if not is_sharePosts(is_local, request.user):
+            return Response(response_object, status=403)
+        
         #if the posts visibility is set
         #to PUBLIC, we are ok to return it
         if (post.visibility == "PUBLIC"):
@@ -559,6 +426,9 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
             "previous": None,
             "comments": None
         }
+
+        if not is_sharePosts(is_local, request.user):
+            return Response(response_object, status=403)
 
         request_url = request.build_absolute_uri("/").strip("/")
         previous_page = None
@@ -671,7 +541,6 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
     # post: Add a comment to a post
     def post(self, request, post_id):
-        #print("comment: ", request.data['comment'])
         is_local = is_local_request(request)
         response_object = {
             "query":"addComment",
@@ -690,11 +559,12 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
 
         data = request.data['comment']
         data['post'] = post_id
-        #print("data: ", data)
-        print("is_local: ", is_local)
+
+        if not is_sharePosts(is_local, request.user):
+            return Response(status=403)
+
         if is_local:
             #lets check if an author is logged in firstst
-            print("local user: ", request.user.id)
             try:
                 author = Author.objects.get(id=request.user.id)
             except:
@@ -702,7 +572,6 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
                 response_object["message"] = "Log in to add a comment."
                 return Response(response_object, status=status.HTTP_403_FORBIDDEN)
         else:
-            print("from remote")
             request_author = request.data['comment']['author']
             request_author_id = urls_to_ids([request_author['id']])[0]
             author = Author.objects.filter(id=request_author_id)
@@ -723,7 +592,7 @@ class ReadAndCreateAllCommentsOnSinglePost(APIView):
                 response_object["type"] = True
                 response_object["message"] = "Successfully added comment."
                 return Response(response_object, status=status.HTTP_200_OK)
-            print(serializer.validated_data)
+
             response_object["type"] = False
             response_object["message"] = "Could not add comment."
             return Response(response_object, status=status.HTTP_400_BAD_REQUEST)

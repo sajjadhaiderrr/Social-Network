@@ -4,7 +4,6 @@ function fetchGetRequest(url){
         mode: "cors",
         credentials: "same-origin",
         headers: {
-            //"x-csrftoken": csrf_token,
             "Accept": "application/json"
         }
     });
@@ -67,4 +66,6 @@ function updateFriendRequestCount() {
         .then(data=>setBadgeCounter(data['counts']));
 }
 
-setTimeout(updateFriendRequestCount, 0);
+window.onload = function(){
+    setTimeout(updateFriendRequestCount, 0);
+}

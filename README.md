@@ -1,73 +1,20 @@
-# CMPUT404-Project
-This is CMPUT404 project. This is a distributed social network. Written by:
+## Project Description:
+This is an implementation of a distributed social network based on [Django](https://www.djangoproject.com/). This project has a concrete implementation of a RESTful API, all of the accomplished API can be found [here](https://github.com/sajjadhaiderrr/CMPUT404-Project/wiki/API-Endpoints). By being a RESTful API, we can connect with other servers, whom are following the same API protocol as we are. Therefore, we can browse posts made not only by authors on our server, but also authors on other servers that are connecting with us. Servers who are connected with us are determined by the web admin. An authentication credential will be issued if the web admin accepts an incomming connection with the other server.
+
+For remote funcionalities, we will not store any information of posts hosted on other servers. We do temperarily store authors' information for our friendship and commentting functionalities (as the foreign key constraint will be violated if not stored). All remote authors' information will be updated if corresponding author interacts with our server.
+
+For more information, please visit our [wiki page](https://github.com/sajjadhaiderrr/CMPUT404-Project/wiki)
+
+To view a demo of our project, check out our [Video Demo!](https://youtu.be/oUkNwVjryOQ)
+
+## Group Members
 - Jiahao Guo
 - Hussain Khan
 - Sajjad Haider
 - Yizhou Zhao
-## Project Structure
-This project is consisted by three apps:
-- Accounts
-    - Handling functionalities related with authors. Including:
-        - Sign-up
-        - Login
-        - Search for other users by their display names.
-        - Viewing profile of current logined user.
-            
-        - Viewing profile of other user's profile.
-            
-        - Following other users.
-        - Unfollowing other users.
-    - Also contains pages that showing:
-        - Login page
-            - `/author/signin/`
-        - Sign-up page
-            - `/author/signup/`
-        - Current user's home page
-            - `/author/{author_id}/`
-        - Current user's profile
-            - `/author/{author_id}/info/`
-        - Current user's friends
-            - `/author/{author_id}/friends/`
-        - Other user's profile
-            - `/author/{author_id}/info/`
-        - Search result of other users.
-            - `/author/searchresult/?search={term}`
-- api
-    - The following apis are implemented:
-        - Authors:
-            - `/author/{author_id}`
-                - `GET`: Get a author's profile.
-            - `/author/{author_id}/friends`
-                - `GET`: Get a list of author.
-                - `POST`: Ask a service if anyone in the list is a friend.
-            - `/author/{author1_id}/friends/{author2_id}`
-                - `GET`: Ask if 2 authors are friends.
-            - `/friendrequest`
-                - `POST`: Make a friend request
-            - `/unfriendrequest`
-                - `POST`: Make an unfriend request
-            - `/author/{author_id}/following`
-                - `GET`: Get a list of authors that current author is following.
-            - `/author/{author_id}/follower`
-                - `GET`: Get a list of authors that are following current author.
-- posting
-    - The following apis are implemented:
-        - Posts:           
-            - `/posts/`
-                - `GET`: Get all posts marked as public on the server
-                - `POST`: Create a new post
-            - `/posts/{post_id}`
-                - `GET`: Get a post by post id
-                - `PUT`: Update a post by post id
-                - `DELETE`: Delete a post by post id
-                
-            - `/posts/{post_id}/comments`
-                - `GET`: Get comments of a post
-                - `POST`: Add a comment to a post
 
 ## Reference
 - Django Rest framework: https://www.django-rest-framework.org/
 - django-bootstrap4: https://pypi.org/project/django-bootstrap4/
 - showdownjs: http://showdownjs.com/
-             
-            
+- django-cors-headers: https://github.com/ottoyiu/django-cors-headers

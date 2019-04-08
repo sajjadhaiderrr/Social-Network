@@ -8,8 +8,7 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
                 callback(xhr.response);
             }
             catch (e) {
-                //alert('XHR Error: ' + e.name);
-                console.log(url);
+                console.log('XHR Error: ' + e.name);
             }
         }
     };
@@ -19,12 +18,7 @@ function sendJSONHTTPPost(url, objects, callback, remote={}) {
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
-
-    //if (Object.keys(remote).length === 0 && remote.constructor === Object){
-    xhr.setRequestHeader("x-csrftoken", csrf_token);
-    //}else{
-    //    xhr.setRequestHeader("Authorization", "Basic "+ Base64.encode(remote.username + ":" + remote.password));
-    //}
+    xhr.setRequestHeader("x-csrftoken", csrf_token);    // csrf_token is global. Initiated as long as each page is loaded.
     xhr.send(JSON.stringify(objects));
 }
 
@@ -35,7 +29,7 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
             if (xhr.status == 200) {
                 callback(xhr.response);
             }
-            
+
         }
     };
     if (xhr.overrideMimeType) {
@@ -44,11 +38,16 @@ function sendJSONHTTPGet(url, objects, callback, remote={}) {
     xhr.open("GET", url);
     xhr.setRequestHeader("Content-Type", "application/json");
     xhr.setRequestHeader("Accept", "application/json");
+    
+    // if remote is an empty onject. We know it's a local server reqeust. Use x-csrf-token
+    // Else, it's a remote request. Use Authorization
     if (Object.keys(remote).length === 0 && remote.constructor === Object) {
         xhr.setRequestHeader("x-csrftoken", csrf_token);
     } else {
         xhr.setRequestHeader("Authorization", "Basic " + btoa(remote.username + ":" + remote.password));
     }
+    
+    // try to set x-request-user-id header.
     try{
         xhr.setRequestHeader("x-request-user-id", request_user_id);
     }catch{
@@ -93,7 +92,7 @@ function addComment(post_url, id, same_host){
             if (remote_host == post_host){
                 header["Authorization"] = "Basic " + btoa(r.username + ":" + r.password);
             }
-        } 
+        }
     };
     let commentForm = {
         "query":"addComment",
@@ -107,7 +106,7 @@ function addComment(post_url, id, same_host){
                    "comment":"",
                    "contentType":"text/plain",
                    "published": new Date().toISOString(),
-                   "id": uuidv4()    
+                   "id": uuidv4()
         }
     };
 
@@ -135,7 +134,7 @@ function addComment(post_url, id, same_host){
         {
         }
     });
-    
+
 }
 
 // callback function after sending unfriend request
@@ -290,7 +289,7 @@ function getFriends(user, remote, from_one_host) {
     }else{
         sendJSONHTTPGet(url, request_body, sendFriendsCallback, remote[0]);
     }
-    
+
 }
 
 function getFollowers(user) {
@@ -642,34 +641,66 @@ function get_visible_post_callback(response){
 // loading and creating cards of post cards
 function fetch_github_stream_callback(response){
     var response = JSON.parse(response);
-    for(post of response){
-        //console.log(post);
+    console.log("RESPONSE IS " +response.message);
+    if(response.message == "error"){
+        resmessage = document.createElement("h5");
+        resmessage.innerHTML = "Add a github url to your profile to see your github activity!";
         var card = document.createElement("div");
-        card.classList.add("card","home-page-post-card");
+        card.classList.add("card","home-page-github-card");
+        card.appendChild(resmessage);
 
-        var card_body = document.createElement("div");
-        card_body.classList.add("card-body");
+        document.getElementById("home_page_github_cards").appendChild(card);
+    }
+    else {
+        for(post of response){
+            console.log(post);
+            var card = document.createElement("div");
+            card.classList.add("card","home-page-post-card");
 
-        var card_title = document.createElement("a");
-        card_title.classList.add("card-title");
-        card_title.href = '/posts/' + post.id + "/?host=" + post.author.host ;
-        var link_to_post_page = document.createElement("h3");
-        link_to_post_page.innerText = "Github Post";
-        card_title.appendChild(link_to_post_page);
+            var card_body = document.createElement("div");
+            card_body.classList.add("card-body");
 
-        var publish_time = document.createElement("a");
-        publish_time.classList.add("font-weight-light", "text-muted");
-        publish_time.innerText = post.date;
+            var card_title = document.createElement("a");
+            card_title.classList.add("card-title");
+            var link_to_post_page = document.createElement("h3");
+            const image = new Image();
+            image.src = post.avatar_url;
+            image.width = "40";
+            image.height = "40";
+            image.style.borderRadius = "50%";
+            
+            link_to_post_page.appendChild(image);
+            
+        
+            
+            card_title.appendChild(link_to_post_page);
 
-        var content = document.createElement("p");
-        content.innerText = post.event_message;
+            var publish_time = document.createElement("a");
+            publish_time.classList.add("font-weight-light", "text-muted");
 
-        card_body.appendChild(card_title);
-        card_body.appendChild(publish_time);
-        card_body.appendChild(document.createElement("hr"));
-        card_body.appendChild(content);
-        card.appendChild(card_body);
-        document.getElementById("home_page_post_cards").appendChild(card);
+            var publish_date_time = Date.parse(post.date);
+            var now = new Date();
+            var sec_ago = (now - publish_date_time)/1000;
+            var min_ago = sec_ago / 60;
+            var hr_ago = min_ago / 60;
+            var days_ago = hr_ago / 24;
+            if (min_ago < 60){
+                publish_time.innerText = Math.round(min_ago) + " mins. ago";
+            }else if (hr_ago < 60){
+                publish_time.innerText = Math.round(hr_ago) + " hrs. ago";
+            }else{
+                publish_time.innerText = Math.round(days_ago) + " days ago";
+            }
+
+            var content = document.createElement("p");
+            content.innerText = post.event_message;
+            card_body.appendChild(card_title);
+            card_body.appendChild(publish_time);
+            card_body.appendChild(document.createElement("hr"));
+            card_body.appendChild(content);
+            card.appendChild(card_body);
+            document.getElementById("home_page_github_cards").appendChild(card);
+        }
     }
 }
 
