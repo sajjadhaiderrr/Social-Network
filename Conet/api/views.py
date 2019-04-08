@@ -562,13 +562,10 @@ class AuthorFriends(APIView):
 
             friends = ApiHelper.get_friends(current_user)
             #friends = Author.objects.filter(id__in=friends)
-            print("author/id/friends local frds: ", friends)
             response['authors'] = []
             for friend in friends:
                 if friend in request_friends:
                     response['authors'].append(friend)
-            print('request friends: ', request_friends)
-            print('friends api: ', response['authors'])
             return Response(response)
         except:
             response['authors'] = []
