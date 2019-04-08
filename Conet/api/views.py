@@ -605,7 +605,7 @@ class AuthorPostsAPI(APIView):
         print("=============")
         is_local = ApiHelper.is_local_request(request)
         allposts = []
-        page_size = 10
+        page_size = 1000
         posts = Post.objects.none() # pylint: disable=maybe-no-member
 
         if not ApiHelper.is_sharePosts(is_local, request.user):
@@ -795,7 +795,7 @@ class ViewAuthorPostAPI(APIView):
         print("==================")
         is_local = ApiHelper.is_local_request(request)
         allposts = []
-        page_size = 10
+        page_size = 1000
         valid_req_user_id = True
         FOAF = False
         posts = Post.objects.none() # pylint: disable=maybe-no-member
