@@ -1,6 +1,6 @@
 import datetime
 import json
-
+from django.utils.six.moves.urllib.parse import urlsplit
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect, render
@@ -39,7 +39,7 @@ class SignUpPage(View):
             user.host = 'http://'+request.META['HTTP_HOST']
             user.url = user.host + "/author/" + str(user.id)
             user.save()
-            return redirect(self.success_url)
+            return HttpResponseRedirect(self.success_url)
         else:
             #form #= SignUpForm()
             return render(request, self.template_name, {'form': form})
@@ -60,6 +60,9 @@ class ProfilePage(View):
     # if receive a GET request, create a new form
     def get(self, request, pk):
         # get current user and user that is being viewed
+        scheme = urlsplit(request.build_absolute_uri(None)).scheme
+        if (scheme=="https"):
+            return HttpResponseRedirect('/')
         user_be_viewed_id = pk
         current_user = request.user
         nodes = Node.objects.all()
